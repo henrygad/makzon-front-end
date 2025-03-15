@@ -1,0 +1,13 @@
+
+type commentProps = {
+    _id: string,
+    postId: string,
+    replyId: string | null,
+    author: string,
+    body: { _html: string, text: string },
+    url_leading_to_comment_parent: string, 
+    replingTo: string[],
+    likes: string[],    
+};
+
+export default commentProps;
