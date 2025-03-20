@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import postProps from "../types/post.type";
 import Displayuserinfor from "./Displayuserinfor";
 import Dropmenu from "./Dropmenu";
@@ -7,35 +7,48 @@ import useSanitize from "../hooks/useSanitize";
 import Displayimage from "./Displayimage";
 import imgplaceholder from "../assert/imageplaceholder.svg";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch } from "../redux";
-import { deleteBlogpost, editBlogpost } from "../redux/slices/userBlogpostSlices";
+import Comment from "./Comment";
+import commentProps from "../types/comment.type";
+import Likeblogpost from "./Likeblogpost";
+import { Button } from "./Button";
+import Tab from "./Tab";
+import Blogpostcomments from "../sections/Blogpostcomments";
+import Blogpostlikes from "../sections/Blogpostlikes";
+import Shareblogpost from "./Shareblogpost";
+import Viewblogpost from "./Viewblogpost";
+import { useAppDispatch, useAppSelector } from "../redux";
+import { editProfile } from "../redux/slices/userProfileSlices";
 
 type Props = {
-    displyType: string;
+    displayType: string;
     blogpost: postProps;
+    updateBlogpost: ({ type, blogpost }: { type: "EDIT", blogpost: postProps } | { type: "DELETE", blogpost: { _id: string } }) => void;
 };
 
-const Displayblogpost = ({ displyType, blogpost }: Props) => {
-    const appDispatch = useAppDispatch();
-    const [authorInfor, setAuthorInfor] = useState<userProps | null>(null);
-    const sanitize = useSanitize();
+const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
     const navigate = useNavigate();
+    const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
+    const appDispatch = useAppDispatch();
+
+
+    const [authorInfor, setAuthorInfor] = useState<userProps | null>(null);
+    const [comments, setComments] = useState<commentProps[]>([]);
+    const blogpostRef = useRef<HTMLDivElement | null>(null);
+    const sanitize = useSanitize();
 
     const publicBlogpostMenus = [
         {
-            name: "Copy link",
-            icon: <span>c</span>,
-            func: () => console.log("copied"),
-        },
-        {
             name: "View post",
             icon: <span>V</span>,
-            func: () => handleToView(blogpost),
+            func: () => {
+                document.body.classList.remove("overflow-y-hidden");
+                handleToView(blogpost);                
+            },
         },
         {
             name: "Save post",
             icon: <span>S</span>,
-            func: () => console.log("Save post"),
+            func: () => handleSave(blogpost._id || ""),
         },
         {
             name: "Report",
@@ -48,11 +61,15 @@ const Displayblogpost = ({ displyType, blogpost }: Props) => {
             func: () => console.log("Block"),
         },
     ];
+    
     const privateBlogpostMenu = [
         {
             name: "Edit",
             icon: <span>E</span>,
-            func: () => handleToEdit(blogpost),
+            func: () => {
+                handleToEdit(blogpost);
+                document.body.classList.remove("overflow-y-hidden");
+            },
         },
         {
             name: blogpost.status === "published" ? "Unpublish" : "publish",
@@ -67,7 +84,7 @@ const Displayblogpost = ({ displyType, blogpost }: Props) => {
         },
         {
             name: "Delete",
-            icon: <span>U</span>,
+            icon: <span>D</span>,
             func: () => handleDelete(blogpost._id || ""),
         },
     ];
@@ -80,12 +97,36 @@ const Displayblogpost = ({ displyType, blogpost }: Props) => {
         } as userProps);
     };
 
+    const handleFetchBlogpostComments = (_id: string) => {
+        const Comments: commentProps[] = JSON.parse(localStorage.getItem("comments") || "[]");
+        const blogpostComments = Comments.filter(comment => comment.postId === _id);
+        setComments(blogpostComments.map(parentComment => {
+            const children = Comments.filter(comment => comment.replyId === parentComment._id);
+            return { ...parentComment, children };
+        }));
+    };
+
     const truncate = (words: string, numWords: number) => {
         return words.split(" ", numWords).join(" ");
     };
 
-    const handleToView = (blogpost: postProps) => {
-        navigate("/" + blogpost.author + "/" + blogpost.slug, { state: { blogpost } });
+    const handleSave = (_id: string) => {
+        if ((User.saves || []).includes(_id)) {
+            return;
+        } else {
+            const updatedUser: userProps = {
+                ...User,
+                saves: [_id, ...(User.saves || []),]
+            };
+            localStorage.setItem("user", JSON.stringify({ ...updatedUser }));
+            appDispatch(editProfile(updatedUser));
+        }
+    };
+
+    const handleToView = (blogpost: postProps, hashId: string | null = null) => {
+        if (displayType.trim().toLowerCase() === "_html") return;
+        const url = "/" + blogpost.author + "/" + blogpost.slug + (hashId ? "/#" + hashId : "");
+        navigate(url, { state: { blogpost } });
     };
 
     const handleToEdit = (blogpost: postProps) => {
@@ -101,7 +142,7 @@ const Displayblogpost = ({ displyType, blogpost }: Props) => {
         localStorage.setItem("blogposts", JSON.stringify(Blogposts.map(
             (blogpost: postProps) => blogpost._id === publishBlogpost._id ? { ...publishBlogpost } : blogpost
         )));
-        appDispatch(editBlogpost(publishBlogpost));
+        updateBlogpost({ blogpost: publishBlogpost, type: "EDIT" });
     };
 
     const handleUnpublish = (blogpost: postProps) => {
@@ -113,124 +154,230 @@ const Displayblogpost = ({ displyType, blogpost }: Props) => {
         localStorage.setItem("blogposts", JSON.stringify(Blogposts.map(
             (blogpost: postProps) => blogpost._id === unpublishBlogpost._id ? { ...unpublishBlogpost } : blogpost
         )));
-        appDispatch(editBlogpost(unpublishBlogpost));
+        updateBlogpost({ blogpost: unpublishBlogpost, type: "EDIT" });
     };
 
     const handleDelete = (_id: string) => {
         const Blogposts: postProps[] = JSON.parse(localStorage.getItem("blogposts") || "[]");
         localStorage.setItem("blogposts", JSON.stringify(Blogposts.filter(blogpost => blogpost._id !== _id)));
-        appDispatch(deleteBlogpost({ _id }));
+        updateBlogpost({ blogpost: { _id }, type: "DELETE" });
     };
 
     useEffect(() => {
-        handleFetchAutoInfor(blogpost.author || "");
-    }, []);
+        if (blogpost._id) {
+            handleFetchAutoInfor(blogpost.author || "");
+            handleFetchBlogpostComments(blogpost._id);
+        }
+    }, [blogpost._id]);
 
     if (!authorInfor) {
         return <div>loaidng...</div>;
     }
 
-    return <div className={`space - y - 4 p-2 ${displyType === "TEXT" ? "border" : ""} rounded-md`}>
-        <div className="flex items-start justify-between gap-6">
-            {/* author info */}
-            <Displayuserinfor
-                short={true}
-                user={authorInfor}
-                onClick={()=> navigate("/profile/"+authorInfor.userName)}
-            />
-            <Dropmenu
-                children={
-                    <ul className="min-w-[140px] text-sm font-text p-4 space-y-3 rounded-md border bg-white ">
-                        {
-                            (blogpost.author &&
-                                blogpost.author.trim() === "@henry_dev" ?
-                                [...publicBlogpostMenus, ...privateBlogpostMenu]
-                                : publicBlogpostMenus)
-                                .map((menu) =>
-                                    displyType === "_HTML" &&
-                                        menu.name === "View post" ?
-                                        null :
-                                        <li
-                                            key={menu.name}
-                                            className="flex gap-1 cursor-pointer"
-                                            onClick={(e) => {
-                                                menu.func();
-                                                document.body.classList.remove("overflow-y-hidden");
-                                                e.stopPropagation();
-                                            }}>
-                                            {menu.icon} <span>{menu.name}</span>
-                                        </li>)
-                        }
-                    </ul>
-                }
-            />
-        </div>
-        <article className="font-text text-base">
-            <span className="flex gap-4 text-sm text-stone-700 font-sec">
-                {/* post date */}
-                <span>Post: 02 01 25; 11:00am</span>
-                <span>Updated: 03 01 25; 1:00pm</span>
+    return <>
+        <div
+            ref={blogpostRef}
+            className={`space - y - 4 p-2 ${displayType === "TEXT" ? "border" : ""} rounded-md`}
+        >
+            <span className="flex items-start justify-between gap-6">
+                {/* author info */}
+                <Displayuserinfor
+                    short={true}
+                    user={authorInfor}
+                    onClick={() => navigate("/profile/" + authorInfor.userName)}
+                />
+                <Dropmenu
+                    children={
+                        <ul className="min-w-[140px] text-sm font-text p-4 space-y-3 rounded-md border bg-white ">
+                            {
+                                (blogpost.author &&
+                                    blogpost.author.trim() === "@henry_dev" ?
+                                    [...publicBlogpostMenus, ...privateBlogpostMenu]
+                                    : publicBlogpostMenus)
+                                    .map((menu) =>
+                                        displayType === "_HTML" &&
+                                            menu.name === "View post" ?
+                                            null :
+                                            <li
+                                                key={menu.name}
+                                                className="flex gap-1 cursor-pointer"
+                                                onClick={(e) => {
+                                                    menu.func();                                                    
+                                                    e.stopPropagation();
+                                                }}>
+                                                {menu.icon} <span>{menu.name}</span>
+                                            </li>)
+                            }
+                        </ul>
+                    }
+                />
             </span>
-            <ul className="flex gap-1 text-sm text-slate-800">
-                {blogpost.catigories && blogpost.catigories.length
-                    ? blogpost.catigories.map((catigory, index) => (
-                        catigory.trim() ? <li key={index}>
-                            <span className="font-semibold">.</span>
-                            {catigory}
-                        </li> :
-                            null
-                    ))
-                    : null}
-            </ul>
-            <span className="space flex justify-center mt-2 mb-1">
-                <span className="border-2 min-w-10 max-w-10 rounded-md"></span>
-            </span>
-            {/* post article */}
-            {displyType === "_HTML" ? (
-                <span
-                    dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}
-                ></span>
-            ) : (
-                <span className="block indent-2 break-words hyphens-auto">
-                    {truncate(blogpost.body || "", 40)} {" "}
+            <article className="font-text text-base">
+                <span className="flex gap-4 text-sm text-stone-700 font-sec">
+                    {/* post date */}
+                    <span>Post: 02 01 25; 11:00am</span>
+                    <span>Updated: 03 01 25; 1:00pm</span>
+                </span>
+                <ul className="flex gap-1 text-sm text-slate-800">
+                    {blogpost.catigories && blogpost.catigories.length
+                        ? blogpost.catigories.map((catigory, index) => (
+                            catigory.trim() ? <li key={index}>
+                                <span className="font-semibold">.</span>
+                                {catigory}
+                            </li> :
+                                null
+                        ))
+                        : null}
+                </ul>
+                <span className="space flex justify-center mt-2 mb-1">
+                    <span className="border-2 min-w-10 max-w-10 rounded-md"></span>
+                </span>
+                {/* post article */}
+                {displayType === "_HTML" ? (
                     <span
-                        className="text-blue-700 text-sm font-semibold cursor-pointer"
+                        dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}
+                    ></span>
+                ) : (
+                    <span className="block indent-2 break-words hyphens-auto">
+                        {truncate(blogpost.body || "", 40)} {" "}
+                        <span
+                            className="text-blue-700 text-sm font-semibold cursor-pointer"
+                            onClick={() => handleToView(blogpost)}
+                        >
+                            Continue Reading...
+                        </span>
+                    </span>
+                )}
+                {displayType === "TEXT" &&
+                    blogpost.image.trim() ? (
+                    <Displayimage
+                        url={blogpost.image || ""}
+                        alt={blogpost.title || ""}
+                        useCancle={false}
+                        parentClassName="w-full h-full"
+                        className="w-full h-20 object-cover  cursor-pointer"
+
+                        placeHolder={
+                            <img
+                                src={imgplaceholder}
+                                className="absolute top-0 bottom-0 right-0 left-0 object-cover w-full h-20"
+                            />
+                        }
                         onClick={() => handleToView(blogpost)}
+                    />
+                ) :
+                    null
+                }
+                <span className="space flex justify-center my-2">
+                    <span className="border-2 min-w-10 max-w-10 rounded-md"></span>
+                </span>
+            </article>
+            <span className="flex justify-around gap-4">
+                {/* post stat */}
+                <button
+                    id="blogpost-comment-btn"
+                    className="flex items-center gap-2 cursor-pointer"
+                >
+                    <Comment
+                        blogpost={blogpost}
+                        replyId={null}
+                        parentComment={null}
+                        replying={[]}
+                        setComments={setComments}
+                    />
+                    <span
+                        onClick={() => handleToView(blogpost, "blogpost-comments")}
                     >
-                        Continue Reading...
+                        {comments && comments.length}
+                    </span>
+                </button>
+                <button
+                    id="blogpost-like-btn"
+                    className="flex items-center gap-2 cursor-pointer"
+                >
+                    <Likeblogpost
+                        blogpost={blogpost}
+                        updateBlogpost={updateBlogpost}
+                    />
+                    <span
+                        onClick={() => handleToView(blogpost, "blogpost-likes")}
+                    >
+                        {blogpost?.likes && blogpost.likes.length || 0}
+                    </span>
+                </button>
+                <button
+                    id="blogpost-share-btn"
+                    className="flex items-center gap-2 cursor-pointer"
+                >
+                    <Shareblogpost
+                        blogpost={blogpost}
+                        updateBlogpost={updateBlogpost}
+                    />
+                    <span>
+                        {blogpost?.shares && blogpost.shares.length || 0}
+                    </span>
+                </button>
+                <span
+                    id="blogpost-view-btn"
+                    className="flex items-center gap-2 cursor-pointer"
+                >
+                    <Viewblogpost
+                        blogpostRef={blogpostRef}
+                        displayType={displayType}
+                        blogpost={blogpost}
+                        updateBlogpost={updateBlogpost}
+                    />
+                    <span>
+                        {blogpost?.views && blogpost.views.length || 0}
                     </span>
                 </span>
-            )}
-            {displyType === "TEXT" &&
-                blogpost.image.trim() ? (
-                <Displayimage
-                    url={blogpost.image || ""}
-                    alt={blogpost.title || ""}
-                    useCancle={false}
-                    parentClassName="w-full h-full"
-                    className="w-full h-20 object-cover  cursor-pointer"
-
-                    placeHolder={
-                        <img
-                            src={imgplaceholder}
-                            className="absolute top-0 bottom-0 right-0 left-0 object-cover w-full h-20"
-                        />
-                    }
-                    onClick={() => handleToView(blogpost)}
-                />
-            ) : null}
-            <span className="space flex justify-center my-2">
-                <span className="border-2 min-w-10 max-w-10 rounded-md"></span>
             </span>
-        </article>
-        <div className="flex justify-around gap-4">
-            {/* post stat */}
-            <button>comments 20</button>
-            <button>likes 30</button>
-            <button>shares 50</button>
-            <button>views 100</button>
         </div>
-    </div>;
+
+        {
+            displayType.trim().toLowerCase() === "_html" ?
+                <>
+                    <menu className="border-t border-b">
+                        <ul className="flex items-center gap-6 p-2">
+                            <li>
+                                <Button
+                                    fieldName={"Comments"}
+                                    className=""
+                                    onClick={() => navigate("#blogpost-comments")}
+                                />
+                            </li>
+                            <li>
+                                <Button
+                                    fieldName={"Likes"}
+                                    className=""
+                                    onClick={() => navigate("#blogpost-likes")}
+                                />
+                            </li>
+                        </ul>
+                    </menu>
+                    <Tab
+                        className="px-2"
+                        arrOfTab={[
+                            {
+                                id: "blogpost-comments",
+                                tab: <Blogpostcomments
+                                    blogpost={blogpost}
+                                    comments={comments}
+                                    setComments={setComments}
+                                />
+                            },
+                            {
+                                id: "blogpost-likes",
+                                tab: <Blogpostlikes
+                                    likes={blogpost.likes || []}
+                                />
+                            },
+                        ]}
+                    />
+                </> :
+                null
+        }
+    </>;
 };
 
 export default Displayblogpost;

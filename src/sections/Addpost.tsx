@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../redux";
 import { addBlogpost, addDraft, deleteDraft, editBlogpost, editDraft } from "../redux/slices/userBlogpostSlices";
 import mediaProps from "../types/file.type";
-import { addMdia, displayMediaOptions } from "../redux/slices/userMediaSlices";
+import { addMdia, addToDisplaySingleMedia, displayMediaOptions } from "../redux/slices/userMediaSlices";
 
 type Props = {
     oldBlogpost: postProps | null
@@ -25,10 +25,10 @@ const Addpost = ({
 }: Props) => {
     const navigate = useNavigate();
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
-    const { data: Media , selectedMedia} = useAppSelector(state => state.userMediaSlices.media);
+    const { data: Media, selectedMedia } = useAppSelector(state => state.userMediaSlices.media);
     const appDispatch = useAppDispatch();
 
-    const { getLocalFiles } = useGetLocalFiles();   
+    const { getLocalFiles } = useGetLocalFiles();
 
     const editorRef = useRef<HTMLDivElement | null>(null);
 
@@ -37,7 +37,7 @@ const Addpost = ({
         _html: "",
         text: ""
     });
-    const [catigories, setCatigories] = useState<{ _id: string, cat: string }[]>([{_id: Date.now().toString(), cat: ""}]);
+    const [catigories, setCatigories] = useState<{ _id: string, cat: string }[]>([{ _id: Date.now().toString(), cat: "" }]);
     const catigoryInputRef = useRef<HTMLInputElement>(null);
     const [slug, setSlug] = useState("");
     const [slugPatter, setSlugPatter] = useState("-");
@@ -91,8 +91,8 @@ const Addpost = ({
         appDispatch(addBlogpost(getNewBlogpost));
     };
 
-    const draft = (blogpost: postProps) => {        
-        const addNewBlogpost = {            
+    const draft = (blogpost: postProps) => {
+        const addNewBlogpost = {
             ...blogpost,
             _id: blogpost._id || Date.now().toString()
         };
@@ -204,7 +204,7 @@ const Addpost = ({
             setPopUp(true);
         } else {
             const createDraftBlogpost: postProps = {
-                _id:  oldBlogpost?._id,
+                _id: oldBlogpost?._id,
                 author: User.userName,
                 image: displayImageUrl,
                 publishedId: oldBlogpost?.publishedId,
@@ -240,7 +240,7 @@ const Addpost = ({
         if (selectedMedia &&
             selectedMedia.length) {
             setDisplayImageUrl(selectedMedia[0].url);
-            }
+        }
     }, [selectedMedia]);
 
     useEffect(() => {
@@ -281,12 +281,12 @@ const Addpost = ({
                         italic: true,
                         underline: true,
                         textTransform: true,
-                        anchorlink: true,                        
+                        anchorlink: true,
                         textColor: true,
                         backGroundColor: true,
                         alignment: true,
                         listing: true,
-                        emoji: true,                        
+                        emoji: true,
                     },
                     useBlock: true,
                     useDelete: true,
@@ -308,7 +308,7 @@ const Addpost = ({
                     }
                     setTitle(title.join(" "));
                 }}
-                imageGalary={Media.filter(image=>  image.type.toLowerCase() === "image")}
+                imageGalary={Media.filter(image => image.type.toLowerCase() === "image")}
                 videoGalary={Media.filter(image => image.type.toLowerCase() === "vidoe")}
                 handleLocalFile={async (files) => {
                     try {
@@ -417,7 +417,7 @@ const Addpost = ({
                 <Displayimage
                     url={displayImageUrl}
                     setUrl={setDisplayImageUrl}
-                    alt={displayImageUrlCaption}                    
+                    alt={displayImageUrlCaption}
                     useCancle={true}
                     placeHolder={<span
                         onClick={() => navigate("#insert-display-image")}
@@ -482,6 +482,21 @@ const Addpost = ({
                         </button>
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-6 m">
+                        <span>
+                            <button
+                                className="cursor-pointer"
+                                onClick={() => {
+                                    appDispatch(addToDisplaySingleMedia({ url: displayImageUrl, _id: "", type: "image", mime: "png" }));
+                                    appDispatch(displayMediaOptions({
+                                        negativeNavigate: "#insert-display-image",
+                                    }));
+                                    navigate("#single-image");
+                                }}
+                            >
+                                Icon
+                            </button>
+                            View
+                        </span>
                         <Fileinput
                             id="choose-display-blogpost-image"
                             accept="image/png, image/gif, image/jpeg"
@@ -489,9 +504,9 @@ const Addpost = ({
                             fieldName="Device"
                             className="cursor-pointer"
                             handleGetFile={async (e) => {
-                                const data = await getLocalFiles(e);                          
+                                const data = await getLocalFiles(e);
                                 if (data.length) {
-                                    const url = addImage(data[0].bufferUrl as string);                                  
+                                    const url = addImage(data[0].bufferUrl as string);
                                     setDisplayImageUrl(url);
                                     navigate("#add-post");
                                     if (isEmpty) {
@@ -521,7 +536,7 @@ const Addpost = ({
                 </div>
             }
         />
-        
+
     </div>;
 };
 

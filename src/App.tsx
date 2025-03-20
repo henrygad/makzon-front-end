@@ -44,7 +44,7 @@ const App = () => {
           displayEmail: "",
           displayPhoneNumber: "",
           website: "",
-          profession: [""],
+          profession: "",
           country: "",
           sex: "",
           bio: "",
@@ -120,7 +120,7 @@ const App = () => {
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="*" element={<Page404 />} />
-          <Route path="/" element={<Treading />} />
+          <Route path="/" element={!User.login ? <Treading /> : <Navigate to={`/profile/${User.userName}`} /> } />
           <Route path="/:author/:slug" element={<Blogpost />} />
           <Route
             path="/register"
@@ -132,7 +132,7 @@ const App = () => {
               )
             }
           />
-          <Route
+          <Route  
             path="/login"
             element={
               !User.login ? (

@@ -9,6 +9,7 @@ type userProps = {
   googleId?: string;
   isValidPassword(password: string): Promise<boolean>;
   userVerified: boolean;
+  sessionId: string
   sessions: {
     token: string,
     toExpire: number

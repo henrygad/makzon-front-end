@@ -19,9 +19,11 @@ const Profile = () => {
                     {userName &&
                         User && userName.trim() === User.userName.trim() ?
                         <Userprofile
-                            User={{...User}}
+                            User={{ ...User }}
                         /> :
-                        <Othersprofile />
+                        <Othersprofile
+                            userName={userName}
+                        />
                     }
                 </> :
                 <div>loading profile page...</div>

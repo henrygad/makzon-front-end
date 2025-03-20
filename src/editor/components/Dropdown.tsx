@@ -1,6 +1,6 @@
 import { ReactElement, useRef, useState } from "react";
 import { IoIosArrowDown } from "react-icons/io";
-import useClickOutSide from "../utils/useClickOutSide";
+import useClickOutSide from "../hooks/useClickOutSide";
 
 type Props = {
     id: string

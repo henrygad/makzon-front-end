@@ -1,4 +1,5 @@
 
+
 type commentProps = {
     _id: string,
     postId: string,
@@ -7,7 +8,8 @@ type commentProps = {
     body: { _html: string, text: string },
     url_leading_to_comment_parent: string, 
     replingTo: string[],
-    likes: string[],    
+    likes: string[],   
+    children?: commentProps[]
 };
 
 export default commentProps;

@@ -16,9 +16,6 @@ import { Button } from "../components/Button";
 import mediaProps from "../types/file.type";
 import { addMdia, addToDisplaySingleMedia, displayMediaOptions } from "../redux/slices/userMediaSlices";
 
-
-/* two more problem. remove focus on input and remove focus on click outside */
-
 const Updateprofile = () => {
     const navigate = useNavigate();
     const { data: User, loading } = useAppSelector(
@@ -83,14 +80,13 @@ const Updateprofile = () => {
         return url;
     };
 
-    const addUser = (user: userProps) => {
-        const User = JSON.parse(localStorage.getItem("user") || JSON.stringify({}));
+    const editUserData = (user: userProps) => {
         localStorage.setItem("user", JSON.stringify({ ...User, ...user }));
+        appDispatch(editProfile(user));
     };
 
     const handleUpadteUserData = (data: userProps) => {
-        addUser(data);
-        appDispatch(editProfile(data));
+        editUserData(data);
         setFocusInput("");
     };
 
@@ -368,7 +364,7 @@ const Updateprofile = () => {
                                                 });
                                             }}
                                             onFocus={() => {
-                                                setFocusInput("profession");
+                                                setFocusInput(pre => pre === "profession" ? "" : "profession");
                                             }}
                                         />
                                         <Customselection
@@ -379,7 +375,6 @@ const Updateprofile = () => {
                                             search={searchProfession}
                                             select={userData.profession}
                                             setSelect={(value) => {
-                                                // professionInputRef.current?.blur()
                                                 setUserData((pre) => ({
                                                     ...pre,
                                                     profession: value as string,
@@ -767,6 +762,7 @@ const Updateprofile = () => {
                                             useSearch={false}
                                             select={userData.sex}
                                             setSelect={(value) => {
+                                                setFocusInput("");
                                                 setUserData((pre) => ({
                                                     ...pre,
                                                     sex: value as string,
@@ -840,12 +836,12 @@ const Updateprofile = () => {
                                                 });
                                             }}
                                             onFocus={() => {
-                                                setFocusInput("country");
+                                                setFocusInput(pre => pre === "country" ? "" : "country");
                                             }}
                                         />
                                         <Customselection
                                             arrOfOptions={Countries.map((country) => country.country)}
-                                            className="top-9 right-0 left-0 w-full min-h-[180px] max-h-[180px] border border-blue-600 py-2 rounded-md shadow-md shadow-gray-400 overflow-y-auto"
+                                            className="bottom-9 right-0 left-0 w-full min-h-[180px] max-h-[180px] border border-blue-600 py-2 rounded-md shadow-md shadow-gray-400 overflow-y-auto"
                                             useSearch={true}
                                             search={searchCountry}
                                             select={userData.country}
@@ -953,7 +949,7 @@ const Updateprofile = () => {
                                                     className="absolute top-0 bottom-0 right-0 h-[100px] w-[100px] rounded-full cursor-pointer"
                                                     onClick={() => {
                                                         appDispatch(addToDisplaySingleMedia({ url: avatar, _id: "", type: "image", mime: "png" }));
-                                                        appDispatch(displayMediaOptions({                                                            
+                                                        appDispatch(displayMediaOptions({
                                                             negativeNavigate: "#insert-profile-picture",
                                                         }));
                                                         navigate("#single-image");
@@ -962,7 +958,7 @@ const Updateprofile = () => {
                                             }
                                             onClick={() => {
                                                 appDispatch(addToDisplaySingleMedia({ url: avatar, _id: "", type: "image", mime: "png" }));
-                                                appDispatch(displayMediaOptions({                                                   
+                                                appDispatch(displayMediaOptions({
                                                     negativeNavigate: "#insert-profile-picture",
                                                 }));
                                                 navigate("#single-image");
@@ -975,14 +971,15 @@ const Updateprofile = () => {
                                                 className="cursor-pointer"
                                                 onClick={() => {
                                                     appDispatch(addToDisplaySingleMedia({ url: avatar, _id: "", type: "image", mime: "png" }));
-                                                    appDispatch(displayMediaOptions({                                                       
+                                                    appDispatch(displayMediaOptions({
                                                         negativeNavigate: "#insert-profile-picture",
                                                     }));
-                                                    navigate("#single-image");
+                                                    navigate("?url=me&type=image#single-image");
                                                 }}
                                             >
-                                                View
+                                                Icon
                                             </button>
+                                            View
                                         </span>
                                         <Fileinput
                                             id="choose-profile-picture"
@@ -1018,7 +1015,8 @@ const Updateprofile = () => {
                                             Galary
                                         </span>
                                     </div>
-                                    {avatar && avatar.trim() !== User.avatar?.trim() ? (
+                                    {avatar &&
+                                        avatar.trim() !== User.avatar?.trim() ? (
                                         <button
                                             className="text-white text-base font-text font-semibold w-full py-1.5 bg-blue-600 border rounded-lg shadow "
                                             onClick={() => {
@@ -1032,7 +1030,9 @@ const Updateprofile = () => {
                                         >
                                             Add photo
                                         </button>
-                                    ) : null}
+                                    ) :
+                                        null
+                                    }
                                 </div>
                             }
                         />

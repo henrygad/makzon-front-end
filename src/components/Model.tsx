@@ -13,11 +13,18 @@ const Model = ({ id, children }: Props) => {
   const handleDisplayModel = (id: string, hashId: string) => {
     if (hashId.trim() &&
       hashId.trim().toLowerCase() === id.trim().toLowerCase()) {
-      setDisplayModel(true);
+      setDisplayModel(true); 
+    } else {
+      setDisplayModel(false);     
+    }
+
+  };
+
+  const handleStopScrolling = () => { 
+    if (displayModel) {
       document.body.classList.add("overflow-hidden");
     } else {
-      setDisplayModel(false);
-      if (displayModel) document.body.classList.remove("overflow-hidden");
+      document.body.classList.remove("overflow-hidden");      
     }
 
   };
@@ -26,6 +33,11 @@ const Model = ({ id, children }: Props) => {
     const hashId = location.hash.trim().slice(1);
     handleDisplayModel(id, hashId);
   };
+
+
+  useEffect(() => {
+    handleStopScrolling();
+  }, [displayModel]);
 
   useEffect(() => {
     const hashId = location.hash.trim().slice(1);
@@ -36,6 +48,7 @@ const Model = ({ id, children }: Props) => {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
+
 
   return (
     displayModel ? <div

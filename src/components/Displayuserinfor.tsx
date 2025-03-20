@@ -59,7 +59,7 @@ const Displayuserinfor = ({ user, short = true, onClick = () => null }: Props) =
             </span>
         </span>;
     };
-
+    
     return <>
         {short ?
             <Shortdetail /> :
@@ -90,7 +90,8 @@ const Displayuserinfor = ({ user, short = true, onClick = () => null }: Props) =
                             {user.website ?
                                 <>
                                     <GoLink
-                                        size={14}
+                                        size={13}
+                                        color="blue"
                                     />
                                     <a
                                         href={user.website || ""}

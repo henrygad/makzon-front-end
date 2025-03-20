@@ -6,8 +6,8 @@ import { useNavigate } from "react-router-dom";
 import Displayvideo from "../components/Displayvideo";
 
 const Displaysinglemedialmodel = () => {
-    const navigate = useNavigate();
-    const { displaySingleMedia , mediaSelectOptions} = useAppSelector((state) => state.userMediaSlices.media);
+    const navigate = useNavigate();   
+    const { displaySingleMedia, mediaSelectOptions } = useAppSelector((state) => state.userMediaSlices.media);
 
     return (
         <Model
@@ -30,10 +30,10 @@ const Displaysinglemedialmodel = () => {
                             className="h-full w-full object-contain"
                         /> :
                         <Displayvideo
-                            url={displaySingleMedia?.url || ""}                            
-                            useCancle={false}                            
-                            className="h-full w-full object-contain"                           
-                        />                        
+                            url={displaySingleMedia?.url || ""}
+                            useCancle={false}
+                            className="h-full w-full object-contain"
+                        />
                     }
                 </div>
             }

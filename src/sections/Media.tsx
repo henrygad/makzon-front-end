@@ -38,7 +38,7 @@ const Media = () => {
             });
         }
     };
-
+    
     const Displaymedia = ({ media }: { media: mediaProps }) => {
         if (media.type &&
             media.type.toLowerCase() === "image"
@@ -98,10 +98,10 @@ const Media = () => {
                 mediaSelections?.length ? <ul>
                 <li>
                     <button
-                        className="flex items-center gap-1"
+                        className="flex items-center gap-1 text-red-800"
                         onClick={() => handleMultipleMediaDelete()}
                     >
-                        <MdDeleteOutline size={18} />
+                        <MdDeleteOutline color="red" size={18} />
                         ({mediaSelections &&
                             mediaSelections.length || 0})
                     </button>
@@ -116,16 +116,20 @@ const Media = () => {
                             <button
                                 className="text-sm font-text font-semibold text-blue-600 "
                                 onClick={() => handleSelectAll()}
-                            >Select all</button> :
+                            >
+                                Select all
+                            </button> :
                             <button
                                 className="text-sm font-text font-semibold text-blue-600"
                                 onClick={() => setIsSelect(true)}
-                            >Select</button>
+                            >
+                                Select
+                            </button>
                     }
                 </li>
                 {isSelect ?
                     <li> <button
-                        className="text-base font-text font-bold text-red-700"
+                        className="text-base font-text font-bold text-slate-800"
                         onClick={() => {
                             setIsSelect(false);
                             appDispatch(clearAllSelectedMedia([]));
