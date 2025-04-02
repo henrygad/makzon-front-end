@@ -81,7 +81,9 @@ const Addpost = ({
     const publish = (blogpost: postProps) => {
         const addNewBlogpost = {
             _id: Date.now().toString(),
-            ...blogpost
+            ...blogpost,
+            slug: (blogpost.slug || "").trim(),
+            title: (blogpost.title || "").trim(),            
         };
         const Blogposts: postProps[] = JSON.parse(localStorage.getItem("blogposts") || "[]");
         localStorage.setItem("blogposts", JSON.stringify([...Blogposts, addNewBlogpost]));
@@ -94,7 +96,9 @@ const Addpost = ({
     const draft = (blogpost: postProps) => {
         const addNewBlogpost = {
             ...blogpost,
-            _id: blogpost._id || Date.now().toString()
+            _id: blogpost._id || Date.now().toString(),
+            slug: (blogpost.slug || "").trim(),
+            title: (blogpost.title || "").trim(),       
         };
         const Blogposts: postProps[] = JSON.parse(localStorage.getItem("drafts") || "[]");
         localStorage.setItem("drafts", JSON.stringify([...Blogposts, addNewBlogpost]));
@@ -264,7 +268,7 @@ const Addpost = ({
     }, [oldBlogpost]);
 
 
-    return <div>
+    return <section>
         <div className="space-y-10">
             <Texteditor
                 editorRef={editorRef}
@@ -536,8 +540,7 @@ const Addpost = ({
                 </div>
             }
         />
-
-    </div>;
+    </section>;
 };
 
 export default Addpost;

@@ -4,25 +4,26 @@ import { useAppSelector } from "../redux";
 const Unpublishs = () => {
     const { data: Blogposts, loading } = useAppSelector(state => state.userBlogpostSlices.blogposts);
 
-    return <div>
+    return <section>
         <div className="space-y-6">
             {!loading ?
                 Blogposts &&
-                    Blogposts.length ? 
+                    Blogposts.length ?
                     Blogposts
-                        .filter(blogpost=> blogpost.status.toLowerCase() === "unpublished")
+                        .filter(blogpost => blogpost.status.toLowerCase() === "unpublished")
                         .map(blogpost =>
-                        <Displayblogpost
-                            key={blogpost._id}
-                            displyType="TEXT"
-                            blogpost={blogpost}
-                        /> 
-                    ):
-                    <span>No unpublish blogposts</span>:
+                            <Displayblogpost
+                                key={blogpost._id}
+                                displayType="TEXT"
+                                blogpost={blogpost}
+                                updateBlogpost={() => null}
+                            />
+                        ) :
+                    <span>No unpublish blogposts</span> :
                 <span>loading...</span>
             }
         </div>
-    </div>;
+    </section>;
 };
 
 export default Unpublishs;

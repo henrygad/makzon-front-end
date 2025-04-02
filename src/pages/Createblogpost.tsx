@@ -1,7 +1,5 @@
 import Tab from "../components/Tab";
 import Addpost from "../sections/Addpost";
-import Footernav from "../sections/Footernav";
-import Headernav from "../sections/Headernav";
 import { Button } from "../components/Button";
 import postProps from "../types/post.type";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -22,9 +20,7 @@ const Createblogpost = () => {
         }
     }, [state?.blogpost]);
 
-    return <>
-        <Headernav></Headernav>
-        <main
+    return<main
             className="container space-y-8"
         >
             <menu
@@ -87,9 +83,7 @@ const Createblogpost = () => {
                     }
                 ]}
             />
-        </main>
-        <Footernav></Footernav>
-    </>;
+        </main>;
 };
 
 export default Createblogpost;

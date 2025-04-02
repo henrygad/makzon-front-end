@@ -5,7 +5,7 @@ import { useAppSelector } from "../redux";
 const Drafts = () => {
     const { data: Drafts } = useAppSelector(state => state.userBlogpostSlices.drafts);
 
-    return <div>
+    return <section>
         <div className="space-y-6">
             {Drafts &&
                 Drafts.length ?
@@ -18,7 +18,7 @@ const Drafts = () => {
                 <span>No draft yet</span>
             }
         </div>
-    </div>;
+    </section>;
 };
 
 export default Drafts;

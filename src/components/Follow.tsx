@@ -1,3 +1,4 @@
+import useSendNotification from "../hooks/useSendNotification";
 import { useAppDispatch, useAppSelector } from "../redux";
 import { editProfile } from "../redux/slices/userProfileSlices";
 import userProps from "../types/user.type";
@@ -7,25 +8,44 @@ import { Button } from "./Button";
 const Follow = ({ friend }: { friend: string }) => {
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
     const appDispatch = useAppDispatch();
+    const sendNotification = useSendNotification();
 
     const follow = (friend: string) => {
         const updatedUser: userProps = {
             ...User,
-           followings: [friend, ...(User.followings||[])]
-         };
+            followings: [friend, ...(User.followings || [])]
+        };
 
         localStorage.setItem("user", JSON.stringify({ ...updatedUser }));
         appDispatch(editProfile(updatedUser));
+        sendNotification({
+            type: "followed",
+            targetTitle: "Someone followed you",
+            from: User.userName,
+            to: friend,
+            message: " followed you. You can follow them back",
+            checked: false,
+            url: "/profile/" + User.userName,
+        });
     };
 
     const unFollow = (friend: string) => {
         const updatedUser: userProps = {
             ...User,
-            followings: (User.followings || []).filter(userName=> userName !== friend)
+            followings: (User.followings || []).filter(userName => userName !== friend)
         };
 
         localStorage.setItem("user", JSON.stringify({ ...updatedUser }));
         appDispatch(editProfile(updatedUser));
+        sendNotification({
+            type: "unfollowed",
+            from: User.userName,
+            targetTitle: "Someone unfollowed you",
+            to: friend,
+            message: "unfollowed you. You can unfollow them back",
+            checked: false,
+            url: "/profile/" + User.userName,
+        });
     };
 
     const handleFollow = () => {
@@ -45,3 +65,4 @@ const Follow = ({ friend }: { friend: string }) => {
 };
 
 export default Follow;
+

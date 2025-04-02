@@ -1,26 +1,19 @@
-import { useEffect, useState } from "react";
 
+const useFilterQuery = () => {
 
-const useFilterQuery = <T,>(search: string) => {
-    const [query, setQuery] = useState<T | null>(null);
-
-    const filterSearchQuery = <T,>(search: string) => {
-        let queries: T | null = null;
-        if (search.startsWith("?")) {
-            search.slice(1).split("&").map(query => {
+    const filterQuery = <T,>(queries: string) => {
+        let searchObj: T | undefined = undefined;
+        if (queries.startsWith("?")) {
+            queries.slice(1).split("&").map(query => {
                 const result: { [key: string]: string } = {};
                 result[query.split("=")[0]] = query.split("=")[1];
-                queries = { ...queries, ...result } as T;
+                searchObj = { ...searchObj, ...result } as T;
             });
         }
-        setQuery(queries);
+        return searchObj as T | undefined;
     };
 
-    useEffect(() => {
-        filterSearchQuery(search);
-    }, [search]);
-
-    return { query };
+    return filterQuery;
 };
 
 export default useFilterQuery;

@@ -43,7 +43,7 @@ const usermedia = createSlice({
             state.media = action.payload;
         },
         addMdia: (state, action: { payload: mediaProps }) => {
-            state.media.data = [action.payload, ...state.media.data];
+            state.media.data.push(action.payload);
         },
         deleteMdia: (state, action: { payload: { _id: string } }) => {
             state.media.data = state.media.data.filter(

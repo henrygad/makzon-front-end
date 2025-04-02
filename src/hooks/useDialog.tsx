@@ -16,14 +16,6 @@ const useDialog = () => {
         }
     };
 
-    const handleStopScrolling = () => {
-        if (dialog) {
-            document.body.classList.add("overflow-y-hidden");
-        } else {
-            document.body.classList.remove("overflow-y-hidden");
-        }
-    };
-
     const handlePopState = () => {
         if (dialog) {
             setDialog(false);
@@ -31,10 +23,17 @@ const useDialog = () => {
     };
 
     useEffect(() => {
-        handleStopScrolling();
+        if (dialog) {
+            document.body.classList.add("overflow-y-hidden");
+        } else {
+            document.body.classList.remove("overflow-y-hidden");
+        }
 
         window.addEventListener("popstate", handlePopState);
-        return () => window.removeEventListener("popstate", handlePopState);
+        return () => {
+            document.body.classList.remove("overflow-y-hidden");
+            window.removeEventListener("popstate", handlePopState);
+        };
     }, [dialog]);
 
     return { dialog, handleDialog };

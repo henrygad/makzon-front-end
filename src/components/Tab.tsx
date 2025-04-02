@@ -1,12 +1,12 @@
 import { ReactElement, useEffect, useState } from "react";
-import { useLocation} from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 type Props = {
     arrOfTab: {
         id: string,
         tab: ReactElement,
     }[]
-    className: string    
+    className: string
 }
 
 
@@ -21,9 +21,9 @@ const Tab = ({ className, arrOfTab }: Props) => {
     const handleDisplayTab = (hashId: string) => {
         if (arrOfTab.map(tab => tab.id.trim().toLowerCase())
             .includes(hashId.trim().toLowerCase())) {
-                setCurrentTab(hashId);            
-        }else {
-            setCurrentTab(pre => pre ? pre : arrOfTab[0].id);            
+            setCurrentTab(hashId);
+        } else {
+            setCurrentTab(pre => pre ? pre : arrOfTab[0].id);
         }
     };
 
@@ -49,16 +49,12 @@ const Tab = ({ className, arrOfTab }: Props) => {
             arrOfTab &&
                 arrOfTab.length ?
                 arrOfTab.map(tab =>
-                    <div
-                        key={tab.id}
-                        id={tab.id}
-                        className={tab.id.trim().toLowerCase() === currentTab.trim().toLowerCase() ?
-                            "block" :
-                            "hidden"}>
+                    tab.id.trim().toLowerCase() === currentTab.trim().toLowerCase() ?
                         <Eachtab
+                            key={tab.id}
                             tab={tab.tab}
-                        />
-                    </div>
+                        /> :
+                        null
                 ) :
                 null
         }

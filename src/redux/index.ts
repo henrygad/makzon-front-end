@@ -2,6 +2,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import userProfileSlices from "./slices/userProfileSlices";
 import userBlogpostSlices from "./slices/userBlogpostSlices";
 import userMediaSlices from "./slices/userMediaSlices";
+import userNotificationSlices from "./slices/userNotificationSlices";
+
 import { useDispatch, useSelector } from "react-redux";
 
 const store = configureStore({
@@ -9,6 +11,7 @@ const store = configureStore({
         userProfileSlices,
         userBlogpostSlices,
         userMediaSlices,
+        userNotificationSlices
     },
 });
 

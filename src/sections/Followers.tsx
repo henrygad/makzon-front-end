@@ -6,7 +6,7 @@ const Followers = ({ followers }: { followers: string[] }) => {
 
 
   return (
-    <div className="space-y-6">
+    <section className="space-y-6">
       <div className="flex items-center justify-start gap-4 sticky top-0 px-1 py-2 shadow-sm">
         <span
           onClick={() => navigate(-1)}
@@ -29,7 +29,7 @@ const Followers = ({ followers }: { followers: string[] }) => {
             </span>
         }
       </div>
-    </div>
+    </section>
   );
 };
 

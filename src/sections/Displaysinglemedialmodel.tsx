@@ -13,7 +13,7 @@ const Displaysinglemedialmodel = () => {
         <Model
             id="single-image"
             children={
-                <div className="relative h-full w-full bg-white p-1">
+                <section className="relative h-full w-full bg-white p-1">
                     <button
                         className="absolute top-2 left-2 bg-white cursor-pointer z-20"
                         onClick={() => navigate(mediaSelectOptions?.negativeNavigate || "")}
@@ -35,7 +35,7 @@ const Displaysinglemedialmodel = () => {
                             className="h-full w-full object-contain"
                         />
                     }
-                </div>
+                </section>
             }
         />
     );

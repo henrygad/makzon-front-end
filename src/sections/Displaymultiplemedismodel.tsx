@@ -75,7 +75,7 @@ const Displaymediamultiplemodel = () => {
     <Model
       id="display-image-galary"
       children={
-        <div className="relative font-text shadow-sm bg-white">
+        <section className="relative font-text shadow-sm bg-white">
           <div className="flex justify-center items-center gap-2 border-b shadow-sm p-2">
             {/* header */}
             <h2 className="text-2xl">Image galary</h2>
@@ -116,7 +116,7 @@ const Displaymediamultiplemodel = () => {
               disabled={mediaSelections && !mediaSelections.length}
             />
           </div>
-        </div>
+        </section>
       }
     />
   );

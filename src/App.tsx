@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect } from "react";
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Loading from "./pages/Loading";
 import userProps from "./types/user.type";
 import { useAppDispatch, useAppSelector } from "./redux";
@@ -11,11 +11,19 @@ import {
   fetchSavedBlogposts,
 } from "./redux/slices/userBlogpostSlices";
 import mediaProps from "./types/file.type";
-import {
-  fetchMdia,
-} from "./redux/slices/userMediaSlices";
+import { fetchMdia } from "./redux/slices/userMediaSlices";
 import Displaymultiplemedismodel from "./sections/Displaymultiplemedismodel";
 import Displaysinglemedialmodel from "./sections/Displaysinglemedialmodel";
+import { fetchNotifications } from "./redux/slices/userNotificationSlices";
+import notificationProps from "./types/notification.type";
+import Header from "./sections/Header";
+import Footer from "./sections/Footer";
+import Notification from "./pages/Notification";
+import axios from "axios";
+import errorProps from "./types/error.type";
+import Cookies from "js-cookie";
+import "dotenv/config";
+
 const Treading = lazy(() => import("./pages/Treading"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Login = lazy(() => import("./pages/Login"));
@@ -24,115 +32,164 @@ const Profile = lazy(() => import("./pages/Profile"));
 const Createblogpost = lazy(() => import("./pages/Createblogpost"));
 const Blogpost = lazy(() => import("./pages/Blogpost"));
 const Updateprofile = lazy(() => import("./pages/Updateprofile"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Security = lazy(() => import("./pages/Security"));
+const Verifyuser = lazy(() => import("./pages/Verifyuser"));
 const Page404 = lazy(() => import("./pages/Page404"));
 
 const App = () => {
-  const navigate = useNavigate();
   const { data: User } = useAppSelector(
     (state) => state.userProfileSlices.userProfile
   );
   const appDispatch = useAppDispatch();
 
-  const handleFetchUserDatas = () => {
-    const userProfileData: userProps = JSON.parse(
-      localStorage.getItem("user") ||
-        JSON.stringify({
-          userName: "@henry_dev",
-          name: { familyName: "", givenName: "" },
-          dateOfBirth: "",
-          displayDateOfBirth: false,
-          displayEmail: "",
-          displayPhoneNumber: "",
-          website: "",
-          profession: "",
-          country: "",
-          sex: "",
-          bio: "",
-          login: true,
-        })
-    );
-
-    appDispatch(
-      fetchProfile({
-        data: userProfileData,
-        loading: false,
-        error: "",
-      })
-    );
-
-    if (userProfileData) {
-      /* fetching blogposts */
-      const userBlogpostsData: postProps[] = JSON.parse(
-        localStorage.getItem("blogposts") || "[]"
-      );
-      appDispatch(
-        fetchBlogposts({
-          data: userBlogpostsData,
-          loading: false,
-          error: "",
-        })
-      );
-
-      /* fetching draft posts */
-      const userDraftsData: postProps[] = JSON.parse(
-        localStorage.getItem("drafts") || "[]"
-      );
-      appDispatch(
-        fetchDrafts({
-          data: userDraftsData,
-          loading: false,
-          error: "",
-        })
-      );
-
-      /* fetching saves post */
-      const userSavedBlogpostsData: postProps[] = JSON.parse(
-        localStorage.getItem("saves") || "[]"
-      );
-      appDispatch(
-        fetchSavedBlogposts({
-          data: userSavedBlogpostsData,
-          loading: false,
-          error: "",
-        })
-      );
-
-      /* fetching media */
-      const userMediaData: mediaProps[] = JSON.parse(
-        localStorage.getItem("media") || "[]"
-      );
-      appDispatch(
-        fetchMdia({
-          data: userMediaData,         
-          loading: false,
-          error: "",
-        })
-      );
-    }
-  };
-
+  /* get client session */
   useEffect(() => {
-    handleFetchUserDatas();
+    axios(process.env.NODE_ENV + "/", {
+      baseURL: process.env.NODE_ENV + "/",
+      withCredentials: true,
+    })
+      .then(async (res) => {
+        const clientSession = (await res.data) as { sessionId: string };
+        appDispatch(
+          fetchProfile({
+            data: { ...User, sessionId: clientSession.sessionId },
+            loading: true,
+            error: "",
+          })
+        );
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    document.body.style.background = "#fafafab0";
+    return () => {
+      document.body.style.background = "#fafafab0";
+    };
   }, []);
 
+  /* get user profile data */
+  useEffect(() => {
+    axios(process.env.NODE_ENV + "/user", {
+      baseURL: process.env.NODE_ENV,
+      withCredentials: true,
+    })
+      .then(async (res) => {
+        const userData = (await res.data.data._doc) as userProps;
+
+        appDispatch(
+          fetchProfile({
+            data: { ...User, ...userData },
+            loading: false,
+            error: "",
+          })
+        );
+
+        //fetch user notifications
+        const userNotificationsData: notificationProps[] = JSON.parse(
+          localStorage.getItem("notifications") || "[]"
+        );
+        appDispatch(
+          fetchNotifications({
+            data: userNotificationsData,
+            loading: false,
+            error: "",
+          })
+        );
+
+        //fetch user blogposts
+        const userBlogpostsData: postProps[] = JSON.parse(
+          localStorage.getItem("blogposts") || "[]"
+        );
+        appDispatch(
+          fetchBlogposts({
+            data: userBlogpostsData,
+            loading: false,
+            error: "",
+          })
+        );
+
+        //fetch user draft posts
+        const userDraftsData: postProps[] = JSON.parse(
+          localStorage.getItem("drafts") || "[]"
+        );
+        appDispatch(
+          fetchDrafts({
+            data: userDraftsData,
+            loading: false,
+            error: "",
+          })
+        );
+
+        //fetch user saves post
+        const userSavedBlogpostsData: postProps[] = JSON.parse(
+          localStorage.getItem("saves") || "[]"
+        );
+        appDispatch(
+          fetchSavedBlogposts({
+            data: userSavedBlogpostsData,
+            loading: false,
+            error: "",
+          })
+        );
+
+        //fetch user media
+        const userMediaData: mediaProps[] = JSON.parse(
+          localStorage.getItem("media") || "[]"
+        );
+        appDispatch(
+          fetchMdia({
+            data: userMediaData,
+            loading: false,
+            error: "",
+          })
+        );
+      })
+      .catch((error) => {
+        const getError = error as errorProps;
+        const errorMsg: string = getError.response.data.message;
+        if (errorMsg.toLowerCase().includes("unauthorized")) {
+          appDispatch(
+            fetchProfile({
+              data: {
+                sessionId: User.sessionId,
+                userName: "",
+                email: "",
+                login: false,
+              } as userProps,
+              loading: true,
+              error: errorMsg,
+            })
+          );
+          Cookies.remove("makzonFrtendSession");
+        }
+      });
+
+  }, [User.login]);
+
   return (
-    <div>
+    <>
+      <Header />
       <Suspense fallback={<Loading />}>
         <Routes>
           <Route path="*" element={<Page404 />} />
-          <Route path="/" element={!User.login ? <Treading /> : <Navigate to={`/profile/${User.userName}`} /> } />
-          <Route path="/:author/:slug" element={<Blogpost />} />
           <Route
-            path="/register"
+            path="/"
             element={
               !User.login ? (
-                <Signup />
+                <Treading />
               ) : (
                 <Navigate to={`/profile/${User.userName}`} />
               )
             }
           />
-          <Route  
+          <Route path="/:author/:slug" element={<Blogpost />} />
+          <Route
+            path="signup"
+            element={!User.login ? <Signup /> : <Navigate to="/verify/user" />}
+          />
+          <Route
             path="/login"
             element={
               !User.login ? (
@@ -142,7 +199,16 @@ const App = () => {
               )
             }
           />
-
+          <Route
+            path="/verify/user"
+            element={
+              User.login && !User.userVerified ? (
+                <Verifyuser />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
           <Route
             path="/timeline"
             element={User.login ? <Timeline /> : <Navigate to="/login" />}
@@ -159,39 +225,24 @@ const App = () => {
             path="/profile/update"
             element={User.login ? <Updateprofile /> : <Navigate to="/login" />}
           />
+          <Route
+            path="/notification"
+            element={User.login ? <Notification /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/settings"
+            element={User.login ? <Settings /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/settings/security"
+            element={User.login ? <Security /> : <Navigate to="/login" />}
+          />
         </Routes>
       </Suspense>
-      {User.login ? (
-        <>
-          <div className="mt-20"></div>
-          <nav className="container fixed bottom-0 right-0 left-0 bg-white py-2 border-t">
-            {/* login bottom navigation */}
-            <ul className="flex items-center justify-between gap-6">
-              <li>
-                <button onClick={() => navigate("/timeline")}>Timeline</button>
-              </li>
-              <li>
-                <button onClick={() => navigate("/")}>Treading</button>
-              </li>
-              <li>
-                <button onClick={() => navigate("/createblogpost")}>
-                  Post
-                </button>
-              </li>
-              <li>
-                <button onClick={() => navigate("/profile/" + User.userName)}>
-                  Profile
-                </button>
-              </li>
-            </ul>
-          </nav>
-        </>
-      ) : (
-        <nav>{/* logout bottom navigation */}</nav>
-      )}  
+      <Footer />
       <Displaymultiplemedismodel />
       <Displaysinglemedialmodel />
-    </div>
+    </>
   );
 };
 

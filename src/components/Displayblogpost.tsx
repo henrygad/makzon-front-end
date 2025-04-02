@@ -23,13 +23,29 @@ type Props = {
     displayType: string;
     blogpost: postProps;
     updateBlogpost: ({ type, blogpost }: { type: "EDIT", blogpost: postProps } | { type: "DELETE", blogpost: { _id: string } }) => void;
+    autoViewComment?: {
+        blogpostParentComment: string | null,
+        targetComment: string,
+    }
+    autoViewLike?: {
+        comment?: {
+            blogpostParentComment: string | null,
+            targetComment: string,
+        }   
+        targetLike: string
+    }   
 };
 
-const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
+const Displayblogpost = ({
+    displayType,
+    blogpost,
+    updateBlogpost,
+    autoViewComment,
+    autoViewLike
+}: Props) => {
     const navigate = useNavigate();
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
     const appDispatch = useAppDispatch();
-
 
     const [authorInfor, setAuthorInfor] = useState<userProps | null>(null);
     const [comments, setComments] = useState<commentProps[]>([]);
@@ -41,8 +57,7 @@ const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
             name: "View post",
             icon: <span>V</span>,
             func: () => {
-                document.body.classList.remove("overflow-y-hidden");
-                handleToView(blogpost);                
+                handleToView(blogpost);
             },
         },
         {
@@ -61,14 +76,13 @@ const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
             func: () => console.log("Block"),
         },
     ];
-    
+
     const privateBlogpostMenu = [
         {
             name: "Edit",
             icon: <span>E</span>,
             func: () => {
                 handleToEdit(blogpost);
-                document.body.classList.remove("overflow-y-hidden");
             },
         },
         {
@@ -106,10 +120,6 @@ const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
         }));
     };
 
-    const truncate = (words: string, numWords: number) => {
-        return words.split(" ", numWords).join(" ");
-    };
-
     const handleSave = (_id: string) => {
         if ((User.saves || []).includes(_id)) {
             return;
@@ -126,7 +136,7 @@ const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
     const handleToView = (blogpost: postProps, hashId: string | null = null) => {
         if (displayType.trim().toLowerCase() === "_html") return;
         const url = "/" + blogpost.author + "/" + blogpost.slug + (hashId ? "/#" + hashId : "");
-        navigate(url, { state: { blogpost } });
+        navigate(url);
     };
 
     const handleToEdit = (blogpost: postProps) => {
@@ -202,7 +212,7 @@ const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
                                                 key={menu.name}
                                                 className="flex gap-1 cursor-pointer"
                                                 onClick={(e) => {
-                                                    menu.func();                                                    
+                                                    menu.func();
                                                     e.stopPropagation();
                                                 }}>
                                                 {menu.icon} <span>{menu.name}</span>
@@ -238,35 +248,42 @@ const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
                         dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}
                     ></span>
                 ) : (
-                    <span className="block indent-2 break-words hyphens-auto">
-                        {truncate(blogpost.body || "", 40)} {" "}
+                    <>
                         <span
-                            className="text-blue-700 text-sm font-semibold cursor-pointer"
+                            className="indent-2 break-words hyphens-auto line-clamp-3 cursor-pointer"
                             onClick={() => handleToView(blogpost)}
                         >
-                            Continue Reading...
+                            {blogpost.body}
                         </span>
-                    </span>
+                    </>
                 )}
-                {displayType === "TEXT" &&
+                {
                     blogpost.image.trim() ? (
-                    <Displayimage
-                        url={blogpost.image || ""}
-                        alt={blogpost.title || ""}
-                        useCancle={false}
-                        parentClassName="w-full h-full"
-                        className="w-full h-20 object-cover  cursor-pointer"
-
-                        placeHolder={
-                            <img
-                                src={imgplaceholder}
-                                className="absolute top-0 bottom-0 right-0 left-0 object-cover w-full h-20"
-                            />
-                        }
-                        onClick={() => handleToView(blogpost)}
-                    />
-                ) :
-                    null
+                        <Displayimage
+                            url={blogpost.image || ""}
+                            alt={blogpost.title || ""}
+                            useCancle={false}
+                            parentClassName="w-full h-full"
+                            className="w-full h-20 object-cover  cursor-pointer"
+                            placeHolder={
+                                <img
+                                    src={imgplaceholder}
+                                    className="absolute top-0 bottom-0 right-0 left-0 object-cover w-full h-20"
+                                    onClick={() => {
+                                        if (displayType === "TEXT") {
+                                            handleToView(blogpost);
+                                        }
+                                    }}
+                                />
+                            }
+                            onClick={() => {
+                                if (displayType === "TEXT") {
+                                    handleToView(blogpost);
+                                }
+                            }}
+                        />
+                    ) :
+                        null
                 }
                 <span className="space flex justify-center my-2">
                     <span className="border-2 min-w-10 max-w-10 rounded-md"></span>
@@ -319,7 +336,7 @@ const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
                 </button>
                 <span
                     id="blogpost-view-btn"
-                    className="flex items-center gap-2 cursor-pointer"
+                    className="flex items-center gap-2"
                 >
                     <Viewblogpost
                         blogpostRef={blogpostRef}
@@ -333,6 +350,7 @@ const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
                 </span>
             </span>
         </div>
+        
 
         {
             displayType.trim().toLowerCase() === "_html" ?
@@ -364,12 +382,15 @@ const Displayblogpost = ({ displayType, blogpost, updateBlogpost }: Props) => {
                                     blogpost={blogpost}
                                     comments={comments}
                                     setComments={setComments}
+                                    autoViewComment={autoViewComment}
+                                    autoViewLike={autoViewLike}
                                 />
                             },
                             {
                                 id: "blogpost-likes",
                                 tab: <Blogpostlikes
                                     likes={blogpost.likes || []}
+                                    autoViewLike={autoViewLike}
                                 />
                             },
                         ]}

@@ -36,14 +36,6 @@ const Dropmenu = ({ horizotal = false, children }: Props) => {
         }, 1);
     };
 
-    const handleStopScrolling = () => {
-        if (dropMenu) {
-            document.body.classList.add("overflow-y-hidden");
-        } else {
-            document.body.classList.remove("overflow-y-hidden");
-        }
-    };
-
     const handlePopState = () => {
         if (dropMenu) {
             setDropMenu(false);
@@ -51,10 +43,17 @@ const Dropmenu = ({ horizotal = false, children }: Props) => {
     };
 
     useEffect(() => {
-        handleStopScrolling();
+        if (dropMenu) {
+            document.body.classList.add("overflow-y-hidden");
+        } else {
+            document.body.classList.remove("overflow-y-hidden");
+        }
 
         window.addEventListener("popstate", handlePopState);
-        return () => window.removeEventListener("popstate", handlePopState);
+        return () => {
+            document.body.classList.remove("overflow-y-hidden");
+            window.removeEventListener("popstate", handlePopState);
+        };
     }, [dropMenu]);
 
     return <div

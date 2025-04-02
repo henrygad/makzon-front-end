@@ -2,6 +2,7 @@ import { useEffect} from "react";
 import postProps from "../types/post.type";
 import { useAppSelector } from "../redux";
 import { IoStatsChart } from "react-icons/io5";
+import useSendNotification from "../hooks/useSendNotification";
 
 type Props = {
     displayType: string,
@@ -12,6 +13,8 @@ type Props = {
 
 const Viewblogpost = ({ displayType, blogpostRef, blogpost, updateBlogpost }: Props) => {
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
+
+    const sendNotification = useSendNotification();
 
     const viewBlogpost = async (_id: string, sessionId: string) => {
         if (blogpost.views?.includes(sessionId)) {
@@ -26,6 +29,17 @@ const Viewblogpost = ({ displayType, blogpostRef, blogpost, updateBlogpost }: Pr
                 (blogpost: postProps) => blogpost._id === _id ? { ...updatedBlogpost } : blogpost
             )));
             updateBlogpost({ blogpost: updatedBlogpost, type: "EDIT" });
+
+            if (updatedBlogpost.views.length === 101) {
+                sendNotification({
+                    type: "viewed",
+                    from: "Makzon",
+                    to: blogpost.author || "",
+                    message: `${updatedBlogpost.views.length}+ have viewed your blogpost, ${blogpost.title || ""}`,
+                    checked: false,
+                    url: blogpost.author + "/" + blogpost.slug + "#blogpost-views",
+                });                
+            }
         }
 
     };

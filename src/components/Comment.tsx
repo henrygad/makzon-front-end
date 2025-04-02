@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import commentProps from "../types/comment.type";
 import { useAppSelector } from "../redux";
 import useDialog from "../hooks/useDialog";
+import useSendNotification from "../hooks/useSendNotification";
+import useTrimWords from "../hooks/useTrimWords";
 
 type Props = {
     blogpost: postProps,
@@ -14,12 +16,16 @@ type Props = {
     callBack?: (comment: commentProps) => void;
 };
 
-const Comment = ({ blogpost, replyId = null, parentComment, replying, setComments, callBack = ()=> null }: Props) => {    
+const Comment = ({ blogpost, replyId = null, parentComment, replying, setComments, callBack = () => null }: Props) => {
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
     const [commentBody, setCommentBody] = useState("");
     const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
     const { dialog, handleDialog } = useDialog();
+
+    const sendNotification = useSendNotification();
+
+    const trim = useTrimWords();
 
     const handleCommentUrl = () => {
         if (replyId && parentComment) {
@@ -27,10 +33,6 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
         } else {
             return "";
         }
-    };
-
-    const createNotivication = (comment: commentProps, replyId: string | null) => {
-        console.log(comment, replyId);
     };
 
     const addComment = (e: React.FormEvent) => {
@@ -47,7 +49,7 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
         };
 
         const Comments: postProps[] = JSON.parse(localStorage.getItem("comments") || "[]");
-        localStorage.setItem("comments", JSON.stringify([newComment, ...Comments]));        
+        localStorage.setItem("comments", JSON.stringify([newComment, ...Comments]));
         setComments(pre => {
             if (newComment.replyId === null) {
                 /* it a parent comment */
@@ -70,9 +72,40 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
         setCommentBody("");
         handleDialog();
         callBack(newComment);
-        createNotivication(newComment, replyId);
+
+        if (replyId) {
+            sendNotification({
+                type: "commented",
+                from: newComment.author,
+                targetTitle: trim(parentComment?.body.text || "", 20),
+                options: {
+                    type: "reply-comment",
+                    parentCommentId: replyId,
+                    targetCommentId: newComment._id
+                },
+                to: parentComment?.author || "",
+                message: `replyed to your comment, ${trim(parentComment?.body.text || "", 20)}`,
+                checked: false,
+                url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
+            });
+        } else {
+            sendNotification({
+                type: "commented",
+                from: newComment.author,
+                targetTitle: blogpost.title,
+                options: {
+                    type: "blogpost-comment",
+                    parentCommentId: null,
+                    targetCommentId: newComment._id
+                },
+                to: blogpost.author || "",
+                message: `commented on, ${blogpost.title}`,
+                checked: false,
+                url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
+            });
+        }
+
     };
-   
 
     const handleResizeTextArea = () => {
         if (textAreaRef.current) {
@@ -93,7 +126,7 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
     return (<>
         <FaRegComments
             size={!replyId ? 22 : 18}
-            onClick={ handleDialog}
+            onClick={handleDialog}
         />
         {dialog ?
             <div
@@ -101,17 +134,16 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
             >
                 <form
                     className="relative flex-1 flex items-end gap-4 pt-2  pb-6 px-6 bg-white border rounded-md shadow-2xl"
-                    onSubmit={addComment}
                 >
                     <span
                         className="absolute top-2 right-6 text-sm text-slate-500 font-text cursor-pointer"
-                        onClick={ handleDialog}
+                        onClick={handleDialog}
                     >
                         x
-                    </span>                    
+                    </span>
                     <span className="w-full space-y-3">
                         <span className="block font-sec text-slate-600 text-base font-semibold text-start">
-                            {replyId? "Reply": "Comment"}
+                            {replyId ? "Reply" : "Comment"}
                         </span>
                         {replyId ?
                             <span className="w-full flex gap-2 items-center bg-white">
@@ -146,7 +178,8 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                     <input
                         type="button"
                         value={"Send"}
-                        className="text-base font-text text-white bg-green-800 py-1.5 px-4 rounded-full shadow-sm shadow-green-100"
+                        className="text-base font-text text-white bg-green-800 py-1.5 px-4 rounded-full shadow-sm shadow-green-100 cursor-pointer"
+                        onClick={addComment}
                     />
                 </form>
             </div> :

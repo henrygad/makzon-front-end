@@ -43,16 +43,20 @@ const Userprofile = ({ User }: { User: userProps }) => {
             <Dialog
                 dialog={dialog}
                 handleDialog={handleDialog}
-                className="flex gap-8 border rounded-lg px-12 py-8 bg-white"
+                className="flex gap-8 border rounded-lg px-12 py-10 bg-white"
                 children={<>
                     <button
                         className="text-sm font-text text-slate-600 cursor-pointer"
                         onClick={() => {
-                            appDispatch(addToDisplaySingleMedia({ url: User.avatar, _id: "", type: "image", mime: "png" }));
-                            appDispatch(displayMediaOptions({
-                                negativeNavigate: "#",
-                            }));
-                            navigate("#single-image");
+                           handleDialog();
+                            const clear = setTimeout(() => {
+                                appDispatch(addToDisplaySingleMedia({ url: User.avatar, _id: "", type: "image", mime: "png" }));
+                                appDispatch(displayMediaOptions({
+                                    negativeNavigate: "#",
+                                }));
+                                navigate("#single-image");   
+                                clearTimeout(clear);
+                             }, 100);
                         }}
                     >
                         View Picture

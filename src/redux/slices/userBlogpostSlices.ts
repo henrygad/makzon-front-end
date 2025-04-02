@@ -45,7 +45,7 @@ const userBlogposts = createSlice({
             state.blogposts = action.payload;
         },
         addBlogpost: (state, action: { payload: postProps }) => {
-            state.blogposts.data = [action.payload, ...state.blogposts.data];
+            state.blogposts.data.push(action.payload);
         },
         editBlogpost: (state, action: { payload: postProps }) => {
             state.blogposts.data = state.blogposts.data.map(
@@ -61,7 +61,7 @@ const userBlogposts = createSlice({
             state.drafts = action.payload;
         },
         addDraft: (state, action: { payload: postProps }) => {
-            state.drafts.data = [action.payload, ...state.drafts.data];
+            state.drafts.data.push(action.payload);
         },
         editDraft: (state, action: { payload: postProps }) => {
             state.drafts.data = state.drafts.data.map(
@@ -77,7 +77,7 @@ const userBlogposts = createSlice({
             state.savedBlogposts = action.payload;
         },
         addSaveBlogposts: (state, action: { payload: postProps }) => {
-            state.savedBlogposts.data = [action.payload, ...state.savedBlogposts.data];
+            state.savedBlogposts.data.push(action.payload);
         },
         removeSaveBlogpost: (state, action: { payload: { _id: string } }) => {
             state.savedBlogposts.data = state.savedBlogposts.data.filter((item) => item._id !== action.payload._id);
@@ -90,4 +90,5 @@ export const {
     fetchDrafts, addDraft, editDraft, deleteDraft,
     fetchSavedBlogposts, addSaveBlogposts, removeSaveBlogpost
 } = userBlogposts.actions;
+
 export default userBlogposts.reducer;

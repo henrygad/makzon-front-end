@@ -1,17 +1,47 @@
+import { useEffect, useRef} from "react";
 import Displaycomment from "../components/Displaycomment";
 import commentProps from "../types/comment.type";
 import postProps from "../types/post.type";
+import { useLocation } from "react-router-dom";
+import useAutoNavigate from "../hooks/useAutoNavigate";
 
 type Props = {
   blogpost: postProps;
   comments: commentProps[];
   setComments: React.Dispatch<React.SetStateAction<commentProps[]>>;
+  autoViewComment?: {
+    blogpostParentComment: string | null,
+    targetComment: string,
+  }
+  autoViewLike?: {
+    comment?: {
+      blogpostParentComment: string | null;
+      targetComment: string;
+    };
+    targetLike: string;
+  };
 };
 
-const Blogpostcomments = ({ blogpost, comments, setComments }: Props) => {
+const Blogpostcomments = ({ blogpost, comments, setComments, autoViewComment, autoViewLike }: Props) => {
+  const location = useLocation();
+  const autoNavigate = useAutoNavigate();
+
+  const sectionRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (location.hash &&
+      location.hash.trim() === "#blogpost-comments" &&
+      sectionRef.current
+    ) {
+      autoNavigate(sectionRef.current);
+    }
+  }, [location.hash, sectionRef]);
+
+
   return (
-    <div>
-      <div>
+    <section ref={sectionRef}>
+      <div className="space-y-4">
+        {/* display normal comments */}
         {comments && comments.length ? (
           comments.map((comment) =>
             comment.replyId === null ? (
@@ -21,14 +51,16 @@ const Blogpostcomments = ({ blogpost, comments, setComments }: Props) => {
                 replyId={comment._id}
                 comment={comment}
                 setComments={setComments}
+                  autoViewComment={autoViewComment}
+                  autoViewLike={autoViewLike}
               />
             ) : null
           )
         ) : (
           <span>Be the first to comment</span>
-        )}
+        )}        
       </div>
-    </div>
+    </section>
   );
 };
 

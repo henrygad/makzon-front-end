@@ -17,7 +17,7 @@ type Props = {
 
 const Profileblogposts = ({ loading, blogposts, updateBlogpost }: Props) => {
 
-    return <>
+    return <section>
         <div className="border-b pb-1 mb-4">
             <span className="block text-base text-slate-400 font-sec mt-5">
                 Published {blogposts && blogposts.length || 0} articles
@@ -47,7 +47,7 @@ const Profileblogposts = ({ loading, blogposts, updateBlogpost }: Props) => {
                     <div>loading blogposts ...</div>
             }
         </div>
-    </>;
+    </section>;
 };
 
 export default Profileblogposts;

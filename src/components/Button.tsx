@@ -16,7 +16,7 @@ const Button = ({ id, fieldName, className, onClick = ()=> null, disabled }: Pro
 
     return <button
         id={id || ""}
-        className={`font-sec ${className} px-3 py-1 shadow border`}
+        className={`font-sec px-3 py-1 shadow border ${className}`}
         onClick={handleClick}
         disabled={disabled}
     >

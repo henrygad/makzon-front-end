@@ -4,7 +4,14 @@ import react from "@vitejs/plugin-react";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  server: {
+  server: { 
+   /*  proxy: {
+      "/api": {
+        target: "https://localhost:3000",
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\/api/, "")
+      },
+    }, */
     https: {
       key: "./cert/localhost-key.pem",
       cert: "./cert/localhost.pem",

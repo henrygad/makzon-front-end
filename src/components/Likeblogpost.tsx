@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import postProps from "../types/post.type";
 import { SlLike } from "react-icons/sl";
 import { useAppSelector } from "../redux";
+import useSendNotification from "../hooks/useSendNotification";
 
 
 type Props = {
@@ -14,6 +15,8 @@ const Likeblogpost = ({ blogpost, updateBlogpost }: Props) => {
     const [isLiked, setIsLiked] = useState<boolean>((blogpost.likes || []).includes(User.userName));
     const [animateLikeBtn, setAnimateLikeBtn] = useState(false);
 
+    const sendNotification = useSendNotification();
+
     const like = (_id: string, userName: string) => {
         const updatedBlogpost = {
             ...blogpost,
@@ -25,6 +28,19 @@ const Likeblogpost = ({ blogpost, updateBlogpost }: Props) => {
         )));
         updateBlogpost({blogpost: updatedBlogpost,  type: "EDIT"});
         setIsLiked(true);
+        
+        sendNotification({
+            type: "liked",
+            from: userName,
+            targetTitle: blogpost.title,
+            options: {
+                type: "blogpost-like",                           
+            },
+            to: blogpost.author || "",
+            message: `liked your blogpost, ${blogpost.title}`,
+            checked: false,
+            url: blogpost.author + "/" + blogpost.slug + "#blogpost-likes",
+        });
     };
 
     const unLike = (_id: string, userName: string) => {
