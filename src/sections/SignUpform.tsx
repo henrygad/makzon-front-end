@@ -10,13 +10,14 @@ import { useAppDispatch, useAppSelector } from "../redux";
 import { fetchProfile } from "../redux/slices/userProfileSlices";
 import Cookies from "js-cookie";
 import errorProps from "../types/error.type";
+import Googleloginbtn from "../components/Googleloginbtn";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const SignUpform = () => {
   const navigate = useNavigate();
   const { data: User } = useAppSelector(
     (state) => state.userProfileSlices.userProfile
-  );
+  );  
   const appDispatch = useAppDispatch();
 
   const [toggleHidePassword, setToggleHidePassword] = useState<string[]>([
@@ -29,12 +30,14 @@ const SignUpform = () => {
     register,
     handleSubmit,
     setValue,
+    watch,
     setError,
     formState: { errors },
   } = useForm<registrationProps>({ resolver: yupResolver(signUpValid) });
 
-  const handleRegistration = async (data: registrationProps) => {
-    if (loading) return;
+  const getInputValues = watch();
+
+  const handleRegistration = async (data: registrationProps) => {    
 
     try {
       setLoading(true);
@@ -50,8 +53,14 @@ const SignUpform = () => {
       if (registerData) {
         /* Log in user */
         const url = apiEndPont + "/auth/login";
-        const loginInfo: loginProps = { identity: data.userName, password: data.password };
-        const res = await axios.post(url, loginInfo, { baseURL: apiEndPont, withCredentials: true });
+        const loginInfo: loginProps = {
+          identity: data.userName,
+          password: data.password,
+        };
+        const res = await axios.post(url, loginInfo, {
+          baseURL: apiEndPont,
+          withCredentials: true,
+        });
 
         const loginData = (await res.data) as {
           userName: string;
@@ -138,7 +147,7 @@ const SignUpform = () => {
       <form
         id="signup-form"
         action=""
-        className="flex flex-col gap-4 font-text px-10 py-8 bg-white rounded transition-shadow hover:shadow-gray-700 hover:shadow-2xl"
+        className="flex flex-col gap-4 font-text transition-shadow hover:shadow-gray-700 hover:shadow-2xl  p-4 bg-white rounded"
         onSubmit={handleSubmit(handleRegistration)}
       >
         {/* title */}
@@ -289,8 +298,26 @@ const SignUpform = () => {
         <span className="block"></span>
         {/* button */}
         <span className="flex justify-center items-center">
-          <button className="flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg cursor-pointer">
-            {!loading ? "Sign up" : "Loading..."}
+          <button
+            className={`flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg
+            ${
+              !loading &&
+              getInputValues.comfirmPassword &&
+              getInputValues.password &&
+              getInputValues.email &&
+              getInputValues.userName
+                ? "cursor-pointer"
+                : "cursor-default opacity-30"
+            }`}
+            disabled={
+              loading ||
+              !getInputValues.comfirmPassword ||
+              !getInputValues.password ||
+              !getInputValues.email ||
+              !getInputValues.userName
+            }
+          >
+            {!loading ? "Create" : "Process..."}
           </button>
         </span>
         {/* alread have an account */}
@@ -303,16 +330,10 @@ const SignUpform = () => {
         {/* google login */}
         <span className="block space-y-4">
           <span className="flex justify-start items-center gap-3">
-            <span className="block flex-1 border rounded-md "></span> OR{" "}
-            <span className="block  flex-1 border rounded-md"></span>
+            <span className="block flex-1 border border-green-500 rounded-md "></span>  OR <span className="block flex-1 border border-green-500 rounded-md"></span>
           </span>
-          <span className="flex flex-col items-start">
-            <span className="border border-blue-200 px-6 py-2 rounded-md">
-              <a href={apiEndPont+"/auth/google"} className="flex ga-4 ">
-                <img src="" alt="" />
-                <span>Login With Google</span>
-              </a>
-            </span>
+          <span className="flex flex-col justify-center gap-1">   
+            <Googleloginbtn />
           </span>
         </span>
       </form>

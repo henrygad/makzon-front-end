@@ -51,19 +51,25 @@ const Verification = () => {
     }
   };
 
-  const verifyUserAccount = async ({ email, otp }: { email: string, otp: string }) => {
-    if (loading) return;
+  const verifyUserAccount = async ({
+    email,
+    otp,
+  }: {
+    email: string;
+    otp: string;
+  }) => {
+    if (loading || !OTP || !User.email) return;
 
     try {
       setLoading(true);
-      const url = apiEndPont+`/auth/verify?email=${email}&otp=${otp}`;
+      const url = apiEndPont + `/auth/verify?email=${email}&otp=${otp}`;
       const res = await axios(url, {
         baseURL: apiEndPont,
         withCredentials: true,
       });
       const verificationData = await res.data;
       if (verificationData) {
-        navigate("/profile/"+User.userName);        
+        navigate("/profile/" + User.userName);
       }
     } catch (error) {
       const getError = error as errorProps;
@@ -89,7 +95,7 @@ const Verification = () => {
 
   useEffect(() => {
     if (location.search) {
-      const getQueries = query<{ email: string, otp: string }>(location.search);
+      const getQueries = query<{ email: string; otp: string }>(location.search);
       if (getQueries) {
         setOTP(getQueries.otp);
         verifyUserAccount(getQueries);
@@ -103,11 +109,13 @@ const Verification = () => {
         id="email-verification-form"
         action=""
         onSubmit={handleFormVerification}
-        className="flex flex-col gap-4 font-text px-10 py-8 rounded transition-shadow hover:shadow-gray-700 hover:shadow-2xl bg-white"
+        className="flex flex-col gap-4 font-text p-4 rounded transition-shadow hover:shadow-gray-700 hover:shadow-2xl bg-white"
       >
+        {/* title */}
         <span className="flex justify-center">
-          <h2 className="font-prim text-2xl">Verify account</h2>
+          <h2 className="font-prim text-4xl">Verify account</h2>
         </span>
+        {/* email input */}
         <label htmlFor="email" className="w-full flex flex-col gap-2">
           <span className="text-base">
             Email <span className="text-red-500">*</span>
@@ -129,6 +137,7 @@ const Verification = () => {
             ) : null}
           </span>
         </label>
+        {/* opt input */}
         <label htmlFor="opt" className="w-full flex flex-col gap-2">
           <span className="text-base">
             OTP <span className="text-red-500">*</span>
@@ -154,11 +163,13 @@ const Verification = () => {
           {error ? <p className="text-xs text-red-600"> {error} </p> : null}
         </label>
         <span className="block"></span>
+        {/* button */}
         <span className="w-full flex">
           <button
-            className={`flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg ${loading || !User.email || !OTP ? "opacity-30" : "cursor-pointer"
+            className={`flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg 
+              ${
+                loading || !User.email || !OTP ? "opacity-30" : "cursor-pointer"
               } `}
-            disabled={loading || !OTP || !User.email}
           >
             {!loading ? "Verify account" : "Process..."}
           </button>

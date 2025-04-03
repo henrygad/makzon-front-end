@@ -10,11 +10,12 @@ import { fetchProfile } from "../redux/slices/userProfileSlices";
 import { useAppDispatch, useAppSelector } from "../redux";
 import Cookies from "js-cookie";
 import { loginProps } from "../types/registration.types";
+import Googleloginbtn from "../components/Googleloginbtn";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 
 const Loginform = () => {
-  const {data: User} = useAppSelector((state) => state.userProfileSlices.userProfile);
+  const { data: User } = useAppSelector((state) => state.userProfileSlices.userProfile);
   const appDispatch = useAppDispatch();
   const [toggleHidePassword, setToggleHidePassword] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -25,8 +26,10 @@ const Loginform = () => {
     handleSubmit,
     setValue,
     setError,
+    watch,
     formState: { errors },
   } = useForm<loginProps>({ resolver: yupResolver(logInValid) });
+  const getInputValues = watch();
 
   const handleLoginForm = async (data: loginProps) => {
     if (loading) return;
@@ -92,12 +95,13 @@ const Loginform = () => {
         id="login-form"
         action=""
         onSubmit={handleSubmit(handleLoginForm)}
-        className="flex flex-col gap-4 font-text px-10 py-8 rounded transition-shadow hover:shadow-gray-700 hover:shadow-2xl bg-white"
+        className="flex flex-col gap-4 font-text transition-shadow hover:shadow-gray-700 hover:shadow-2xl  p-4 bg-white rounded"
       >
         {/* title */}
         <span className="flex justify-center">
-          <h2 className="font-prim text-2xl">Log in</h2>
+          <h2 className="font-prim text-4xl">Wellcome back</h2>
         </span>
+        {/* identity */}
         <label htmlFor="identity" className="w-full flex flex-col gap-2">
           <span className="text-base">User name / Email <span className="text-red-500">*</span></span>
           <input
@@ -116,6 +120,7 @@ const Loginform = () => {
             </p>
           )}
         </label>
+        {/* password */}
         <label htmlFor="password" className="w-full flex flex-col gap-2">
           <span className="text-base">Password <span className="text-red-500">*</span></span>
           <span className="flex-1 relative">
@@ -133,9 +138,9 @@ const Loginform = () => {
               className=" absolute top-1/2 -translate-y-1/2 right-2 cursor-pointer"
             >
               {!toggleHidePassword ? (
-                <FaRegEyeSlash size={18} />
-              ) : (
                 <FaRegEye size={16} />
+              ) : (
+                <FaRegEyeSlash size={18} />
               )}
             </span>
           </span>
@@ -147,21 +152,30 @@ const Loginform = () => {
           )}
         </label>
         <span className="block"></span>
-        {/*login button */}
-        <span className="flex justify-center items-center">
+        {/*login button and forget password*/}
+        <span className="flex  flex-col justify-center gap-0.5">          
           <button
-            className="flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg cursor-pointer"
+            className={`flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg
+            ${!loading &&
+                getInputValues.password &&
+                getInputValues.identity ?
+                "cursor-pointer"
+                : "cursor-default opacity-30"
+              }`}
+            disabled={
+              loading ||
+              !getInputValues.password ||
+              !getInputValues.identity
+            }
           >
-            {!loading ? "Log in" : "Loading..."}
+            {!loading ? "Log in" : "Process..."}
           </button>
-        </span>
-        {/*  forget passwoord */}
-        <span className="w-full flex justify-center items-center">
+
           <input
             id="forget-password"
             type="button"
             value="Forget password"
-            className="font-text text-xs text-green-500 cursor-pointer"
+            className="font-text text-xs text-red-500 cursor-pointer"
             onClick={() => navigate("/password")}
           />
         </span>
@@ -175,17 +189,10 @@ const Loginform = () => {
         {/* google login */}
         <span className="block space-y-4">
           <span className="flex justify-start items-center gap-3">
-            <span className="block flex-1 border rounded-md "></span>  OR <span className="block  flex-1 border rounded-md"></span>
+            <span className="block flex-1 border border-green-500 rounded-md "></span>  OR <span className="block flex-1 border border-green-500 rounded-md"></span>
           </span>
-          <span className="flex flex-col items-start">
-            <button
-              className="border border-blue-200 px-6 py-2 rounded-md"
-            >
-              <a href="http://" className="flex ga-4 ">
-                <img src="" alt="" />
-                <span>Login With Google</span>
-              </a>
-            </button>
+          <span className="flex flex-col justify-center gap-1">
+           < Googleloginbtn />
           </span>
         </span>
       </form>

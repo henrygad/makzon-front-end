@@ -5,7 +5,7 @@ import Verification from "../sections/Verification";
 const Verifyuser = () => {
 
     return (
-        <>
+        <div className="min-h-screen bg-[#fafafab0]">
             <header className="container py-10">
                 <div className="flex justify-center items-center mb-2">
                     <Logo
@@ -32,7 +32,7 @@ const Verifyuser = () => {
                     </button>
                 </div>
             </footer>
-        </>
+        </div>
     );
 };
 

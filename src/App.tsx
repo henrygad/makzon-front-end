@@ -62,11 +62,6 @@ const App = () => {
       .catch((err) => {
         console.log(err);
       });      
-
-    document.body.style.background = "#fafafab0";
-    return () => {
-      document.body.style.background = "#fafafab0";
-    };
   }, []);
 
   /* get user profile data */

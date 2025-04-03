@@ -4,7 +4,7 @@ import Logo from "../components/Logo";
 
 const Signup = () => {
   return (
-    <>
+    <div className="min-h-screen bg-[#fafafab0]">
       <header className="container py-10">
         <div className="flex justify-center items-center mb-2">
           <Logo
@@ -31,7 +31,7 @@ const Signup = () => {
           </button>
         </div>
       </footer>
-    </>
+    </div>
   );
 };
 
