@@ -9,6 +9,8 @@ import errorProps from "../types/error.type";
 import { fetchProfile } from "../redux/slices/userProfileSlices";
 import { useAppDispatch, useAppSelector } from "../redux";
 import Cookies from "js-cookie";
+import { loginProps } from "../types/registration.types";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 
 const Loginform = () => {
@@ -24,20 +26,19 @@ const Loginform = () => {
     setValue,
     setError,
     formState: { errors },
-  } = useForm({ resolver: yupResolver(logInValid) });
+  } = useForm<loginProps>({ resolver: yupResolver(logInValid) });
 
-  const handleLoginForm = async (data: { identity: string, password: string }) => {
+  const handleLoginForm = async (data: loginProps) => {
     if (loading) return;
 
     try {
       setLoading(true);
 
-      const url = "https://localhost:3000/api/auth/login";
-      const res = await axios.post(url, data,
-        {
-          baseURL: "https://localhost:3000/api/auth/login",
-          withCredentials: true,
-        }
+      const url = apiEndPont + "/auth/login";
+      const res = await axios.post(
+        url,
+        data,
+        { baseURL: apiEndPont, withCredentials: true }
       );
       const loginData = await res.data as { userName: string, email: string, };
 

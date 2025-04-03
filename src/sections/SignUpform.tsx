@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
@@ -6,18 +5,24 @@ import { FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
 import signUpValid from "../validators/signUpValid";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
-import registrationProps from "../types/registration.types";
+import registrationProps, { loginProps } from "../types/registration.types";
 import { useAppDispatch, useAppSelector } from "../redux";
 import { fetchProfile } from "../redux/slices/userProfileSlices";
 import Cookies from "js-cookie";
 import errorProps from "../types/error.type";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const SignUpform = () => {
   const navigate = useNavigate();
-  const {data: User} = useAppSelector((state) => state.userProfileSlices.userProfile);
+  const { data: User } = useAppSelector(
+    (state) => state.userProfileSlices.userProfile
+  );
   const appDispatch = useAppDispatch();
 
-  const [toggleHidePassword, setToggleHidePassword] = useState<string[]>(["password", "comfirmPassword"]);
+  const [toggleHidePassword, setToggleHidePassword] = useState<string[]>([
+    "password",
+    "comfirmPassword",
+  ]);
   const [loading, setLoading] = useState(false);
 
   const {
@@ -26,7 +31,7 @@ const SignUpform = () => {
     setValue,
     setError,
     formState: { errors },
-  } = useForm({ resolver: yupResolver(signUpValid) });
+  } = useForm<registrationProps>({ resolver: yupResolver(signUpValid) });
 
   const handleRegistration = async (data: registrationProps) => {
     if (loading) return;
@@ -35,37 +40,54 @@ const SignUpform = () => {
       setLoading(true);
 
       /* register user */
-      const url = "https://localhost:3000/api/auth/register";
-      const res = await axios.post(url, data);
+      const url = apiEndPont + "/auth/register";
+      const res = await axios.post(url, data, {
+        baseURL: apiEndPont,
+        withCredentials: true,
+      });
       const registerData = await res.data;
 
       if (registerData) {
         /* Log in user */
-        const url = "https://localhost:3000/api/auth/login";
-        const res = await axios.post(url,
-          { identity: data.userName, password: data.password },
-          {
-            baseURL: "https://localhost:3000/api/auth/login",
-            withCredentials: true,
-          });
-        const loginData = await res.data as { userName: string, email: string, };
-        
-        if (loginData) {
+        const url = apiEndPont + "/auth/login";
+        const loginInfo: loginProps = { identity: data.userName, password: data.password };
+        const res = await axios.post(url, loginInfo, { baseURL: apiEndPont, withCredentials: true });
 
+        const loginData = (await res.data) as {
+          userName: string;
+          email: string;
+        };
+
+        if (loginData) {
           // update user profile
-          appDispatch(fetchProfile({
-            data: {...User, userName: loginData.userName, email: loginData.email, login: true},
-            loading: false,
-            error: "",
-          }));
+          appDispatch(
+            fetchProfile({
+              data: {
+                ...User,
+                userName: loginData.userName,
+                email: loginData.email,
+                login: true,
+              },
+              loading: false,
+              error: "",
+            })
+          );
 
           // set cookie
-          Cookies.set("makzonFrtendSession",
-             JSON.stringify({ userName: loginData.userName, email: loginData.email, login: true, sessionId: User.sessionId }), {
-            expires: 1, // Cookie expires in 1 days
-            secure: true, // Ensures the cookie is only sent over HTTPS
-            sameSite: "Strict", // Prevents cross-site request forgery (adjust as needed)
-          });
+          Cookies.set(
+            "makzonFrtendSession",
+            JSON.stringify({
+              userName: loginData.userName,
+              email: loginData.email,
+              login: true,
+              sessionId: User.sessionId,
+            }),
+            {
+              expires: 1, // Cookie expires in 1 days
+              secure: true, // Ensures the cookie is only sent over HTTPS
+              sameSite: "Strict", // Prevents cross-site request forgery (adjust as needed)
+            }
+          );
 
           // navigate to user verification page
           navigate("/verify/user");
@@ -124,13 +146,17 @@ const SignUpform = () => {
           <h2 className="font-prim text-4xl">Create a new account</h2>
         </span>
         <label htmlFor="username" className="w-full flex flex-col gap-2">
-          <span className="text-base">User name <span className="text-red-500">*</span></span>
+          <span className="text-base">
+            User name <span className="text-red-500">*</span>
+          </span>
           <input
             autoComplete="true"
             id="username"
             type="text"
             placeholder="User name"
-            className={`flex-1 text-sm p-2 bg-inherit border border-green-500 rounded-md ${errors.userName ? "border-red-600 outline-red-600" : ""}`}
+            className={`flex-1 text-sm p-2 bg-inherit border border-green-500 rounded-md ${
+              errors.userName ? "border-red-600 outline-red-600" : ""
+            }`}
             {...register("userName")}
           />
           {errors.userName && (
@@ -141,14 +167,17 @@ const SignUpform = () => {
           )}
         </label>
         <label htmlFor="email" className="w-full flex flex-col gap-2">
-          <span className="text-base">Email <span className="text-red-500">*</span></span>
+          <span className="text-base">
+            Email <span className="text-red-500">*</span>
+          </span>
           <input
             autoComplete="true"
             id="email"
             type="email"
             placeholder="Email"
-            className={`flex-1 text-sm p-2 bg-inherit border border-green-500 rounded-md ${errors.email ? "border-red-600 outline-red-600" : ""
-              }`}
+            className={`flex-1 text-sm p-2 bg-inherit border border-green-500 rounded-md ${
+              errors.email ? "border-red-600 outline-red-600" : ""
+            }`}
             {...register("email")}
           />
           {errors.email && (
@@ -159,21 +188,29 @@ const SignUpform = () => {
           )}
         </label>
         <label htmlFor="password" className="w-full flex flex-col gap-2">
-          <span className="text-base">Password <span className="text-red-500">*</span></span>
+          <span className="text-base">
+            Password <span className="text-red-500">*</span>
+          </span>
           <span className="flex-1">
             <span className="relative w-full">
               <input
                 autoComplete="true"
                 id="password"
-                type={toggleHidePassword.includes("password") ? "password" : "text"}
+                type={
+                  toggleHidePassword.includes("password") ? "password" : "text"
+                }
                 placeholder="Password"
-                className={`w-full text-sm p-2 bg-inherit border border-green-500 rounded-md ${errors.password ? "border-red-600 outline-red-600" : ""}`}
+                className={`w-full text-sm p-2 bg-inherit border border-green-500 rounded-md ${
+                  errors.password ? "border-red-600 outline-red-600" : ""
+                }`}
                 {...register("password")}
               />
               <span
                 onClick={() =>
-                  setToggleHidePassword(pre =>
-                    pre.includes("password") ? pre.filter(item => item !== "password") : [...pre, "password"]
+                  setToggleHidePassword((pre) =>
+                    pre.includes("password")
+                      ? pre.filter((item) => item !== "password")
+                      : [...pre, "password"]
                   )
                 }
                 className=" absolute top-1/2 -translate-y-1/2 right-2 cursor-pointer"
@@ -203,23 +240,34 @@ const SignUpform = () => {
             </p>
           )}
         </label>
-        <label htmlFor="comfirm-password" className="w-full flex flex-col gap-2">
-          <span className="text-base">Comfirm Password <span className="text-red-500">*</span></span>
+        <label
+          htmlFor="comfirm-password"
+          className="w-full flex flex-col gap-2"
+        >
+          <span className="text-base">
+            Comfirm Password <span className="text-red-500">*</span>
+          </span>
           <span className="flex-1 relative">
             <input
               autoComplete="true"
               id="comfirm-password"
               type={
-                toggleHidePassword.includes("comfirmPassword") ? "password" : "text"
+                toggleHidePassword.includes("comfirmPassword")
+                  ? "password"
+                  : "text"
               }
               placeholder="Comfirm password"
-              className={`w-full text-sm p-2 bg-inherit border border-green-500 rounded-md ${errors.comfirmPassword ? "border-red-600 outline-red-600" : ""}`}
+              className={`w-full text-sm p-2 bg-inherit border border-green-500 rounded-md ${
+                errors.comfirmPassword ? "border-red-600 outline-red-600" : ""
+              }`}
               {...register("comfirmPassword")}
             />
             <span
               onClick={() =>
-                setToggleHidePassword(pre =>
-                  pre.includes("comfirmPassword") ? pre.filter(item => item !== "comfirmPassword") : [...pre, "comfirmPassword"]
+                setToggleHidePassword((pre) =>
+                  pre.includes("comfirmPassword")
+                    ? pre.filter((item) => item !== "comfirmPassword")
+                    : [...pre, "comfirmPassword"]
                 )
               }
               className=" absolute top-1/2 -translate-y-1/2 right-2 cursor-pointer"
@@ -241,9 +289,7 @@ const SignUpform = () => {
         <span className="block"></span>
         {/* button */}
         <span className="flex justify-center items-center">
-          <button
-            className="flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg cursor-pointer"
-          >
+          <button className="flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg cursor-pointer">
             {!loading ? "Sign up" : "Loading..."}
           </button>
         </span>
@@ -257,17 +303,16 @@ const SignUpform = () => {
         {/* google login */}
         <span className="block space-y-4">
           <span className="flex justify-start items-center gap-3">
-            <span className="block flex-1 border rounded-md "></span>  OR <span className="block  flex-1 border rounded-md"></span>
+            <span className="block flex-1 border rounded-md "></span> OR{" "}
+            <span className="block  flex-1 border rounded-md"></span>
           </span>
           <span className="flex flex-col items-start">
-            <button
-              className="border border-blue-200 px-6 py-2 rounded-md"
-            >
-              <a href="http://" className="flex ga-4 ">
+            <span className="border border-blue-200 px-6 py-2 rounded-md">
+              <a href={apiEndPont+"/auth/google"} className="flex ga-4 ">
                 <img src="" alt="" />
                 <span>Login With Google</span>
               </a>
-            </button>
+            </span>
           </span>
         </span>
       </form>

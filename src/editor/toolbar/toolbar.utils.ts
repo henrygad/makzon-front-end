@@ -40,7 +40,7 @@ export const deleteAll = (inputRef: RefObject<HTMLDivElement | null>) => {
         const firstSpan_ele = inputRef.current.firstElementChild;
         if (firstSpan_ele) {
             inputRef.current.innerHTML = "";
-            addInitialSpans(inputRef, { createNew: true, data: "" });
+            addInitialSpans(inputRef);
             displayPlaceholder(inputRef);
             addHistory(inputRef.current.innerHTML); // add history
         }

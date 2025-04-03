@@ -13,9 +13,9 @@ type InitialState = {
 const initialState: InitialState = {
   userProfile: {
     data: (() => {
-      const loginUserData: userprops = JSON.parse(Cookies.get("makzonFrtendSession") || JSON.stringify({ userName: "", email: "", login: false }));
+      const loginUserData: userprops = JSON.parse(Cookies.get("makzonFrtendSession") || JSON.stringify({ userName: "", email: "", login: false, sessionId: "" }));
       if (loginUserData) {
-        return { ...loginUserData, displayPhoneNumber: "" };
+        return loginUserData;
       }
       return loginUserData;
     })(),

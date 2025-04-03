@@ -22,7 +22,7 @@ import Notification from "./pages/Notification";
 import axios from "axios";
 import errorProps from "./types/error.type";
 import Cookies from "js-cookie";
-import "dotenv/config";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Treading = lazy(() => import("./pages/Treading"));
 const Signup = lazy(() => import("./pages/Signup"));
@@ -45,12 +45,12 @@ const App = () => {
 
   /* get client session */
   useEffect(() => {
-    axios(process.env.NODE_ENV + "/", {
-      baseURL: process.env.NODE_ENV + "/",
+    axios(apiEndPont + "/", {
+      baseURL: apiEndPont + "/",
       withCredentials: true,
     })
       .then(async (res) => {
-        const clientSession = (await res.data) as { sessionId: string };
+        const clientSession = (await res.data) as { sessionId: string };        
         appDispatch(
           fetchProfile({
             data: { ...User, sessionId: clientSession.sessionId },
@@ -61,7 +61,7 @@ const App = () => {
       })
       .catch((err) => {
         console.log(err);
-      });
+      });      
 
     document.body.style.background = "#fafafab0";
     return () => {
@@ -71,20 +71,38 @@ const App = () => {
 
   /* get user profile data */
   useEffect(() => {
-    axios(process.env.NODE_ENV + "/user", {
-      baseURL: process.env.NODE_ENV,
+    axios(apiEndPont + "/user", {
+      baseURL: apiEndPont,
       withCredentials: true,
     })
       .then(async (res) => {
         const userData = (await res.data.data._doc) as userProps;
-
+        
         appDispatch(
           fetchProfile({
-            data: { ...User, ...userData },
+            data: { ...User, ...userData, login: true },
             loading: false,
             error: "",
           })
-        );
+        );       
+
+        if (User.login === false) {
+          // set a new cookie
+          Cookies.set(
+            "makzonFrtendSession",
+            JSON.stringify({
+              userName: userData.userName,
+              email: userData.email,
+              login: true,
+              sessionId: User.sessionId,
+            }),
+            {
+              expires: 1, // Cookie expires in 1 days
+              secure: true, // Ensures the cookie is only sent over HTTPS
+              sameSite: "Strict", // Prevents cross-site request forgery (adjust as needed)
+            }
+          );
+        }
 
         //fetch user notifications
         const userNotificationsData: notificationProps[] = JSON.parse(
@@ -167,6 +185,7 @@ const App = () => {
       });
 
   }, [User.login]);
+
 
   return (
     <>

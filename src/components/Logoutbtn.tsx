@@ -1,10 +1,17 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useAppDispatch, useAppSelector } from "../redux";
+import { fetchProfile } from "../redux/slices/userProfileSlices";
+import userProps from "../types/user.type";
+
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Logoutbtn = () => {
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const appDispatch = useAppDispatch();
+  const { data: User } = useAppSelector((state) => state.userProfileSlices.userProfile);
+  const [loading, setLoading] = useState(false);
 
   const handleLogOut = async () => {
     if (loading) return;
@@ -12,12 +19,26 @@ const Logoutbtn = () => {
     try {
       setLoading(true);
 
-      const url = "http://localhost:3000/api/logout";
-      const res = await axios(url);
-      const body = await res.data;
-      console.log(body);
+      const url = apiEndPont+"/auth/logout";
+      const res = await axios(url, {
+        baseURL: apiEndPont + "/",
+        withCredentials: true,
+      });
+      const logoutData = await res.data;      
+      if (logoutData) {
+        appDispatch(fetchProfile({
+          data: {
+            sessionId: User.sessionId,
+            userName: "",
+            email: "",
+            login: false,
+          } as userProps,
+          loading: true,
+          error: "",
+        }));
+        navigate("/login");        
+      }
 
-      navigate("/login");
     } catch (error) {
       console.error(error);
     } finally {

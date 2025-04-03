@@ -37,7 +37,7 @@ const App = ({
         clearHistorTimeOut = setTimeout(() => {
             const element = editorRef.current?.innerHTML || "";
             addHistory(element); // add history
-        }, 400);
+        }, 400) as unknown as number;
     };
 
     /* func that listen for global changes */

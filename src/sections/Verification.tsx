@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../redux";
 import errorProps from "../types/error.type";
 import useFilterQuery from "../hooks/useFilterQuery";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Verification = () => {
   const location = useLocation();
@@ -15,7 +16,7 @@ const Verification = () => {
   const [OTP, setOTP] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const intervalRef = useRef<number>(undefined);
+  const intervalRef = useRef<number | undefined>(undefined);
   const navigate = useNavigate();
 
   const handleHideEmail = (email: string) => {
@@ -28,7 +29,7 @@ const Verification = () => {
     setTiming(30);
     intervalRef.current = setInterval(() => {
       setTiming((pre) => (pre ? pre - 1 : 30));
-    }, 1000);
+    }, 1000) as unknown as number;
   };
 
   const resendOTP = async () => {
@@ -36,9 +37,9 @@ const Verification = () => {
     try {
       handleStartTiming();
 
-      const url = "https://localhost:3000/api/auth/opt";
+      const url = apiEndPont + "/auth/opt";
       const res = await axios(url, {
-        baseURL: "https://localhost:3000/api/",
+        baseURL: apiEndPont,
         withCredentials: true,
       });
       console.log(res);
@@ -50,18 +51,20 @@ const Verification = () => {
     }
   };
 
-  const verifyUserAccount = async ({ email, otp }: { email: string, otp: string }) => { 
-    if ( loading) return;
+  const verifyUserAccount = async ({ email, otp }: { email: string, otp: string }) => {
+    if (loading) return;
 
-    try {      
+    try {
       setLoading(true);
-      const url = `https://localhost:3000/api/auth/verify?email=${email}&otp=${otp}`;
+      const url = apiEndPont+`/auth/verify?email=${email}&otp=${otp}`;
       const res = await axios(url, {
-        baseURL: "https://localhost:3000/api/",
+        baseURL: apiEndPont,
         withCredentials: true,
       });
-      console.log(res.data);
-      navigate("/");
+      const verificationData = await res.data;
+      if (verificationData) {
+        navigate("/profile/"+User.userName);        
+      }
     } catch (error) {
       const getError = error as errorProps;
       const errorMsg: string = getError.response.data.message;
@@ -74,7 +77,7 @@ const Verification = () => {
 
   const handleFormVerification = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-     verifyUserAccount({ email: User.email, otp: OTP });
+    verifyUserAccount({ email: User.email, otp: OTP });
   };
 
   useEffect(() => {
@@ -84,12 +87,12 @@ const Verification = () => {
     }
   }, [timing]);
 
-  useEffect(() => { 
-    if (location.search) {     
+  useEffect(() => {
+    if (location.search) {
       const getQueries = query<{ email: string, otp: string }>(location.search);
       if (getQueries) {
-        setOTP(getQueries.otp);      
-        verifyUserAccount(getQueries);        
+        setOTP(getQueries.otp);
+        verifyUserAccount(getQueries);
       }
     }
   }, [location.search]);
@@ -153,9 +156,8 @@ const Verification = () => {
         <span className="block"></span>
         <span className="w-full flex">
           <button
-            className={`flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg ${
-              loading || !User.email || !OTP ? "opacity-30" : "cursor-pointer"
-            } `}
+            className={`flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg ${loading || !User.email || !OTP ? "opacity-30" : "cursor-pointer"
+              } `}
             disabled={loading || !OTP || !User.email}
           >
             {!loading ? "Verify account" : "Process..."}
