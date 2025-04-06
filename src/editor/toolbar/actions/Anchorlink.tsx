@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { GoLink, GoUnlink } from "react-icons/go";
 import { anchorLinkProps, getSelectionProps } from "../../type";
 import inlineCmd from "../../commands/inline.cmd";
-import Dialog from "../../components/Model";
+import Model from "../../components/Model";
 import { Button } from "../../components/Button";
 import { useNavigate } from "react-router-dom";
 
@@ -52,7 +52,7 @@ const Anchorlink = ({
         handleStayHighlidted(false);
         setLink("");
         setIsHighlight(false);
-        navigate("");
+        navigate(-1);
     };
 
     useEffect(() => {
@@ -82,7 +82,7 @@ const Anchorlink = ({
                     }}>
                     <GoLink size={16} />
                 </button>
-                <Dialog
+                <Model
                     id="create-link"
                     children={
                         <form
@@ -90,7 +90,7 @@ const Anchorlink = ({
                             className="relative space-y-3 p-6 rounded shadow-sm bg-white z-0"
                         >
                             <span
-                                onClick={() => navigate("")}
+                                onClick={() => navigate(-1)}
                                 className="absolute top-3 right-3 text-red-800 font-bold text-sm cursor-pointer"
                             >
                                 X

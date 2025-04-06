@@ -13,8 +13,9 @@ import Texteditor from "../editor/App";
 import Customselection from "../components/Customselection";
 import { Countries, Professions } from "../assert/date";
 import { Button } from "../components/Button";
-import mediaProps from "../types/file.type";
-import { addMdia, addToDisplaySingleMedia, displayMediaOptions } from "../redux/slices/userMediaSlices";
+import { addMedia} from "../redux/slices/userMediaSlices";
+import axios from "axios";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Updateprofile = () => {
     const navigate = useNavigate();
@@ -25,8 +26,6 @@ const Updateprofile = () => {
         (state) => state.userMediaSlices.media
     );
     const appDispatch = useAppDispatch();
-
-    const { getLocalFiles } = useGetLocalFiles();
 
     const [userData, setUserData] = useState({
         userName: "",
@@ -64,50 +63,94 @@ const Updateprofile = () => {
 
     const [focusInput, setFocusInput] = useState("");
     const [changeInputs, setChangeInputs] = useState([""]);
+    const { getLocalFiles } = useGetLocalFiles();
+    const [grapSelectedMedia, setGrapSelectedMedia] = useState("");
+    const [blob, setBlob] = useState<Blob | undefined>(undefined);
+    const [loadingUpdatedData, setLoadingUpdatedData] = useState(false);
 
-    const addImage = (url: string) => {
-        const image: mediaProps = {
-            _id: Date.now().toString(),
-            url,
-            mime: "png",
-            type: "image",
-        };
+    const updatedAvatar = async (file: Blob) => {
+        setLoadingUpdatedData(true);
+        try {
+            const formData = new FormData();
+            formData.append("avatar", file);
 
-        const Media = JSON.parse(localStorage.getItem("media") || "[]");
-        localStorage.setItem("media", JSON.stringify([...Media, image]));
-        appDispatch(addMdia(image));
+            const url = apiEndPont + "/user";
+            const res = await axios.patch(url, formData, {
+                baseURL: apiEndPont,
+                withCredentials: true,
+            });
+            const updatedUserData: userProps = await res.data;
+            if (updatedUserData) {
+                console.log(updatedUserData);
+                appDispatch(editProfile(updatedUserData));
+                appDispatch(addMedia({
+                    _id: Date.now().toString(),
+                    filename: updatedUserData.avatar,
+                    size: 100,
+                    fieldname: "avatar",
+                    mimetype: updatedUserData.avatar.split(".")[1],
 
-        return url;
+                }));
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoadingUpdatedData(false);
+        }
     };
 
-    const editUserData = (user: userProps) => {
-        localStorage.setItem("user", JSON.stringify({ ...User, ...user }));
-        appDispatch(editProfile(user));
+    const updatedOtherData = async (user: userProps) => {
+        setLoadingUpdatedData(true);
+        try {
+            const url = apiEndPont + "/user";
+            const res = await axios.patch(
+                url,
+                { ...user },
+                {
+                    baseURL: apiEndPont,
+                    withCredentials: true,
+                }
+            );
+            const updatedUserData: userProps = await res.data;
+            if (updatedUserData) {
+                appDispatch(editProfile(updatedUserData));
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoadingUpdatedData(false);
+        }
     };
 
-    const handleUpadteUserData = (data: userProps) => {
-        editUserData(data);
+    const handleUpadteUserData = (data: unknown) => {
+        const getData = data as userProps;
+        updatedOtherData({ ...User, ...getData });
         setFocusInput("");
     };
 
     useEffect(() => {
         if (selectedMedia && selectedMedia.length) {
-            setAvatar(selectedMedia[0].url);
-        }
+            setGrapSelectedMedia(apiEndPont + "/media/" + User.avatar || "");           
+        } else {
+            if (grapSelectedMedia) {
+                setAvatar(grapSelectedMedia);
+            }
+        }        
     }, [selectedMedia]);
 
     useEffect(() => {
         if (User) {
-            setAvatar(User.avatar || "");
+            setAvatar(apiEndPont + "/media/" + User.avatar || "");
             setUserData((pre) => ({ ...pre, ...User }));
             setDisplayDateOfBirth(User.displayDateOfBirth);
             setDisplayPhoneNumber({
-                code: User.displayPhoneNumber.split("-")[0] || "",
-                number: User.displayPhoneNumber.split("-")[1] || "",
+                code: User.displayPhoneNumber?.split("-")[0] || "",
+                number: User.displayPhoneNumber?.split("-")[1] || "",
             });
         }
     }, [User]);
 
+    console.log(loadingUpdatedData, "loadingUpdatedData");
 
     return (
         <main className="container">
@@ -118,13 +161,12 @@ const Updateprofile = () => {
                             {/* display avatar */}
                             <div>
                                 <Displayimage
-                                    url={User.avatar || ""}
+                                    url={apiEndPont + "/media/" + User.avatar || ""}
                                     setUrl={setAvatar}
                                     alt={User.userName}
                                     useCancle={true}
                                     onCancle={() => {
                                         const updatedUserData = {
-                                            ...User,
                                             avatar: "",
                                         };
                                         handleUpadteUserData(updatedUserData);
@@ -179,7 +221,6 @@ const Updateprofile = () => {
                                             className="text-sm border-2 border-slate-800 py-1 px-3 rounded-full cursor-pointer"
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    ...User,
                                                     name: {
                                                         familyName: User.name?.familyName,
                                                         givenName: userData["name"].givenName,
@@ -243,7 +284,6 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    ...User,
                                                     name: {
                                                         familyName: userData["name"].familyName,
                                                         givenName: User.name?.givenName,
@@ -309,7 +349,6 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    ...User,
                                                     bio: userData.bio,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
@@ -364,7 +403,9 @@ const Updateprofile = () => {
                                                 });
                                             }}
                                             onFocus={() => {
-                                                setFocusInput(pre => pre === "profession" ? "" : "profession");
+                                                setFocusInput((pre) =>
+                                                    pre === "profession" ? "" : "profession"
+                                                );
                                             }}
                                         />
                                         <Customselection
@@ -393,7 +434,6 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    ...User,
                                                     profession: userData.profession,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
@@ -453,7 +493,6 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    ...User,
                                                     displayEmail: userData.displayEmail,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
@@ -547,7 +586,6 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    ...User,
                                                     displayPhoneNumber:
                                                         displayPhoneNumber.code +
                                                         "-" +
@@ -611,7 +649,6 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    ...User,
                                                     website: userData.website,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
@@ -670,7 +707,6 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    ...User,
                                                     displayDateOfBirth,
                                                     dateOfBirth: userData.dateOfBirth,
                                                 };
@@ -747,9 +783,9 @@ const Updateprofile = () => {
                                         <span
                                             id="sex"
                                             ref={sexInputRef}
-                                            className={`block w-full py-1 ${focusInput === "sex" ?
-                                                "px-2 outline outline-2 outline-yellow-600 sm:outline-stone-600" :
-                                                ""
+                                            className={`block w-full py-1 ${focusInput === "sex"
+                                                ? "px-2 outline outline-2 outline-yellow-600 sm:outline-stone-600"
+                                                : ""
                                                 } rounded-md`}
                                             onClick={() => setFocusInput("sex")}
                                         >
@@ -781,7 +817,6 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    ...User,
                                                     sex: userData.sex,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
@@ -836,7 +871,9 @@ const Updateprofile = () => {
                                                 });
                                             }}
                                             onFocus={() => {
-                                                setFocusInput(pre => pre === "country" ? "" : "country");
+                                                setFocusInput((pre) =>
+                                                    pre === "country" ? "" : "country"
+                                                );
                                             }}
                                         />
                                         <Customselection
@@ -865,7 +902,6 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    ...User,
                                                     country: userData.country,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
@@ -893,10 +929,11 @@ const Updateprofile = () => {
                                     )}
                                 </span>
                             </label>
+                            {/* create sapce */}
                             <div className="space">
-                                {/* create sapce */}
                                 <span className="space block mt-12"></span>
                             </div>
+                            {/* update all user data btn */}
                             <span className="w-full flex justify-center items-center">
                                 {changeInputs.length > 1 ? (
                                     <Button
@@ -904,8 +941,12 @@ const Updateprofile = () => {
                                         className="text-base px-10 py-1.5 bg-green-800 hover:bg-green-600 active:bg-green-600 text-white font-semibold rounded-full"
                                         onClick={() => {
                                             const updatedUserData = {
-                                                ...User,
                                                 ...userData,
+                                                displayPhoneNumber:
+                                                    displayPhoneNumber.code +
+                                                    "-" +
+                                                    displayPhoneNumber.number,
+                                                displayDateOfBirth,
                                             };
                                             handleUpadteUserData(updatedUserData);
                                             setChangeInputs([""]);
@@ -914,12 +955,13 @@ const Updateprofile = () => {
                                 ) : null}
                             </span>
                         </div>
+                        {/* model for profile picture */}
                         <Model
-                            id="insert-profile-picture"
+                            id="insert-profile-picture"                            
                             children={
                                 <div className="font-text bg-white px-8 pb-6 rounded-md -mt-[15%]">
                                     {/* header */}
-                                    <div className="flex justify-start items-center gap-4 mt-2 mb-4">
+                                    <header className="flex justify-start items-center gap-4 mt-2 mb-4">
                                         <button
                                             className="cursor-pointer"
                                             onClick={() => navigate("")}
@@ -931,108 +973,87 @@ const Updateprofile = () => {
                                                 Profile picture
                                             </span>
                                         </div>
-                                    </div>
-                                    {/* display picture */}
-                                    <div className="w-full flex justify-center items-center">
-                                        <Displayimage
-                                            url={avatar}
-                                            setUrl={setAvatar}
-                                            useCancle={false}
-                                            alt={avatar}
-                                            parentClassName={
-                                                avatar.trim() ? "border p-1 rounded-md" : ""
-                                            }
-                                            className="h-[100px] w-[100px] object-contain rounded-full border cursor-pointer"
-                                            placeHolder={
-                                                <img
-                                                    src={avatarPlaceholder}
-                                                    className="absolute top-0 bottom-0 right-0 h-[100px] w-[100px] rounded-full cursor-pointer"
-                                                    onClick={() => {
-                                                        appDispatch(addToDisplaySingleMedia({ url: avatar, _id: "", type: "image", mime: "png" }));
-                                                        appDispatch(displayMediaOptions({
-                                                            negativeNavigate: "#insert-profile-picture",
-                                                        }));
-                                                        navigate("#single-image");
-                                                    }}
-                                                />
-                                            }
-                                            onClick={() => {
-                                                appDispatch(addToDisplaySingleMedia({ url: avatar, _id: "", type: "image", mime: "png" }));
-                                                appDispatch(displayMediaOptions({
-                                                    negativeNavigate: "#insert-profile-picture",
-                                                }));
-                                                navigate("#single-image");
-                                            }}
-                                        />
-                                    </div>
-                                    <div className="flex justify-between items-center gap-8 mt-8 mb-4">
-                                        <span>
-                                            <button
-                                                className="cursor-pointer"
-                                                onClick={() => {
-                                                    appDispatch(addToDisplaySingleMedia({ url: avatar, _id: "", type: "image", mime: "png" }));
-                                                    appDispatch(displayMediaOptions({
-                                                        negativeNavigate: "#insert-profile-picture",
-                                                    }));
-                                                    navigate("?url=me&type=image#single-image");
-                                                }}
-                                            >
-                                                Icon
-                                            </button>
-                                            View
-                                        </span>
-                                        <Fileinput
-                                            id="choose-profile-picture"
-                                            accept="image/png, image/gif, image/jpeg"
-                                            type="image"
-                                            fieldName="Device"
-                                            className="cursor-pointer"
-                                            handleGetFile={async (e) => {
-                                                const data = await getLocalFiles(e);
-                                                if (data.length) {
-                                                    const url = addImage(data[0].bufferUrl as string);
-                                                    setAvatar(url);
+                                    </header>
+                                    {/* body change profile picture */}
+                                    <main className="w-full flex justify-center items-center">
+                                        {/* display avatar */}
+                                        <div>
+                                            <Displayimage
+                                                url={avatar}
+                                                setUrl={setAvatar}
+                                                useCancle={false}
+                                                alt={avatar}
+                                                parentClassName={
+                                                    avatar.trim() ? "border p-1 rounded-md" : ""
                                                 }
-                                            }}
-                                        />
-                                        <span className="text-sm text-center">
+                                                className="h-[100px] w-[100px] object-contain rounded-full border cursor-pointer"
+                                                placeHolder={
+                                                    <img
+                                                        src={avatarPlaceholder}
+                                                        className="absolute top-0 bottom-0 right-0 h-[100px] w-[100px] rounded-full cursor-pointer"
+                                                        onClick={() => navigate(`?url=${avatar}&type=image#single-image`)}
+                                                    />
+                                                }
+                                                onClick={() => navigate(`?url=${avatar}&type=image#single-image`)}
+                                            />
+                                        </div>
+                                        {/* profile picture btn */}
+                                        <div className="flex justify-between items-center gap-8 mt-8 mb-4">
+                                            {/* view btn */}
+                                            <span>
+                                                <button
+                                                    className="cursor-pointer"
+                                                    onClick={() => navigate(`?url=${avatar}&type=image#single-image`)}
+                                                >
+                                                    Icon
+                                                </button>
+                                                View
+                                            </span>
+                                            {/* get image from device btn  */}
+                                            <Fileinput
+                                                id="choose-profile-picture"
+                                                accept="image/png, image/gif, image/jpeg"
+                                                type="image"
+                                                fieldName="Device"
+                                                className="cursor-pointer"
+                                                handleGetFile={async (fileList) => {
+                                                    if (fileList) {
+                                                        setBlob(fileList[0]);
+                                                        const data = await getLocalFiles(fileList);
+                                                        setAvatar(data[0].url);
+                                                    }
+                                                }}
+                                            />
+                                            {/* display galary btn  */}
+                                            <span className="text-sm text-center">
+                                                <button
+                                                    className="block text-white bg-orange-500 p-3 rounded-full shadow-sm cursor-pointer"
+                                                    onClick={() => {                                                        
+                                                        navigate("#display-image-galary");
+                                                    }}
+                                                >
+                                                    <IoMdImages size={25} className="text-white" />
+                                                </button>
+                                                Galary
+                                            </span>
+                                        </div>
+                                    </main>
+                                    {/* change avatar btn */}
+                                    <footer>
+                                        {avatar && avatar.trim() !== User.avatar ? (
                                             <button
-                                                className="block text-white bg-orange-500 p-3 rounded-full shadow-sm cursor-pointer"
+                                                className="text-white text-base font-text font-semibold w-full py-1.5 bg-blue-600 border rounded-lg shadow "
                                                 onClick={() => {
-                                                    appDispatch(
-                                                        displayMediaOptions({
-                                                            singleSelection: true,
-                                                            medieType: "image",
-                                                            positiveNavigate: "#insert-profile-picture",
-                                                            negativeNavigate: "#insert-profile-picture",
-                                                        })
-                                                    );
-                                                    navigate("#display-image-galary");
+                                                    if (blob) updatedAvatar(blob);
+                                                    navigate("");
                                                 }}
                                             >
-                                                <IoMdImages size={25} className="text-white" />
+                                                Add photo
                                             </button>
-                                            Galary
-                                        </span>
-                                    </div>
-                                    {avatar &&
-                                        avatar.trim() !== User.avatar?.trim() ? (
-                                        <button
-                                            className="text-white text-base font-text font-semibold w-full py-1.5 bg-blue-600 border rounded-lg shadow "
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    ...User,
-                                                    avatar,
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                navigate("");
-                                            }}
-                                        >
-                                            Add photo
-                                        </button>
-                                    ) :
-                                        null
-                                    }
+                                        ) :
+                                            null
+                                        }
+                                    </footer>
                                 </div>
                             }
                         />

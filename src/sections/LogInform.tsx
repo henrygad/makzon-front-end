@@ -153,13 +153,13 @@ const Loginform = () => {
         </label>
         <span className="block"></span>
         {/*login button and forget password*/}
-        <span className="flex  flex-col justify-center gap-0.5">          
+        <span className="flex  flex-col justify-center gap-1">          
           <button
-            className={`flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg
+            className={`flex-1 text-base text-white p-2 border border-green-500 bg-green-500 rounded-lg
             ${!loading &&
                 getInputValues.password &&
                 getInputValues.identity ?
-                "cursor-pointer"
+                "cursor-pointer active:text-green-200"
                 : "cursor-default opacity-30"
               }`}
             disabled={

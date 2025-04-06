@@ -7,48 +7,44 @@ type Props = {
 };
 
 const Model = ({ id, children }: Props) => {
-  const [displayModel, setDisplayModel] = useState(false);
   const location = useLocation();
+  const [currentModelId, setCurrentModelId] = useState("");
+  const [lastHashId, setLastHashId] = useState("");
+  const [displayModel, setDisplayModel] = useState(false);
 
-  const handleDisplayModel = (id: string, hashId: string) => {
-    if (hashId.trim() &&
-      hashId.trim().toLowerCase() === id.trim().toLowerCase()) {
-      setDisplayModel(true);
-    } else {
-      setDisplayModel(false);
+  const handleDisplayModel = () => {
+    const hashId = location.hash.trim().slice(1);
+    if (hashId &&
+      hashId.trim() === id.trim()
+    ) {
+      setCurrentModelId(id);
+      setLastHashId(hashId);
+      setDisplayModel(true); 
+      document.body.classList.add("overflow-hidden");     
+    }else {
+      if (lastHashId && lastHashId.trim() === currentModelId.trim()) {
+        setDisplayModel(false);
+        if(displayModel)document.body.classList.remove("overflow-hidden");
+      }
     }
 
+    return () => document.body.classList.remove("overflow-hidden");
   };
-
-  const handleStopScrolling = () => {
-    if (displayModel) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-
-  };
-
+ 
   const handlePopState = () => {
-    const hashId = location.hash.trim().slice(1);
-    handleDisplayModel(id, hashId);
+    handleDisplayModel();
   };
 
 
   useEffect(() => {
-    handleStopScrolling();
-  }, [displayModel]);
+    handleDisplayModel();
+  }, [location.hash]);
 
-  useEffect(() => {
-    const hashId = location.hash.trim().slice(1);
-    handleDisplayModel(id, hashId);
-  }, [id, location.hash]);
 
   useEffect(() => {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
-
 
   return (
     displayModel ?

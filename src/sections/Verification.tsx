@@ -33,7 +33,9 @@ const Verification = () => {
   };
 
   const resendOTP = async () => {
-    if (loading || !User.email || OTP || timing) return;
+    if (loading || timing) return;
+    setOTP("");
+    setError("");
     try {
       handleStartTiming();
 
@@ -58,7 +60,7 @@ const Verification = () => {
     email: string;
     otp: string;
   }) => {
-    if (loading || !OTP || !User.email) return;
+    if (loading || !otp || !email) return;
 
     try {
       setLoading(true);

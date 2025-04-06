@@ -34,7 +34,7 @@ const Image = ({
         if (!url) return;
         blockCmd("image", grapSelectionRef.current, { value: url, style });
         handleGlobalChangesOnInputArea();
-        navigate("");
+        navigate(-1);
     };
 
     return (
@@ -53,7 +53,7 @@ const Image = ({
                 children={
                     <div className="relative font-text space-y-8 px-8 pb-8 rounded shadow-sm bg-white">
                         <button
-                            onClick={() => navigate("")}
+                            onClick={() => navigate(-1)}
                             className="absolute top-3 right-3 text-red-800 font-bold text-sm cursor-pointer"
                         >
                             X
@@ -220,7 +220,7 @@ const Image = ({
                                 id="go-back-galary-dialog"
                                 fieldName={"Go back"}
                                 className="bg-red-600 text-white text-sm rounded-md font-text"
-                                onClick={() => navigate("#insert-image")}
+                                onClick={() => navigate(-1)}
                             />
                             <Button
                                 id="go-back-galary-dialog"
@@ -229,7 +229,7 @@ const Image = ({
                                 onClick={() => {
                                     setUrl(select);
                                     setSelect("");
-                                    navigate("#insert-image");
+                                    navigate(-1);
                                 }}
                                 disabled={!select.trim()}
                             />

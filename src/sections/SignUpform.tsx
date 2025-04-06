@@ -299,14 +299,14 @@ const SignUpform = () => {
         {/* button */}
         <span className="flex justify-center items-center">
           <button
-            className={`flex-1 text-base text-white p-2 border border-green-500 bg-green-500 active:text-green-200 rounded-lg
+            className={`flex-1 text-base text-white p-2 border border-green-500 bg-green-500 rounded-lg
             ${
               !loading &&
               getInputValues.comfirmPassword &&
               getInputValues.password &&
               getInputValues.email &&
               getInputValues.userName
-                ? "cursor-pointer"
+              ? "cursor-pointer  active:text-green-200"
                 : "cursor-default opacity-30"
             }`}
             disabled={

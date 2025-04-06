@@ -99,4 +99,3 @@ const Displayimage = ({
 };
 
 export default Displayimage;
-// www.example.com/images/1

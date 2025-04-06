@@ -13,8 +13,9 @@ import Popupmessage from "../components/Popupmessag";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../redux";
 import { addBlogpost, addDraft, deleteDraft, editBlogpost, editDraft } from "../redux/slices/userBlogpostSlices";
-import mediaProps from "../types/file.type";
-import { addMdia, addToDisplaySingleMedia, displayMediaOptions } from "../redux/slices/userMediaSlices";
+import mediaProps from "../types/media.type";
+import { addMedia } from "../redux/slices/userMediaSlices";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
     oldBlogpost: postProps | null
@@ -47,33 +48,24 @@ const Addpost = ({
     const [isEmpty, setIsEmpty] = useState(true);
     const [popUp, setPopUp] = useState(false);
     const [popUpMsg, setPopUpMsg] = useState("");
+    const [grapSelectedMedia, setGrapSelectedMedia] = useState("");
 
     const addVideo = (url: string) => {
-        const video: mediaProps = {
-            _id: Date.now().toString(),
-            url,
-            mime: "vm",
-            type: "video"
-        };
+        const video: mediaProps = {} as mediaProps;
 
         const Media = JSON.parse(localStorage.getItem("media") || "[]");
         localStorage.setItem("media", JSON.stringify([...Media, video]));
-        appDispatch(addMdia(video));
+        appDispatch(addMedia(video));
 
         return url;
     };
 
     const addImage = (url: string) => {
-        const image: mediaProps = {
-            _id: Date.now().toString(),
-            url,
-            mime: "png",
-            type: "image"
-        };
+        const image: mediaProps = {} as mediaProps;
 
         const Media = JSON.parse(localStorage.getItem("media") || "[]");
         localStorage.setItem("media", JSON.stringify([...Media, image]));
-        appDispatch(addMdia(image));
+        appDispatch(addMedia(image));
 
         return url;
     };
@@ -83,7 +75,7 @@ const Addpost = ({
             _id: Date.now().toString(),
             ...blogpost,
             slug: (blogpost.slug || "").trim(),
-            title: (blogpost.title || "").trim(),            
+            title: (blogpost.title || "").trim(),
         };
         const Blogposts: postProps[] = JSON.parse(localStorage.getItem("blogposts") || "[]");
         localStorage.setItem("blogposts", JSON.stringify([...Blogposts, addNewBlogpost]));
@@ -98,7 +90,7 @@ const Addpost = ({
             ...blogpost,
             _id: blogpost._id || Date.now().toString(),
             slug: (blogpost.slug || "").trim(),
-            title: (blogpost.title || "").trim(),       
+            title: (blogpost.title || "").trim(),
         };
         const Blogposts: postProps[] = JSON.parse(localStorage.getItem("drafts") || "[]");
         localStorage.setItem("drafts", JSON.stringify([...Blogposts, addNewBlogpost]));
@@ -241,9 +233,12 @@ const Addpost = ({
     };
 
     useEffect(() => {
-        if (selectedMedia &&
-            selectedMedia.length) {
-            setDisplayImageUrl(selectedMedia[0].url);
+        if (selectedMedia && selectedMedia.length) {
+            setGrapSelectedMedia(apiEndPont + "/media/" + User.avatar || "");
+        } else {
+            if (grapSelectedMedia) {
+                setDisplayImageUrl(grapSelectedMedia);
+            }
         }
     }, [selectedMedia]);
 
@@ -267,9 +262,9 @@ const Addpost = ({
 
     }, [oldBlogpost]);
 
-
     return <section>
         <div className="space-y-10">
+            {/* blogpost rich text editor */}
             <Texteditor
                 editorRef={editorRef}
                 wrapperClassName="h-full w-full"
@@ -312,8 +307,8 @@ const Addpost = ({
                     }
                     setTitle(title.join(" "));
                 }}
-                imageGalary={Media.filter(image => image.type.toLowerCase() === "image")}
-                videoGalary={Media.filter(image => image.type.toLowerCase() === "vidoe")}
+                imageGalary={Media.filter(md => md.mimetype.includes("image")).map(md => ({ url: apiEndPont + "/media/" + md.filename }))}
+                videoGalary={Media.filter(md => md.mimetype.includes("vidoe")).map(md => ({ url: apiEndPont + "/media/" + md.filename }))}
                 handleLocalFile={async (files) => {
                     try {
                         const data = await getLocalFiles(files);
@@ -329,7 +324,8 @@ const Addpost = ({
                     }
                 }}
             />
-            <div className='space-y-1 font-text'>
+            {/* blogpost catigories */}
+            <span className='block space-y-1 font-text'>
                 <span>Catigories</span>
                 {
                     catigories.map((catigory, index) =>
@@ -382,7 +378,8 @@ const Addpost = ({
                         </label>
                     )
                 }
-            </div>
+            </span>
+            {/* blogpost slug */}
             <label htmlFor="blog-post-slug" className="block w-full space-y-1 font-text">
                 <span className="block">Slug</span>
                 <input
@@ -416,6 +413,7 @@ const Addpost = ({
                     </select>
                 </span>
             </label>
+            {/*blogpost display picture  */}
             <div className="space-y-1 w-full font-text">
                 <span className="block">Display image</span>
                 <Displayimage
@@ -440,7 +438,9 @@ const Addpost = ({
                     />
                 </div>
             </div>
+            {/* blogpost btn */}
             <div className="relative flex flex-col justify-center items-center gap-1">
+                {/* publish btn */}
                 <Button
                     fieldName={"Publish"}
                     className={`min-w-[200px] py-2 font-bold text-white font-text rounded-full transition-colors bg-green-600 shadow-green-400 
@@ -452,6 +452,7 @@ const Addpost = ({
                     onClick={handlePublishBlogpostBtn}
                 />
                 <span className="text-sm">Or:</span>
+                {/* draf bnt */}
                 <Button
                     fieldName={"Draft"}
                     className={`min-w-[200px] py-2 font-bold text-white font-text rounded-full transition-colors bg-yellow-600 shadow-yellow-400 
@@ -474,28 +475,22 @@ const Addpost = ({
             id="insert-display-image"
             children={
                 <div className="relative font-text p-6 space-y-6 rounded shadow-sm bg-white">
-                    <div className="flex justify-center items-center gap-6">
+                    <header className="flex justify-center items-center gap-6">
                         <h2 className="text-xl font-text font-semibold">Add Display Image</h2>
                         <button
                             onClick={() => {
-                                navigate("#add-post");
+                                navigate(-1);
                             }}
                             className="text-red-800 font-bold text-sm cursor-pointer"
                         >
                             X
                         </button>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-between gap-6 m">
+                    </header>
+                    <main className="flex flex-wrap items-center justify-between gap-6 m">
                         <span>
                             <button
                                 className="cursor-pointer"
-                                onClick={() => {
-                                    appDispatch(addToDisplaySingleMedia({ url: displayImageUrl, _id: "", type: "image", mime: "png" }));
-                                    appDispatch(displayMediaOptions({
-                                        negativeNavigate: "#insert-display-image",
-                                    }));
-                                    navigate("#single-image");
-                                }}
+                                onClick={() => navigate(`?url=${displayImageUrl? apiEndPont + "/media/" + displayImageUrl: ""}&type=image#single-image`)}
                             >
                                 Icon
                             </button>
@@ -523,20 +518,13 @@ const Addpost = ({
                             <button
                                 className="block text-white bg-orange-500 p-3 rounded-full shadow-sm cursor-pointer"
                                 onClick={() => {
-                                    appDispatch(displayMediaOptions({
-                                        singleSelection: true,
-                                        medieType: "image",
-                                        positiveNavigate: "#add-post",
-                                        negativeNavigate: "#insert-display-image",
-
-                                    }));
                                     navigate("#display-image-galary");
                                 }}>
                                 <IoMdImages size={25} className="text-white" />
                             </button>
                             Galary
                         </span>
-                    </div>
+                    </main>
                 </div>
             }
         />

@@ -3,6 +3,7 @@ import userProps from "../types/user.type";
 import Displayimage from "./Displayimage";
 import useSanitize from "../hooks/useSanitize";
 import avatarPlaceholder from "../assert/avaterplaceholder.svg";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
   short: boolean;
@@ -15,7 +16,7 @@ const Shortdetail = ({ user, short, onClick }: Props) => {
     <span className="flex items-start gap-1 cursor-pointer" onClick={onClick}>
       {short ? (
         <Displayimage
-          url={user.avatar || ""}
+          url={user.avatar.trim() ? apiEndPont + "/media/" + user.avatar : ""}
           alt={user.userName}
           useCancle={false}
           className="h-10 w-10 rounded-full object-contain"
@@ -31,7 +32,7 @@ const Shortdetail = ({ user, short, onClick }: Props) => {
         />
       ) : (
         <Displayimage
-          url={user.avatar || ""}
+          url={user.avatar.trim() ? apiEndPont + "/media/" + user.avatar : ""}
           alt={user.userName}
           useCancle={false}
           className="h-14 w-14 rounded-full object-contain"

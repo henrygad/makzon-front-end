@@ -11,6 +11,7 @@ import {
   viewedNotifications,
 } from "../redux/slices/userNotificationSlices";
 import { useNavigate } from "react-router-dom";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type viewTargetNotificationProps =
   | {
@@ -50,7 +51,7 @@ const Displayuseravatar = ({ userName }: { userName: string }) => {
 
   return (
     <Displayimage
-      url={avatar}
+      url={apiEndPont+"/media/"+avatar}
       alt={userName}
       useCancle={false}
       className="h-9 w-9 rounded-full object-contain"

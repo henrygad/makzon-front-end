@@ -1,66 +1,62 @@
 import { useNavigate } from "react-router-dom";
-import mediaProps from "../types/file.type";
-import { useAppDispatch } from "../redux";
+import mediaProps from "../types/media.type";
+import { useAppDispatch, useAppSelector } from "../redux";
 import Displayimage from "./Displayimage";
-import { addToDisplaySingleMedia, addToMediaSelections, displayMediaOptions, removeFromMediaSelections } from "../redux/slices/userMediaSlices";
+import { addSelectedMedia, removeSelectedMedia} from "../redux/slices/userMediaSlices";
 import Displayvideo from "./Displayvideo";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
-const Displaymedia = ({ media, isSelect, handleDelete, mediaSelections }:
-    { media: mediaProps, isSelect: boolean, mediaSelections: mediaProps[] | undefined, handleDelete: (_id: string) => void }) => {
-
+const Displaymedia = ({
+    media,
+    useSelect,
+    handleDelete = () => null,
+}: {
+    media: mediaProps;
+    useSelect: boolean;    
+    handleDelete?: (_id: string) => void;
+}) => {
     const navigate = useNavigate();
+    const {selectedMedia} = useAppSelector(state => state.userMediaSlices.media);
     const appDispatch = useAppDispatch();
 
-    if (media.type &&
-        media.type.toLowerCase() === "image"
-    ) {
-        return <Displayimage
-            url={media.url}
-            className={`w-[120px] h-[120px] object-contain border ${isSelect ? "border-blue-100 p-1" : ""} rounded-md cursor-pointer`}
-            selected={mediaSelections &&
-                mediaSelections.map(md => md._id).includes(media._id)
-            }
-            removeSelection={() => appDispatch(removeFromMediaSelections({ ...media }))}
-            useCancle={!isSelect}
-            onCancle={() => handleDelete(media._id)}
-            onClick={() => {
-                if (!isSelect) {
-                    appDispatch(addToDisplaySingleMedia({ url: media.url, _id: media._id, type: "image", mime: "png" }));
-                    appDispatch(displayMediaOptions({
-                        negativeNavigate: "#media",
-                    }));
-                    navigate("#single-image");
-                } else {
-                    appDispatch(addToMediaSelections({ ...media }));
-                }
-            }}
-        />;
-    } else if (
-        media.type &&
-        media.type.toLowerCase() === "video") {
-        return <Displayvideo
-            url={media.url}
-            className={`w-[220px] h-[200px] object-contain border ${isSelect ? "border-blue-100 p-1" : ""} rounded-md cursor-pointer`}
-            useCancle={!isSelect}
-            selected={mediaSelections &&
-                mediaSelections.map(md => md._id).includes(media._id)
-            }
-            removeSelection={() => appDispatch(removeFromMediaSelections({ ...media }))}
-            onCancle={() => handleDelete(media._id)}
-            onClick={() => {
-                if (!isSelect) {
-                    appDispatch(addToDisplaySingleMedia({ url: media.url, _id: media._id, type: "vedio", mime: "vm" }));
-                    appDispatch(displayMediaOptions({
-                        negativeNavigate: "#media",
-                    }));
-                    navigate("#single-image");
-                } else {
-                    appDispatch(addToMediaSelections({ ...media }));
-                }
-            }}
-        />;
+    if (!media) return null;
+
+    if (media.mimetype.includes("image")) {
+        return (
+            <Displayimage
+                url={apiEndPont + "/media/" + media.fieldname}
+                className={`w-[120px] h-[120px] object-contain border ${useSelect ? "border-blue-100 p-1" : ""} rounded-md cursor-pointer`}
+                selected={selectedMedia && selectedMedia.map((md) => md.filename).includes(media.fieldname)}
+                useCancle={!useSelect}
+                removeSelection={() => appDispatch(removeSelectedMedia({ _id: media._id }))}
+                onCancle={() => handleDelete(media._id)}
+                onClick={() => {
+                    if (useSelect) {
+                        appDispatch(addSelectedMedia({...media}));                        
+                    } else {                        
+                        navigate(`?url=${apiEndPont+"/media/"+ media.fieldname}&type=image#single-image`);
+                    }
+                }}
+            />
+        );
+    } else if (media.mimetype.includes("video")) {
+        return (
+            <Displayvideo
+                url={apiEndPont + "/media/" + media.fieldname}
+                className={`w-[220px] h-[200px] object-contain border ${useSelect ? "border-blue-100 p-1" : ""} rounded-md cursor-pointer`}useCancle={!useSelect}
+                selected={selectedMedia && selectedMedia.map((md) => md.filename).includes(media.fieldname)}
+                removeSelection={() => appDispatch(removeSelectedMedia({ _id: media._id }))}
+                onCancle={() => handleDelete(media._id)}
+                onClick={() => {
+                    if (useSelect) {
+                        appDispatch(addSelectedMedia({ ...media }));
+                    } else {                        
+                        navigate(`?url=${apiEndPont + "/media/" + media.fieldname}&type=video#single-image`);
+                    }
+                }}
+            />
+        );
     }
-    return null;
 };
 
 export default Displaymedia;

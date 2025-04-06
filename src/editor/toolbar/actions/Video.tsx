@@ -32,7 +32,7 @@ const Video = ({
         if (!url) return;
         blockCmd("video", grapSelectionRef.current, { value: url, style });
         handleGlobalChangesOnInputArea();
-        navigate("");
+        navigate(-1);
     };
 
     return <div id='add-video'>
@@ -49,7 +49,7 @@ const Video = ({
             children={
                 <div className="relative font-text space-y-8 px-8 pb-8 rounded shadow-sm bg-white">
                     <button
-                        onClick={() => navigate("")}
+                        onClick={() => navigate(-1)}
                         className="absolute top-3 right-3 text-red-800 font-bold text-sm cursor-pointer"
                     >
                         X
@@ -188,7 +188,7 @@ const Video = ({
                             id="go-back-galary-dialog"
                             fieldName={"Go back"}
                             className="bg-red-600 text-white text-sm rounded-md font-text"
-                            onClick={() => navigate("#insert-video")}
+                            onClick={() => navigate(-1)}
                         />
                         <Button
                             id="go-back-galary-dialog"
@@ -197,7 +197,7 @@ const Video = ({
                             onClick={() => {
                                 setUrl(select);
                                 setSelect("");
-                                navigate("#insert-video");
+                                navigate(-1);
                             }}
                             disabled={!select.trim()}
                         />

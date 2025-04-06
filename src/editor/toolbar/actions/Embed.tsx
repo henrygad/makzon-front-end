@@ -24,7 +24,7 @@ const Embed = ({
         blockCmd("embed", grapSelectionRef.current, { value: embed, style: [] });
         handleGlobalChangesOnInputArea();
         setEmbed("");
-        navigate("");
+        navigate(-1);
     };
     
     return <div id='embedCode' >
@@ -42,7 +42,7 @@ const Embed = ({
                     className="relative space-y-3 p-6 rounded shadow-sm bg-white z-0"
                 >
                     <span
-                        onClick={() => navigate("")}
+                        onClick={() => navigate(-1)}
                         className="absolute top-3 right-3 text-red-800 font-bold text-sm cursor-pointer"
                     >
                         X

@@ -18,6 +18,7 @@ import Shareblogpost from "./Shareblogpost";
 import Viewblogpost from "./Viewblogpost";
 import { useAppDispatch, useAppSelector } from "../redux";
 import { editProfile } from "../redux/slices/userProfileSlices";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
     displayType: string;
@@ -31,9 +32,9 @@ type Props = {
         comment?: {
             blogpostParentComment: string | null,
             targetComment: string,
-        }   
+        }
         targetLike: string
-    }   
+    }
 };
 
 const Displayblogpost = ({
@@ -243,48 +244,50 @@ const Displayblogpost = ({
                     <span className="border-2 min-w-10 max-w-10 rounded-md"></span>
                 </span>
                 {/* post article */}
-                {displayType === "_HTML" ? (
-                    <span
-                        dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}
-                    ></span>
-                ) : (
-                    <>
+                <>
+                    {displayType === "_HTML" ? <span dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}></span>: 
                         <span
                             className="indent-2 break-words hyphens-auto line-clamp-3 cursor-pointer"
                             onClick={() => handleToView(blogpost)}
                         >
                             {blogpost.body}
                         </span>
-                    </>
-                )}
-                {
-                    blogpost.image.trim() ? (
-                        <Displayimage
-                            url={blogpost.image || ""}
-                            alt={blogpost.title || ""}
-                            useCancle={false}
-                            parentClassName="w-full h-full"
-                            className="w-full h-20 object-cover  cursor-pointer"
-                            placeHolder={
-                                <img
-                                    src={imgplaceholder}
-                                    className="absolute top-0 bottom-0 right-0 left-0 object-cover w-full h-20"
-                                    onClick={() => {
-                                        if (displayType === "TEXT") {
-                                            handleToView(blogpost);
-                                        }
-                                    }}
-                                />
-                            }
-                            onClick={() => {
-                                if (displayType === "TEXT") {
-                                    handleToView(blogpost);
+                    }
+                </>
+                <>
+                    {
+                        blogpost.image.trim() ? (
+                            <Displayimage
+                                url={apiEndPont + "/media/" + blogpost.image}
+                                alt={blogpost.title}
+                                useCancle={false}
+                                parentClassName="w-full h-full"
+                                className="w-full h-20 object-cover  cursor-pointer"
+                                placeHolder={
+                                    <img
+                                        src={imgplaceholder}
+                                        className="absolute top-0 bottom-0 right-0 left-0 object-cover w-full h-20"
+                                        onClick={() => {
+                                            if (displayType === "TEXT") {
+                                                handleToView(blogpost);
+                                            } else {
+                                                navigate(`?url=${blogpost.image}&type=image#single-image`);
+                                            }
+                                        }}
+                                    />
                                 }
-                            }}
-                        />
-                    ) :
-                        null
-                }
+                                onClick={() => {
+                                    if (displayType === "TEXT") {
+                                        handleToView(blogpost);
+                                    } else {
+                                        navigate(`?url=${blogpost.image}&type=image#single-image`);
+                                    }
+                                }}
+                            />
+                        ) :
+                            null
+                    }
+                </>
                 <span className="space flex justify-center my-2">
                     <span className="border-2 min-w-10 max-w-10 rounded-md"></span>
                 </span>
@@ -350,7 +353,7 @@ const Displayblogpost = ({
                 </span>
             </span>
         </div>
-        
+
 
         {
             displayType.trim().toLowerCase() === "_html" ?

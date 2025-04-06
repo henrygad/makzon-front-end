@@ -10,8 +10,8 @@ import {
   fetchDrafts,
   fetchSavedBlogposts,
 } from "./redux/slices/userBlogpostSlices";
-import mediaProps from "./types/file.type";
-import { fetchMdia } from "./redux/slices/userMediaSlices";
+import mediaProps from "./types/media.type";
+import { fetchMedia } from "./redux/slices/userMediaSlices";
 import Displaymultiplemedismodel from "./sections/Displaymultiplemedismodel";
 import Displaysinglemedialmodel from "./sections/Displaysinglemedialmodel";
 import { fetchNotifications } from "./redux/slices/userNotificationSlices";
@@ -50,7 +50,7 @@ const App = () => {
       withCredentials: true,
     })
       .then(async (res) => {
-        const clientSession = (await res.data) as { sessionId: string };        
+        const clientSession = (await res.data) as { sessionId: string };
         appDispatch(
           fetchProfile({
             data: { ...User, sessionId: clientSession.sessionId },
@@ -61,7 +61,7 @@ const App = () => {
       })
       .catch((err) => {
         console.log(err);
-      });      
+      });
   }, []);
 
   /* get user profile data */
@@ -71,16 +71,17 @@ const App = () => {
       withCredentials: true,
     })
       .then(async (res) => {
-        const userData = (await res.data.data._doc) as userProps;
-        
+        const userData = (await res.data.data) as userProps;
+
         appDispatch(
           fetchProfile({
             data: { ...User, ...userData, login: true },
             loading: false,
             error: "",
           })
-        );       
+        );
 
+        // Set local cookies if User.login if still false
         if (User.login === false) {
           // set a new cookie
           Cookies.set(
@@ -99,65 +100,101 @@ const App = () => {
           );
         }
 
+        if (!userData) return;
+
         //fetch user notifications
-        const userNotificationsData: notificationProps[] = JSON.parse(
-          localStorage.getItem("notifications") || "[]"
-        );
-        appDispatch(
-          fetchNotifications({
-            data: userNotificationsData,
-            loading: false,
-            error: "",
+        axios(apiEndPont + "/notification", {
+          baseURL: apiEndPont,
+          withCredentials: true,
+        })
+          .then(async (res) => {
+            const userNotifications: notificationProps[] = await res.data.data;
+            console.log(userNotifications, "notifications");
+            appDispatch(
+              fetchNotifications({
+                data: userNotifications,
+                loading: false,
+                error: "",
+              })
+            );
           })
-        );
+          .catch((error) => console.error(error));
 
         //fetch user blogposts
-        const userBlogpostsData: postProps[] = JSON.parse(
-          localStorage.getItem("blogposts") || "[]"
-        );
-        appDispatch(
-          fetchBlogposts({
-            data: userBlogpostsData,
-            loading: false,
-            error: "",
+        axios(
+          apiEndPont +
+          `/post?status=published&author=${userData.userName}&updatedAt=-1&skip=0&limit=20`,
+          {
+            baseURL: apiEndPont,
+            withCredentials: true,
+          }
+        )
+          .then(async (res) => {
+            const userBlogposts: postProps[] = await res.data.data;
+            console.log(userBlogposts, "blogpost");
+            appDispatch(
+              fetchBlogposts({
+                data: userBlogposts,
+                loading: false,
+                error: "",
+              })
+            );
           })
-        );
+          .catch((error) => console.error(error));
 
         //fetch user draft posts
-        const userDraftsData: postProps[] = JSON.parse(
-          localStorage.getItem("drafts") || "[]"
-        );
-        appDispatch(
-          fetchDrafts({
-            data: userDraftsData,
-            loading: false,
-            error: "",
+        axios(apiEndPont + "/draft", {
+          baseURL: apiEndPont,
+          withCredentials: true,
+        })
+          .then(async (res) => {
+            const userDrafts: postProps[] = await res.data.data;
+            console.log(userDrafts, "draft");
+            appDispatch(
+              fetchDrafts({
+                data: userDrafts,
+                loading: false,
+                error: "",
+              })
+            );
           })
-        );
+          .catch((error) => console.log(error));
 
         //fetch user saves post
-        const userSavedBlogpostsData: postProps[] = JSON.parse(
-          localStorage.getItem("saves") || "[]"
-        );
-        appDispatch(
-          fetchSavedBlogposts({
-            data: userSavedBlogpostsData,
-            loading: false,
-            error: "",
+        axios(apiEndPont + "/post/saves", {
+          baseURL: apiEndPont,
+          withCredentials: true,
+        })
+          .then(async (res) => {
+            const userSavedBlogposts: postProps[] = await res.data.data;
+            console.log(userSavedBlogposts, "saves");
+            appDispatch(
+              fetchSavedBlogposts({
+                data: userSavedBlogposts,
+                loading: false,
+                error: "",
+              })
+            );
           })
-        );
+          .catch((error) => console.log(error));       
 
         //fetch user media
-        const userMediaData: mediaProps[] = JSON.parse(
-          localStorage.getItem("media") || "[]"
-        );
-        appDispatch(
-          fetchMdia({
-            data: userMediaData,
-            loading: false,
-            error: "",
+        axios(apiEndPont + "/media", {
+          baseURL: apiEndPont,
+          withCredentials: true,
+        })
+          .then(async (res) => {
+            const userMedia: mediaProps[] = await res.data.data;
+            console.log(userMedia, "media");
+            appDispatch(
+              fetchMedia({
+                data: userMedia,
+                loading: false,
+                error: "",
+              })
+            );
           })
-        );
+          .catch((error) => console.log(error));           
       })
       .catch((error) => {
         const getError = error as errorProps;
@@ -178,7 +215,6 @@ const App = () => {
           Cookies.remove("makzonFrtendSession");
         }
       });
-
   }, [User.login]);
 
 
