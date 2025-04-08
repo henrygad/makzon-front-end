@@ -10,8 +10,8 @@ import Followers from "../sections/Followers";
 import Followings from "../sections/Followings";
 import Dialog from "../components/Dialog";
 import useDialog from "../hooks/useDialog";
-import { addToDisplaySingleMedia, displayMediaOptions } from "../redux/slices/userMediaSlices";
 import Copytoclipboard from "../components/Copytoclipboard";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Userprofile = ({ User }: { User: userProps }) => {
     const { data: Blogposts, loading } = useAppSelector(state => state.userBlogpostSlices.blogposts);
@@ -19,12 +19,12 @@ const Userprofile = ({ User }: { User: userProps }) => {
     const navigate = useNavigate();
     const { dialog, handleDialog } = useDialog();
 
-    const userMenuOptions = [        
+    const userMenuOptions = [
         {
             name: "Edit profile",
             icon: <span>E</span>,
             func: () => navigate("/profile/update"),
-        },       
+        },
         {
             name: "Settings",
             icon: <span>S</span>,
@@ -48,15 +48,11 @@ const Userprofile = ({ User }: { User: userProps }) => {
                     <button
                         className="text-sm font-text text-slate-600 cursor-pointer"
                         onClick={() => {
-                           handleDialog();
+                            handleDialog();
                             const clear = setTimeout(() => {
-                                appDispatch(addToDisplaySingleMedia({ url: User.avatar, _id: "", type: "image", mime: "png" }));
-                                appDispatch(displayMediaOptions({
-                                    negativeNavigate: "#",
-                                }));
-                                navigate("#single-image");   
+                                navigate(`?url=${apiEndPont + "/media/" + User.avatar}&type=image#single-image`);
                                 clearTimeout(clear);
-                             }, 100);
+                            }, 100);
                         }}
                     >
                         View Picture
@@ -76,13 +72,13 @@ const Userprofile = ({ User }: { User: userProps }) => {
                     <Dropmenu
                         horizotal={true}
                         children={
-                            <ul className="min-w-[140px] text-sm font-text p-4 space-y-3 rounded-md border bg-white "> 
-                                <li className="flex gap-2 items-center cursor-pointer">                                    
+                            <ul className="min-w-[140px] text-sm font-text p-4 space-y-3 rounded-md border bg-white ">
+                                <li className="flex gap-2 items-center cursor-pointer">
                                     <Copytoclipboard body={"/profile/" + User.userName} />
                                     <span>Copy</span>
-                                </li>                                   
+                                </li>
                                 {
-                                    userMenuOptions.map(option => 
+                                    userMenuOptions.map(option =>
                                         <li
                                             key={option.name}
                                             className="flex gap-2 items-center cursor-pointer"
@@ -91,7 +87,7 @@ const Userprofile = ({ User }: { User: userProps }) => {
                                                 e.stopPropagation();
                                             }}
                                         >
-                                            { option.icon}
+                                            {option.icon}
                                             <span>
                                                 {option.name}
                                             </span>

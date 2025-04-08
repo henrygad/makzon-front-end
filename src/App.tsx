@@ -37,6 +37,7 @@ const Security = lazy(() => import("./pages/Security"));
 const Verifyuser = lazy(() => import("./pages/Verifyuser"));
 const Page404 = lazy(() => import("./pages/Page404"));
 
+
 const App = () => {
   const { data: User } = useAppSelector(
     (state) => state.userProfileSlices.userProfile
@@ -60,7 +61,7 @@ const App = () => {
         );
       })
       .catch((err) => {
-        console.log(err);
+        console.error(err);
       });
   }, []);
 
@@ -108,8 +109,7 @@ const App = () => {
           withCredentials: true,
         })
           .then(async (res) => {
-            const userNotifications: notificationProps[] = await res.data.data;
-            console.log(userNotifications, "notifications");
+            const userNotifications: notificationProps[] = await res.data.data;            
             appDispatch(
               fetchNotifications({
                 data: userNotifications,
@@ -130,8 +130,7 @@ const App = () => {
           }
         )
           .then(async (res) => {
-            const userBlogposts: postProps[] = await res.data.data;
-            console.log(userBlogposts, "blogpost");
+            const userBlogposts: postProps[] = await res.data.data;            
             appDispatch(
               fetchBlogposts({
                 data: userBlogposts,
@@ -148,8 +147,7 @@ const App = () => {
           withCredentials: true,
         })
           .then(async (res) => {
-            const userDrafts: postProps[] = await res.data.data;
-            console.log(userDrafts, "draft");
+            const userDrafts: postProps[] = await res.data.data;            
             appDispatch(
               fetchDrafts({
                 data: userDrafts,
@@ -158,16 +156,15 @@ const App = () => {
               })
             );
           })
-          .catch((error) => console.log(error));
+          .catch((error) => console.error(error));
 
         //fetch user saves post
-        axios(apiEndPont + "/post/saves", {
+        axios(apiEndPont + "/post/user/saves", {
           baseURL: apiEndPont,
           withCredentials: true,
         })
           .then(async (res) => {
-            const userSavedBlogposts: postProps[] = await res.data.data;
-            console.log(userSavedBlogposts, "saves");
+            const userSavedBlogposts: postProps[] = await res.data.data;            
             appDispatch(
               fetchSavedBlogposts({
                 data: userSavedBlogposts,
@@ -176,7 +173,7 @@ const App = () => {
               })
             );
           })
-          .catch((error) => console.log(error));       
+          .catch((error) => console.error(error));       
 
         //fetch user media
         axios(apiEndPont + "/media", {
@@ -184,8 +181,7 @@ const App = () => {
           withCredentials: true,
         })
           .then(async (res) => {
-            const userMedia: mediaProps[] = await res.data.data;
-            console.log(userMedia, "media");
+            const userMedia: mediaProps[] = await res.data.data;            
             appDispatch(
               fetchMedia({
                 data: userMedia,
@@ -194,7 +190,7 @@ const App = () => {
               })
             );
           })
-          .catch((error) => console.log(error));           
+          .catch((error) => console.error(error));           
       })
       .catch((error) => {
         const getError = error as errorProps;

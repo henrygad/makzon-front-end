@@ -20,8 +20,7 @@ const Displaysinglemedialmodel = () => {
             }
         }
     }, [location.search]);
-
-    console.log(media);
+    
     return (
         <Model
             id="single-image"
@@ -33,7 +32,7 @@ const Displaysinglemedialmodel = () => {
                     >
                         <IoMdArrowRoundBack size={20} />
                     </button>
-                    {media ?
+                    {media?.type ?
                         <>
                             {
                                 media.type.includes("image") ?

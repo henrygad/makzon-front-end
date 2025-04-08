@@ -8,6 +8,7 @@ type Props = {
     disabled?: boolean
 };
 
+
 const Button = ({ id, fieldName, className, onClick = ()=> null, disabled }: Props) => {    
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {            
@@ -16,7 +17,7 @@ const Button = ({ id, fieldName, className, onClick = ()=> null, disabled }: Pro
 
     return <button
         id={id || ""}
-        className={`font-sec px-3 py-1 shadow border ${className}`}
+        className={`font-sec px-3 ${className}`}
         onClick={handleClick}
         disabled={disabled}
     >

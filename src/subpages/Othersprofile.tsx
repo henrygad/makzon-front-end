@@ -5,17 +5,15 @@ import { useNavigate } from "react-router-dom";
 import Displayuserinfor from "../components/Displayuserinfor";
 import Follow from "../components/Follow";
 import Dropmenu from "../components/Dropmenu";
-import { useAppDispatch } from "../redux";
-import { addToDisplaySingleMedia, displayMediaOptions } from "../redux/slices/userMediaSlices";
 import Tab from "../components/Tab";
 import Profileblogposts from "../sections/Profileblogposts";
 import Followers from "../sections/Followers";
 import Followings from "../sections/Followings";
 import Copytoclipboard from "../components/Copytoclipboard";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Othersprofile = ({ userName }: { userName: string | undefined }) => {
     const navigate = useNavigate();
-    const appDispatch = useAppDispatch();
     const [user, setUser] = useState<userProps | null>(null);
 
     const [loadingBlogpost, setLoadingBlogpost] = useState(false);
@@ -71,13 +69,7 @@ const Othersprofile = ({ userName }: { userName: string | undefined }) => {
             <Displayuserinfor
                 short={false}
                 user={user}
-                onClick={() => {
-                    appDispatch(addToDisplaySingleMedia({ url: user.avatar, _id: "", type: "image", mime: "png" }));
-                    appDispatch(displayMediaOptions({
-                        negativeNavigate: "#",
-                    }));
-                    navigate("#single-image");
-                }}
+                onClick={() => navigate(`?url=${apiEndPont + "/media/" + user.avatar}&type=image#single-image`)}
             />
             <div className="flex flex-col items-end justify-between gap-8 py-2">
                 <div className="flex items-start gap-4">

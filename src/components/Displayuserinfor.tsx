@@ -16,7 +16,7 @@ const Shortdetail = ({ user, short, onClick }: Props) => {
     <span className="flex items-start gap-1 cursor-pointer" onClick={onClick}>
       {short ? (
         <Displayimage
-          url={user.avatar.trim() ? apiEndPont + "/media/" + user.avatar : ""}
+          url={user.avatar?.trim() ? apiEndPont + "/media/" + user.avatar : ""}
           alt={user.userName}
           useCancle={false}
           className="h-10 w-10 rounded-full object-contain"
@@ -32,7 +32,7 @@ const Shortdetail = ({ user, short, onClick }: Props) => {
         />
       ) : (
         <Displayimage
-          url={user.avatar.trim() ? apiEndPont + "/media/" + user.avatar : ""}
+          url={user.avatar?.trim() ? apiEndPont + "/media/" + user.avatar : ""}
           alt={user.userName}
           useCancle={false}
           className="h-14 w-14 rounded-full object-contain"
@@ -50,7 +50,9 @@ const Shortdetail = ({ user, short, onClick }: Props) => {
 
       <span className="flex flex-col">
         {user.name && user.name.givenName ? (
-          <span className="block text-[.9rem] font-sec -mb-1">{`${user.name.givenName} ${user.name.familyName}`}</span>
+          <span className="block text-[.9rem] font-sec -mb-1">
+            {`${user.name.givenName|| ""} ${user.name.familyName || ""}`}
+          </span>
         ) : null}
         <span className="block text-[.8rem] font-sec text-slate-400 font-semibold">
           {user.userName}
@@ -66,6 +68,8 @@ const Displayuserinfor = ({
   onClick = () => null,
 }: Props) => {
   const sanitize = useSanitize();
+
+
   return (
     <>
       {short ? (
@@ -77,27 +81,28 @@ const Displayuserinfor = ({
             {/* bio */}
             <span
               className="block font-text text-base mt-4"
-              dangerouslySetInnerHTML={sanitize(user.bio || "")}
-            ></span>
+              dangerouslySetInnerHTML={sanitize(user.bio || "")}></span>
+              {/* profession */}
             <span className="block text-base font-text text-slate-900 text-start w-full mt-1">
               {user.profession}
             </span>
-            <span className="block text-base text-start text-stone-700 font-text space-y-0.5 mt-3">
+              <span className="block text-base text-start text-stone-700 font-text space-y-0.5 mt-3">
+                {/* email */}
               <span className="block">
                 {/* email */}
                 {user.displayEmail || ""}
-              </span>
-              <span className="block">
+                </span>
                 {/* phonenumber */}
-                {user.displayPhoneNumber ? (
+              <span className="block">                
+                  {user.displayPhoneNumber && user.displayPhoneNumber?.split("-")[1] ? (
                   <span>
                     {user.displayPhoneNumber.split("-")[0]}{" "}
                     {user.displayPhoneNumber.split("-")[1]}
                   </span>
                 ) : null}
               </span>
-              <span className="flex items-center gap-1">
                 {/* website link */}
+              <span className="flex items-center gap-1">
                 {user.website ? (
                   <>
                     <GoLink size={13} color="blue" />
@@ -113,16 +118,16 @@ const Displayuserinfor = ({
               </span>
             </span>
             <span className="block text-base text-start font-text mt-3">
-              <span className="block capitalize">
                 {/* sex */}
+              <span className="block capitalize">
                 {user.sex || ""}
               </span>
-              <span className="block">
                 {/* date of birth */}
+              <span className="block">
                 {user.displayDateOfBirth ? user.dateOfBirth || "" : null}
               </span>
-              <span className="block">
                 {/* country */}
+              <span className="block">
                 {user.country || ""}
               </span>
             </span>

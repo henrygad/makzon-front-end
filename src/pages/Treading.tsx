@@ -5,26 +5,25 @@ import Logo from "../components/Logo";
 const Treading = () => {
     return <>
         <header className="container flex justify-between items-center gap-8 py-3 border-b">         
-            <div>
+            <span>
                 <Logo
                     withText={true}
                     className="h-6 w-6"
                 />
-            </div>
+            </span>
             <menu>
                 <ul className="flex justify-end items-center gap-4">
                     <li>
                         <Button
-                            className="text-sm border-green-500 hover:shadow-none rounded-md"
+                            className="text-sm py-[1.4px] border border-green-500 shadow hover:shadow-none rounded-md"
                             fieldName={<Link to="/login" >Log in</Link>}
                         />
                     </li>
                     <li>
-                        <button
-                            className="font-sec text-sm py-1 hover:text-green-500"
-                        >
-                            <Link to="/signup" >Sign up</Link>
-                        </button>
+                        <Button
+                            fieldName={<Link to="/signup" >Sign up</Link>}
+                            className="font-sec text-sm border-none shadow-none hover:text-green-500"
+                        />                        
                     </li>
                 </ul>
             </menu>

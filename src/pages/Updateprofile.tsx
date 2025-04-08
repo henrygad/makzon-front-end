@@ -13,8 +13,9 @@ import Texteditor from "../editor/App";
 import Customselection from "../components/Customselection";
 import { Countries, Professions } from "../assert/date";
 import { Button } from "../components/Button";
-import { addMedia} from "../redux/slices/userMediaSlices";
+import { addMedia } from "../redux/slices/userMediaSlices";
 import axios from "axios";
+import useSanitize from "../hooks/useSanitize";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Updateprofile = () => {
@@ -27,24 +28,12 @@ const Updateprofile = () => {
     );
     const appDispatch = useAppDispatch();
 
-    const [userData, setUserData] = useState({
-        userName: "",
-        name: { familyName: "", givenName: "" },
-        dateOfBirth: "",
-        displayDateOfBirth: false,
-        displayEmail: "",
-        displayPhoneNumber: "",
-        website: "",
-        profession: "",
-        country: "",
-        sex: "",
-        bio: "",
-    });
-    const [avatar, setAvatar] = useState(" ");
+    const [userData, setUserData] = useState<userProps | null>(null);
+    const [avatar, setAvatar] = useState("");
     const [displayPhoneNumber, setDisplayPhoneNumber] = useState<{
         code: string;
-        number: string;
-    }>({ code: "", number: "" });
+        number: string | undefined;
+    }>({code: "+234", number: undefined});
 
     const [searchProfession, setSearchProfession] = useState("");
     const [searchCountry, setSearchCountry] = useState("");
@@ -67,6 +56,8 @@ const Updateprofile = () => {
     const [grapSelectedMedia, setGrapSelectedMedia] = useState("");
     const [blob, setBlob] = useState<Blob | undefined>(undefined);
     const [loadingUpdatedData, setLoadingUpdatedData] = useState(false);
+    const [avatarChange, setAvatarChange] = useState(false);
+    const sanitize = useSanitize();
 
     const updatedAvatar = async (file: Blob) => {
         setLoadingUpdatedData(true);
@@ -78,17 +69,18 @@ const Updateprofile = () => {
             const res = await axios.patch(url, formData, {
                 baseURL: apiEndPont,
                 withCredentials: true,
-            });
-            const updatedUserData: userProps = await res.data;
+            });            
+            const updatedUserData: userProps = await res.data.data;
+
             if (updatedUserData) {
                 console.log(updatedUserData);
                 appDispatch(editProfile(updatedUserData));
                 appDispatch(addMedia({
                     _id: Date.now().toString(),
-                    filename: updatedUserData.avatar,
+                    filename: updatedUserData?.avatar,
                     size: 100,
                     fieldname: "avatar",
-                    mimetype: updatedUserData.avatar.split(".")[1],
+                    mimetype: updatedUserData?.avatar.split(".")[1],
 
                 }));
             }
@@ -100,7 +92,7 @@ const Updateprofile = () => {
     };
 
     const updatedOtherData = async (user: userProps) => {
-        setLoadingUpdatedData(true);
+        setLoadingUpdatedData(true);        
         try {
             const url = apiEndPont + "/user";
             const res = await axios.patch(
@@ -111,7 +103,7 @@ const Updateprofile = () => {
                     withCredentials: true,
                 }
             );
-            const updatedUserData: userProps = await res.data;
+            const updatedUserData: userProps = await res.data.data;
             if (updatedUserData) {
                 appDispatch(editProfile(updatedUserData));
             }
@@ -130,23 +122,29 @@ const Updateprofile = () => {
 
     useEffect(() => {
         if (selectedMedia && selectedMedia.length) {
-            setGrapSelectedMedia(apiEndPont + "/media/" + User.avatar || "");           
+            setGrapSelectedMedia(apiEndPont + "/media/" + User.avatar || "");
         } else {
             if (grapSelectedMedia) {
                 setAvatar(grapSelectedMedia);
             }
-        }        
+        }
     }, [selectedMedia]);
 
     useEffect(() => {
         if (User) {
-            setAvatar(apiEndPont + "/media/" + User.avatar || "");
-            setUserData((pre) => ({ ...pre, ...User }));
+            if (User.avatar) {
+                setAvatar(apiEndPont + "/media/" + User.avatar);
+                setAvatarChange(true);                
+            }
+            setUserData((pre) => pre ? ({ ...pre, ...User }) : ({ ...User }));
             setDisplayDateOfBirth(User.displayDateOfBirth);
-            setDisplayPhoneNumber({
-                code: User.displayPhoneNumber?.split("-")[0] || "",
-                number: User.displayPhoneNumber?.split("-")[1] || "",
-            });
+            if (User.displayPhoneNumber &&
+                User.displayPhoneNumber.split("-")[1]) {
+                setDisplayPhoneNumber({
+                    code: User.displayPhoneNumber.split("-")[0],
+                    number: User.displayPhoneNumber.split("-")[1],
+                });
+            }
         }
     }, [User]);
 
@@ -161,19 +159,10 @@ const Updateprofile = () => {
                             {/* display avatar */}
                             <div>
                                 <Displayimage
-                                    url={apiEndPont + "/media/" + User.avatar || ""}
+                                    url={User.avatar ? apiEndPont + "/media/" + User.avatar : ""}
                                     setUrl={setAvatar}
                                     alt={User.userName}
-                                    useCancle={true}
-                                    onCancle={() => {
-                                        const updatedUserData = {
-                                            avatar: "",
-                                        };
-                                        handleUpadteUserData(updatedUserData);
-                                    }}
-                                    parentClassName={
-                                        User.avatar?.trim() ? "border p-1 rounded-md" : ""
-                                    }
+                                    useCancle={false}                                                                 
                                     className="h-16 w-16 object-contain rounded-full border cursor-pointer"
                                     placeHolder={
                                         <img
@@ -197,15 +186,15 @@ const Updateprofile = () => {
                                             } capitalize rounded-md`}
                                         autoComplete="false"
                                         placeholder="Your first name..."
-                                        value={userData["name"].givenName}
+                                        value={userData?.name?.givenName || ""}
                                         onChange={(e) => {
-                                            setUserData((pre) => ({
+                                            setUserData((pre) => pre ? ({
                                                 ...pre,
                                                 name: {
                                                     givenName: e.target.value,
-                                                    familyName: pre.name.familyName,
+                                                    familyName: pre.name?.familyName,
                                                 },
-                                            }));
+                                            }) : pre);
                                             setChangeInputs((pre) => {
                                                 if (pre.includes("first-name")) {
                                                     return pre;
@@ -223,7 +212,7 @@ const Updateprofile = () => {
                                                 const updatedUserData = {
                                                     name: {
                                                         familyName: User.name?.familyName,
-                                                        givenName: userData["name"].givenName,
+                                                        givenName: userData?.name?.givenName,
                                                     },
                                                 };
                                                 handleUpadteUserData(updatedUserData);
@@ -260,15 +249,15 @@ const Updateprofile = () => {
                                         className={`flex-1 py-1 ${focusInput === "last-name" ? "px-2" : ""
                                             } capitalize rounded-md`}
                                         placeholder="Your last name..."
-                                        value={userData["name"].familyName}
+                                        value={userData?.name?.familyName || ""}
                                         onChange={(e) => {
-                                            setUserData((pre) => ({
+                                            setUserData((pre) => pre ? ({
                                                 ...pre,
                                                 name: {
-                                                    givenName: pre.name.givenName,
+                                                    givenName: pre.name?.givenName,
                                                     familyName: e.target.value,
                                                 },
-                                            }));
+                                            }) : pre);
 
                                             setChangeInputs((pre) => {
                                                 if (pre.includes("last-name")) {
@@ -285,7 +274,7 @@ const Updateprofile = () => {
                                             onClick={() => {
                                                 const updatedUserData = {
                                                     name: {
-                                                        familyName: userData["name"].familyName,
+                                                        familyName: userData?.name?.familyName,
                                                         givenName: User.name?.givenName,
                                                     },
                                                 };
@@ -332,10 +321,10 @@ const Updateprofile = () => {
                                         onFocus={() => setFocusInput("bio")}
                                         addValue={{
                                             createNew: User.bio?.trim() ? false : true,
-                                            data: (User.bio && User.bio) || "",
+                                            data: sanitize(User.bio).__html || "",
                                         }}
                                         setGetValue={(value) => {
-                                            setUserData((pre) => ({ ...pre, bio: value._html }));
+                                            setUserData((pre) => pre ? ({ ...pre, bio: value._html }) : pre);
                                             setChangeInputs((pre) => {
                                                 if (pre.includes("bio")) {
                                                     return pre;
@@ -349,7 +338,7 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    bio: userData.bio,
+                                                    bio: userData?.bio,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
                                                 setChangeInputs((pre) =>
@@ -387,13 +376,13 @@ const Updateprofile = () => {
                                             placeholder="Your profession..."
                                             className={`block w-full py-1 ${focusInput === "profession" ? "px-2" : ""
                                                 } rounded-md`}
-                                            value={userData.profession}
+                                            value={userData?.profession || ""}
                                             onChange={(e) => {
                                                 setSearchProfession(e.target.value);
-                                                setUserData((pre) => ({
+                                                setUserData((pre) => pre ? ({
                                                     ...pre,
                                                     profession: e.target.value,
-                                                }));
+                                                }) : pre);
                                                 setChangeInputs((pre) => {
                                                     if (pre.includes("profession")) {
                                                         return pre;
@@ -414,12 +403,12 @@ const Updateprofile = () => {
                                             dropDown={focusInput === "profession" ? true : false}
                                             useSearch={true}
                                             search={searchProfession}
-                                            select={userData.profession}
+                                            select={userData?.profession || ""}
                                             setSelect={(value) => {
-                                                setUserData((pre) => ({
+                                                setUserData((pre) => pre ? ({
                                                     ...pre,
                                                     profession: value as string,
-                                                }));
+                                                }) : pre);
                                                 setChangeInputs((pre) => {
                                                     if (pre.includes("profession")) {
                                                         return pre;
@@ -434,7 +423,7 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    profession: userData.profession,
+                                                    profession: userData?.profession,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
                                                 setChangeInputs((pre) =>
@@ -472,12 +461,12 @@ const Updateprofile = () => {
                                         className={`flex-1 py-1 ${focusInput === "display-email" ? "px-2" : ""
                                             } rounded-md`}
                                         placeholder="Display email..."
-                                        value={userData.displayEmail}
+                                        value={userData?.displayEmail || ""}
                                         onChange={(e) => {
-                                            setUserData((pre) => ({
+                                            setUserData((pre) => pre ? ({
                                                 ...pre,
                                                 displayEmail: e.target.value,
-                                            }));
+                                            }) : pre);
 
                                             setChangeInputs((pre) => {
                                                 if (pre.includes("display-email")) {
@@ -493,7 +482,7 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    displayEmail: userData.displayEmail,
+                                                    displayEmail: userData?.displayEmail,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
                                                 setChangeInputs((pre) =>
@@ -533,13 +522,10 @@ const Updateprofile = () => {
                                             <select
                                                 name="countries-code"
                                                 id="countries-code"
-                                                value={displayPhoneNumber.code}
+                                                value={displayPhoneNumber?.code}
                                                 className="text-base font-text p-1 border rounded-md"
                                                 onChange={(e) => {
-                                                    setDisplayPhoneNumber((pre) => ({
-                                                        ...pre,
-                                                        code: e.target.value,
-                                                    }));
+                                                    setDisplayPhoneNumber((pre) =>({ ...pre, code: e.target.value }));
                                                     setChangeInputs((pre) => {
                                                         if (pre.includes("display-phone-number")) {
                                                             return pre;
@@ -565,12 +551,9 @@ const Updateprofile = () => {
                                             className={`flex-1 py-1 ${focusInput === "display-phone-number" ? "px-2" : ""
                                                 } rounded-md`}
                                             placeholder="Phone number..."
-                                            value={displayPhoneNumber.number}
+                                            value={displayPhoneNumber?.number || ""}
                                             onChange={(e) => {
-                                                setDisplayPhoneNumber((pre) => ({
-                                                    ...pre,
-                                                    number: e.target.value.toString().trim(),
-                                                }));
+                                                setDisplayPhoneNumber((pre) => ({ ...pre, number: e.target.value.toString().trim() }));                                               
                                                 setChangeInputs((pre) => {
                                                     if (pre.includes("display-phone-number")) {
                                                         return pre;
@@ -586,10 +569,7 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    displayPhoneNumber:
-                                                        displayPhoneNumber.code +
-                                                        "-" +
-                                                        displayPhoneNumber.number,
+                                                    displayPhoneNumber: displayPhoneNumber?.number ? (displayPhoneNumber.code + "-" + displayPhoneNumber.number) : undefined,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
                                                 setChangeInputs((pre) =>
@@ -628,12 +608,12 @@ const Updateprofile = () => {
                                         className={`flex-1 py-1 ${focusInput === "website" ? "px-2" : ""
                                             } rounded-md`}
                                         placeholder="Your website..."
-                                        value={userData.website}
+                                        value={userData?.website || ""}
                                         onChange={(e) => {
-                                            setUserData((pre) => ({
+                                            setUserData((pre) => pre ? ({
                                                 ...pre,
                                                 website: e.target.value,
-                                            }));
+                                            }) : pre);
 
                                             setChangeInputs((pre) => {
                                                 if (pre.includes("website")) {
@@ -649,7 +629,7 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    website: userData.website,
+                                                    website: userData?.website,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
                                                 setChangeInputs((pre) =>
@@ -686,12 +666,12 @@ const Updateprofile = () => {
                                         className={`flex-1 py-1 ${focusInput === "birth-day" ? "px-2" : ""
                                             } rounded-md`}
                                         placeholder="Display email..."
-                                        value={userData.dateOfBirth}
+                                        value={userData?.dateOfBirth || ""}
                                         onChange={(e) => {
-                                            setUserData((pre) => ({
+                                            setUserData((pre) => pre ? ({
                                                 ...pre,
                                                 dateOfBirth: e.target.value,
-                                            }));
+                                            }) : pre);
 
                                             setChangeInputs((pre) => {
                                                 if (pre.includes("birth-day")) {
@@ -708,7 +688,7 @@ const Updateprofile = () => {
                                             onClick={() => {
                                                 const updatedUserData = {
                                                     displayDateOfBirth,
-                                                    dateOfBirth: userData.dateOfBirth,
+                                                    dateOfBirth: userData?.dateOfBirth,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
                                                 setChangeInputs((pre) =>
@@ -789,20 +769,20 @@ const Updateprofile = () => {
                                                 } rounded-md`}
                                             onClick={() => setFocusInput("sex")}
                                         >
-                                            {userData.sex || "Your sex"}
+                                            {userData?.sex || "Your sex"}
                                         </span>
                                         <Customselection
                                             arrOfOptions={["Male", "Female"]}
                                             className="top-9 right-0 left-0 w-full  bg-white border border-blue-600 py-2 rounded-md shadow-md shadow-gray-400 overflow-y-auto z-10"
                                             dropDown={focusInput === "sex" ? true : false}
                                             useSearch={false}
-                                            select={userData.sex}
+                                            select={userData?.sex || ""}
                                             setSelect={(value) => {
                                                 setFocusInput("");
-                                                setUserData((pre) => ({
+                                                setUserData((pre) => pre ? ({
                                                     ...pre,
                                                     sex: value as string,
-                                                }));
+                                                }) : pre);
                                                 setChangeInputs((pre) => {
                                                     if (pre.includes("sex")) {
                                                         return pre;
@@ -817,7 +797,7 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    sex: userData.sex,
+                                                    sex: userData?.sex,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
                                                 setChangeInputs((pre) =>
@@ -855,13 +835,13 @@ const Updateprofile = () => {
                                             placeholder="Your country..."
                                             className={`block w-full py-1 ${focusInput === "country" ? "px-2" : ""
                                                 } rounded-md`}
-                                            value={userData.country}
+                                            value={userData?.country || ""}
                                             onChange={(e) => {
                                                 setSearchCountry(e.target.value);
-                                                setUserData((pre) => ({
+                                                setUserData((pre) => pre ? ({
                                                     ...pre,
                                                     country: e.target.value,
-                                                }));
+                                                }) : pre);
                                                 setChangeInputs((pre) => {
                                                     if (pre.includes("country")) {
                                                         return pre;
@@ -881,12 +861,12 @@ const Updateprofile = () => {
                                             className="bottom-9 right-0 left-0 w-full min-h-[180px] max-h-[180px] border border-blue-600 py-2 rounded-md shadow-md shadow-gray-400 overflow-y-auto"
                                             useSearch={true}
                                             search={searchCountry}
-                                            select={userData.country}
+                                            select={userData?.country || ""}
                                             setSelect={(value) => {
-                                                setUserData((pre) => ({
+                                                setUserData((pre) => pre ? ({
                                                     ...pre,
                                                     country: value as string,
-                                                }));
+                                                }) : pre);
                                                 setChangeInputs((pre) => {
                                                     if (pre.includes("country")) {
                                                         return pre;
@@ -902,7 +882,7 @@ const Updateprofile = () => {
                                         <button
                                             onClick={() => {
                                                 const updatedUserData = {
-                                                    country: userData.country,
+                                                    country: userData?.country,
                                                 };
                                                 handleUpadteUserData(updatedUserData);
                                                 setChangeInputs((pre) =>
@@ -942,10 +922,11 @@ const Updateprofile = () => {
                                         onClick={() => {
                                             const updatedUserData = {
                                                 ...userData,
-                                                displayPhoneNumber:
-                                                    displayPhoneNumber.code +
-                                                    "-" +
-                                                    displayPhoneNumber.number,
+                                                displayPhoneNumber: (
+                                                    displayPhoneNumber?.number ?
+                                                        (displayPhoneNumber.code + "-" + displayPhoneNumber.number) :
+                                                        undefined
+                                                ),
                                                 displayDateOfBirth,
                                             };
                                             handleUpadteUserData(updatedUserData);
@@ -957,14 +938,14 @@ const Updateprofile = () => {
                         </div>
                         {/* model for profile picture */}
                         <Model
-                            id="insert-profile-picture"                            
+                            id="insert-profile-picture"
                             children={
                                 <div className="font-text bg-white px-8 pb-6 rounded-md -mt-[15%]">
                                     {/* header */}
                                     <header className="flex justify-start items-center gap-4 mt-2 mb-4">
                                         <button
                                             className="cursor-pointer"
-                                            onClick={() => navigate("")}
+                                            onClick={() => navigate(-1)}
                                         >
                                             <IoMdArrowRoundBack size={20} />
                                         </button>
@@ -975,17 +956,19 @@ const Updateprofile = () => {
                                         </div>
                                     </header>
                                     {/* body change profile picture */}
-                                    <main className="w-full flex justify-center items-center">
+                                    <main>
                                         {/* display avatar */}
-                                        <div>
+                                        <div className="flex justify-center items-center">
                                             <Displayimage
                                                 url={avatar}
                                                 setUrl={setAvatar}
-                                                useCancle={false}
-                                                alt={avatar}
-                                                parentClassName={
-                                                    avatar.trim() ? "border p-1 rounded-md" : ""
-                                                }
+                                                useCancle={true}                                             
+                                                onCancle={() => {
+                                                    setAvatar("");
+                                                    setAvatarChange(true);
+                                                    setBlob(undefined);
+                                                }}      
+                                                parentClassName=""
                                                 className="h-[100px] w-[100px] object-contain rounded-full border cursor-pointer"
                                                 placeHolder={
                                                     <img
@@ -1021,6 +1004,7 @@ const Updateprofile = () => {
                                                         setBlob(fileList[0]);
                                                         const data = await getLocalFiles(fileList);
                                                         setAvatar(data[0].url);
+                                                        setAvatarChange(true);
                                                     }
                                                 }}
                                             />
@@ -1028,7 +1012,7 @@ const Updateprofile = () => {
                                             <span className="text-sm text-center">
                                                 <button
                                                     className="block text-white bg-orange-500 p-3 rounded-full shadow-sm cursor-pointer"
-                                                    onClick={() => {                                                        
+                                                    onClick={() => {
                                                         navigate("#display-image-galary");
                                                     }}
                                                 >
@@ -1040,12 +1024,21 @@ const Updateprofile = () => {
                                     </main>
                                     {/* change avatar btn */}
                                     <footer>
-                                        {avatar && avatar.trim() !== User.avatar ? (
-                                            <button
+                                        {avatarChange &&
+                                            avatar.trim() !== (apiEndPont + "/media/" + User.avatar) ?
+                                            (<button
                                                 className="text-white text-base font-text font-semibold w-full py-1.5 bg-blue-600 border rounded-lg shadow "
                                                 onClick={() => {
-                                                    if (blob) updatedAvatar(blob);
-                                                    navigate("");
+                                                    if (blob) {
+                                                        updatedAvatar(blob);
+                                                    } else {
+                                                        const updatedUserData = {
+                                                            avatar: "",
+                                                        };
+                                                        handleUpadteUserData(updatedUserData);
+                                                    }
+                                                    setAvatarChange(false);
+                                                    navigate(-1);
                                                 }}
                                             >
                                                 Add photo

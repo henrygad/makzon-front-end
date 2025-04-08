@@ -27,6 +27,7 @@ const Input = ({
         stopDeleting(e, inputRef); // func to stop deleting inputs if nothing left to clear               
     };
 
+    
     return <div className={inputClassName}>
         <span className="place-holder text-base first-letter:capitalize opacity-45 absolute">
             {placeholderValue}

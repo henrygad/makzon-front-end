@@ -13,7 +13,7 @@ const Header = () => {
   const { data: Notifications, popUpNotificationId } = useAppSelector(
     (state) => state.userNotificationSlices
   );
-
+  
   return (
     <>
       {User.login && location.pathname !== "/verify/user" ? (

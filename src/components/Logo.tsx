@@ -1,7 +1,13 @@
+import { useNavigate } from "react-router-dom";
 
 
 const Logo = ({ withText = true, className }: { withText: boolean, className: string }) => {
-  return <span className="flex gap-1 items-end">
+  const navigete = useNavigate();
+
+  return <span
+    className="flex gap-1 items-end"
+    onClick={() => navigete("/")}
+  >
     <span className={`flex -rotate-45 ${className}`}>
       <span className='w-full h-full border-4 border-slate-100 rounded-full'>
       </span>
