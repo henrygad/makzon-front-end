@@ -1,9 +1,8 @@
 import { useState } from "react";
 
 type localMediaProps = {
-    bufferUrl: string | ArrayBuffer,
-    url: string
-    type: string
+    buffer: string | ArrayBuffer,
+    url: string   
 }
 
 
@@ -20,14 +19,14 @@ const useGetLocalFiles = () => {
             }
 
             const arrFiles = Array.from(files);
+            
             arrFiles.forEach((file, index) => {
                 const readFile = new FileReader();
                 readFile.readAsDataURL(file);                
                 readFile.onload = (e) => {
                     loclUrl.push({
-                        bufferUrl: e.target?.result || "",
-                        url: URL.createObjectURL(file),
-                        type: file.type,
+                        buffer: e.target?.result || "",
+                        url: URL.createObjectURL(file),                     
                     });
 
                     if (index === arrFiles.length - 1) {

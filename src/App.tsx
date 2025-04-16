@@ -1,10 +1,10 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import Loading from "./pages/Loading";
+import { Blogpost, Createblogpost, Login, Notification, Page404, Profile, Security, Settings, Signup, Timeline, Treading, Updateprofile, Verifyuser, } from "./pages";
 import userProps from "./types/user.type";
+import postProps from "./types/post.type";
 import { useAppDispatch, useAppSelector } from "./redux";
 import { fetchProfile } from "./redux/slices/userProfileSlices";
-import postProps from "./types/post.type";
 import {
   fetchBlogposts,
   fetchDrafts,
@@ -18,24 +18,11 @@ import { fetchNotifications } from "./redux/slices/userNotificationSlices";
 import notificationProps from "./types/notification.type";
 import Header from "./sections/Header";
 import Footer from "./sections/Footer";
-import Notification from "./pages/Notification";
-import axios from "axios";
 import errorProps from "./types/error.type";
 import Cookies from "js-cookie";
+import axios from "axios";
+import Displayscreenloading from "./components/Displayscreenloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
-
-const Treading = lazy(() => import("./pages/Treading"));
-const Signup = lazy(() => import("./pages/Signup"));
-const Login = lazy(() => import("./pages/Login"));
-const Timeline = lazy(() => import("./pages/Timeline"));
-const Profile = lazy(() => import("./pages/Profile"));
-const Createblogpost = lazy(() => import("./pages/Createblogpost"));
-const Blogpost = lazy(() => import("./pages/Blogpost"));
-const Updateprofile = lazy(() => import("./pages/Updateprofile"));
-const Settings = lazy(() => import("./pages/Settings"));
-const Security = lazy(() => import("./pages/Security"));
-const Verifyuser = lazy(() => import("./pages/Verifyuser"));
-const Page404 = lazy(() => import("./pages/Page404"));
 
 
 const App = () => {
@@ -101,15 +88,13 @@ const App = () => {
           );
         }
 
-        if (!userData) return;
-
         //fetch user notifications
         axios(apiEndPont + "/notification", {
           baseURL: apiEndPont,
           withCredentials: true,
         })
           .then(async (res) => {
-            const userNotifications: notificationProps[] = await res.data.data;            
+            const userNotifications: notificationProps[] = await res.data.data;
             appDispatch(
               fetchNotifications({
                 data: userNotifications,
@@ -121,16 +106,14 @@ const App = () => {
           .catch((error) => console.error(error));
 
         //fetch user blogposts
-        axios(
-          apiEndPont +
-          `/post?status=published&author=${userData.userName}&updatedAt=-1&skip=0&limit=20`,
+        axios(apiEndPont + "/post/user?skip=0&limit=20",
           {
             baseURL: apiEndPont,
             withCredentials: true,
           }
         )
           .then(async (res) => {
-            const userBlogposts: postProps[] = await res.data.data;            
+            const userBlogposts: postProps[] = await res.data.data;
             appDispatch(
               fetchBlogposts({
                 data: userBlogposts,
@@ -147,7 +130,7 @@ const App = () => {
           withCredentials: true,
         })
           .then(async (res) => {
-            const userDrafts: postProps[] = await res.data.data;            
+            const userDrafts: postProps[] = await res.data.data;
             appDispatch(
               fetchDrafts({
                 data: userDrafts,
@@ -164,7 +147,7 @@ const App = () => {
           withCredentials: true,
         })
           .then(async (res) => {
-            const userSavedBlogposts: postProps[] = await res.data.data;            
+            const userSavedBlogposts: postProps[] = await res.data.data;
             appDispatch(
               fetchSavedBlogposts({
                 data: userSavedBlogposts,
@@ -173,7 +156,7 @@ const App = () => {
               })
             );
           })
-          .catch((error) => console.error(error));       
+          .catch((error) => console.error(error));
 
         //fetch user media
         axios(apiEndPont + "/media", {
@@ -181,7 +164,7 @@ const App = () => {
           withCredentials: true,
         })
           .then(async (res) => {
-            const userMedia: mediaProps[] = await res.data.data;            
+            const userMedia: mediaProps[] = await res.data.data;
             appDispatch(
               fetchMedia({
                 data: userMedia,
@@ -190,7 +173,7 @@ const App = () => {
               })
             );
           })
-          .catch((error) => console.error(error));           
+          .catch((error) => console.error(error));
       })
       .catch((error) => {
         const getError = error as errorProps;
@@ -217,7 +200,7 @@ const App = () => {
   return (
     <>
       <Header />
-      <Suspense fallback={<Loading />}>
+      <Suspense fallback={<Displayscreenloading loading={true} />}>
         <Routes>
           <Route path="*" element={<Page404 />} />
           <Route

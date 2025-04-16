@@ -18,11 +18,14 @@ import Shareblogpost from "./Shareblogpost";
 import Viewblogpost from "./Viewblogpost";
 import { useAppDispatch, useAppSelector } from "../redux";
 import { editProfile } from "../redux/slices/userProfileSlices";
+import axios from "axios";
+import Displayscreenloading from "./Displayscreenloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
     displayType: string;
     blogpost: postProps;
+    authorInfor: userProps,
     updateBlogpost: ({ type, blogpost }: { type: "EDIT", blogpost: postProps } | { type: "DELETE", blogpost: { _id: string } }) => void;
     autoViewComment?: {
         blogpostParentComment: string | null,
@@ -40,6 +43,7 @@ type Props = {
 const Displayblogpost = ({
     displayType,
     blogpost,
+    authorInfor,
     updateBlogpost,
     autoViewComment,
     autoViewLike
@@ -48,10 +52,11 @@ const Displayblogpost = ({
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
     const appDispatch = useAppDispatch();
 
-    const [authorInfor, setAuthorInfor] = useState<userProps | null>(null);
     const [comments, setComments] = useState<commentProps[]>([]);
     const blogpostRef = useRef<HTMLDivElement | null>(null);
     const sanitize = useSanitize();
+
+    const [loading, setLoading] = useState(false);
 
     const publicBlogpostMenus = [
         {
@@ -104,14 +109,6 @@ const Displayblogpost = ({
         },
     ];
 
-    const handleFetchAutoInfor = (userName: string) => {
-        setAuthorInfor({
-            userName,
-            name: { familyName: "Orji", givenName: "Henry" },
-            avatar: "",
-        } as userProps);
-    };
-
     const handleFetchBlogpostComments = (_id: string) => {
         const Comments: commentProps[] = JSON.parse(localStorage.getItem("comments") || "[]");
         const blogpostComments = Comments.filter(comment => comment.postId === _id);
@@ -144,46 +141,65 @@ const Displayblogpost = ({
         navigate("/createblogpost", { state: { blogpost } });
     };
 
-    const handlePublish = (blogpost: postProps) => {
-        const publishBlogpost = {
-            ...blogpost,
-            status: "published"
-        };
-        const Blogposts: postProps[] = JSON.parse(localStorage.getItem("blogposts") || "[]");
-        localStorage.setItem("blogposts", JSON.stringify(Blogposts.map(
-            (blogpost: postProps) => blogpost._id === publishBlogpost._id ? { ...publishBlogpost } : blogpost
-        )));
-        updateBlogpost({ blogpost: publishBlogpost, type: "EDIT" });
+    const handlePublish = async (blogpost: postProps) => {
+        setLoading(true);
+        try {
+            const url = apiEndPont + "/post/partial/" + blogpost._id;
+            const data: postProps = { ...blogpost, status: "published" };
+            const res = await axios.patch(url, data, {
+                baseURL: apiEndPont,
+                withCredentials: true
+            });
+            const publishBlogpost = await res.data.data;
+
+            updateBlogpost({ blogpost: publishBlogpost, type: "EDIT" });
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(true);
+        }
+
     };
 
-    const handleUnpublish = (blogpost: postProps) => {
-        const unpublishBlogpost = {
-            ...blogpost,
-            status: "unpublished"
-        };
-        const Blogposts: postProps[] = JSON.parse(localStorage.getItem("blogposts") || "[]");
-        localStorage.setItem("blogposts", JSON.stringify(Blogposts.map(
-            (blogpost: postProps) => blogpost._id === unpublishBlogpost._id ? { ...unpublishBlogpost } : blogpost
-        )));
-        updateBlogpost({ blogpost: unpublishBlogpost, type: "EDIT" });
+    const handleUnpublish = async (blogpost: postProps) => {
+        setLoading(true);
+        try {
+            const url = apiEndPont + "/post/partial/" + blogpost._id;
+            const data: postProps = { ...blogpost, status: "unpublished" };
+            const res = await axios.patch(url, data, {
+                baseURL: apiEndPont,
+                withCredentials: true
+            });
+            const unpublishBlogpost = await res.data.data;            
+            updateBlogpost({ blogpost: unpublishBlogpost, type: "EDIT" });
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleDelete = (_id: string) => {
-        const Blogposts: postProps[] = JSON.parse(localStorage.getItem("blogposts") || "[]");
-        localStorage.setItem("blogposts", JSON.stringify(Blogposts.filter(blogpost => blogpost._id !== _id)));
-        updateBlogpost({ blogpost: { _id }, type: "DELETE" });
+    const handleDelete = async (_id: string) => {
+        setLoading(true);
+        try {
+            const url = apiEndPont + "/post/" + _id;
+            await axios.delete(url, {
+                baseURL: apiEndPont,
+                withCredentials: true
+            });
+            updateBlogpost({ blogpost: { _id }, type: "DELETE" });
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
         if (blogpost._id) {
-            handleFetchAutoInfor(blogpost.author || "");
             handleFetchBlogpostComments(blogpost._id);
         }
     }, [blogpost._id]);
-
-    if (!authorInfor) {
-        return <div>loaidng...</div>;
-    }
 
     return <>
         <div
@@ -202,7 +218,7 @@ const Displayblogpost = ({
                         <ul className="min-w-[140px] text-sm font-text p-4 space-y-3 rounded-md border bg-white ">
                             {
                                 (blogpost.author &&
-                                    blogpost.author.trim() === "@henry_dev" ?
+                                    blogpost.author.trim() === User.userName ?
                                     [...publicBlogpostMenus, ...privateBlogpostMenu]
                                     : publicBlogpostMenus)
                                     .map((menu) =>
@@ -245,7 +261,7 @@ const Displayblogpost = ({
                 </span>
                 {/* post article */}
                 <>
-                    {displayType === "_HTML" ? <span dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}></span>: 
+                    {displayType === "_HTML" ? <span dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}></span> :
                         <span
                             className="indent-2 break-words hyphens-auto line-clamp-3 cursor-pointer"
                             onClick={() => handleToView(blogpost)}
@@ -353,54 +369,56 @@ const Displayblogpost = ({
                 </span>
             </span>
         </div>
-
-
-        {
-            displayType.trim().toLowerCase() === "_html" ?
-                <>
-                    <menu className="border-t border-b">
-                        <ul className="flex items-center gap-6 p-2">
-                            <li>
-                                <Button
-                                    fieldName={"Comments"}
-                                    className=""
-                                    onClick={() => navigate("#blogpost-comments")}
-                                />
-                            </li>
-                            <li>
-                                <Button
-                                    fieldName={"Likes"}
-                                    className=""
-                                    onClick={() => navigate("#blogpost-likes")}
-                                />
-                            </li>
-                        </ul>
-                    </menu>
-                    <Tab
-                        className="px-2"
-                        arrOfTab={[
-                            {
-                                id: "blogpost-comments",
-                                tab: <Blogpostcomments
-                                    blogpost={blogpost}
-                                    comments={comments}
-                                    setComments={setComments}
-                                    autoViewComment={autoViewComment}
-                                    autoViewLike={autoViewLike}
-                                />
-                            },
-                            {
-                                id: "blogpost-likes",
-                                tab: <Blogpostlikes
-                                    likes={blogpost.likes || []}
-                                    autoViewLike={autoViewLike}
-                                />
-                            },
-                        ]}
-                    />
-                </> :
-                null
-        }
+        {/* Only display on single post page */}
+        <>
+            {
+                displayType.trim().toLowerCase() === "_html" ?
+                    <>
+                        <menu className="border-t border-b">
+                            <ul className="flex items-center gap-6 p-2">
+                                <li>
+                                    <Button
+                                        fieldName={"Comments"}
+                                        className=""
+                                        onClick={() => navigate("#blogpost-comments")}
+                                    />
+                                </li>
+                                <li>
+                                    <Button
+                                        fieldName={"Likes"}
+                                        className=""
+                                        onClick={() => navigate("#blogpost-likes")}
+                                    />
+                                </li>
+                            </ul>
+                        </menu>
+                        <Tab
+                            className="px-2"
+                            arrOfTab={[
+                                {
+                                    id: "blogpost-comments",
+                                    tab: <Blogpostcomments
+                                        blogpost={blogpost}
+                                        comments={comments}
+                                        setComments={setComments}
+                                        autoViewComment={autoViewComment}
+                                        autoViewLike={autoViewLike}
+                                    />
+                                },
+                                {
+                                    id: "blogpost-likes",
+                                    tab: <Blogpostlikes
+                                        likes={blogpost.likes || []}
+                                        autoViewLike={autoViewLike}
+                                    />
+                                },
+                            ]}
+                        />
+                    </> :
+                    null
+            }
+        </>
+        <Displayscreenloading loading={loading} />
     </>;
 };
 

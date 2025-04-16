@@ -16,7 +16,7 @@ const App = ({
     addValue,
     setGetValue,
     autoFocus = true,
-    onFocus = ()=> null,
+    onFocus = () => null,
     useToolBar,
     arrOfEmojis = emojis,
     arrOfFontColors = colors,
@@ -24,9 +24,9 @@ const App = ({
     arrOfHeadings = headings,
     arrOfFontSizes = sizes,
     arrOfFontFamily = family,
-    imageGalary,
-    videoGalary,
     handleLocalFile,
+    handleGalaryFile,
+    onFileAdd,
 }: editorProps) => {
     const textEditorRef = useRef<HTMLDivElement | null>(null);
     let clearHistorTimeOut: number;
@@ -58,7 +58,7 @@ const App = ({
                 handleAddToHistories(); // call func that add continues history in every 400 min sec initail load
                 clearTimeout(clear);
             }, 100);
-       }
+        }
     }, []);
 
     return <div
@@ -78,8 +78,8 @@ const App = ({
                 arrOfFontSizes={arrOfFontSizes}
                 arrOfFontFamily={arrOfFontFamily}
                 textEditorRef={textEditorRef}
-                imageGalary={imageGalary}
-                videoGalary={videoGalary}
+                handleGalaryFile={handleGalaryFile}
+                onFileAdd={onFileAdd}
                 handleLocalFile={handleLocalFile}
                 handleGlobalChangesOnInputArea={handleGlobalChangesOnInputArea}
             /> :

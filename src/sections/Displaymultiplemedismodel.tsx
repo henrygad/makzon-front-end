@@ -17,7 +17,7 @@ const Displaymediamultiplemodel = () => {
         <section className="relative font-text shadow-sm bg-white">
           <div className="flex justify-center items-center gap-2 border-b shadow-sm p-2">
             {/* header */}
-            <h2 className="text-2xl">Image galary</h2>
+            <h2 className="text-2xl">Galary</h2>
             <span>({Media && Media.length})</span>
           </div>
           <div className="flex flex-wrap justify-center gap-2 p-6 h-auto w-auto min-w-full max-w-full max-h-[480px] md:max-h-[768px] overflow-auto">
@@ -38,7 +38,7 @@ const Displaymediamultiplemodel = () => {
             <Button
               id="go-back-galary-dialog"
               fieldName={"Go back"}
-              className="bg-red-600 text-white text-sm rounded-md font-text"
+              className="py-1 bg-red-600 text-white text-sm rounded-md font-text"
               onClick={() => {
                 appDispatch(clearSelectedMedia([]));
                 navigate(-1);
@@ -51,7 +51,7 @@ const Displaymediamultiplemodel = () => {
                   Add {selectedMedia && selectedMedia.length ? selectedMedia.length : null}
                 </>
               }
-              className={`bg-green-600 text-white text-sm rounded-md font-text ${selectedMedia && selectedMedia.length ? "cursor-pointer" : ""
+              className={`py-1 bg-green-600 text-white text-sm rounded-md font-text ${selectedMedia && selectedMedia.length ? "cursor-pointer" : ""
                 }`}
               onClick={() => {                
                 appDispatch(clearSelectedMedia([]));

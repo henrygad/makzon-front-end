@@ -1,22 +1,35 @@
 import Displayblogpost from "../components/Displayblogpost";
-import { useAppSelector } from "../redux";
+import { useAppDispatch, useAppSelector } from "../redux";
+import { deleteBlogpost, editBlogpost } from "../redux/slices/userBlogpostSlices";
 
 const Unpublishs = () => {
-    const { data: Blogposts, loading } = useAppSelector(state => state.userBlogpostSlices.blogposts);
+    const { data: Allblogposts, loading } = useAppSelector(state => state.userBlogpostSlices.blogposts);
+    const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
+    const appDispatch = useAppDispatch();
+
+    const unpublishedPost = Allblogposts.filter(blogpost => blogpost.status.toLowerCase() === "unpublished");    
 
     return <section>
         <div className="space-y-6">
             {!loading ?
-                Blogposts &&
-                    Blogposts.length ?
-                    Blogposts
-                        .filter(blogpost => blogpost.status.toLowerCase() === "unpublished")
+                unpublishedPost &&
+                    unpublishedPost.length ?
+                    unpublishedPost
                         .map(blogpost =>
                             <Displayblogpost
                                 key={blogpost._id}
                                 displayType="TEXT"
                                 blogpost={blogpost}
-                                updateBlogpost={() => null}
+                                authorInfor={User}
+                                updateBlogpost={
+                                    ({ blogpost, type }) => {
+                                        if (type === "EDIT") {
+                                            appDispatch(editBlogpost(blogpost));
+                                        } else if (type === "DELETE") {
+                                            appDispatch(deleteBlogpost({ _id: blogpost._id }));
+                                        }
+                                    }
+                                }
                             />
                         ) :
                     <span>No unpublish blogposts</span> :

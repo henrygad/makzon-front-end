@@ -2,7 +2,9 @@ import { useLocation, useParams } from "react-router-dom";
 import postProps from "../types/post.type";
 import Displayblogpost from "../components/Displayblogpost";
 import { useEffect, useState } from "react";
-
+import axios from "axios";
+import userProps from "../types/user.type";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type viewTargetNotificationProps = {
     autoViewComment?: {
@@ -24,29 +26,38 @@ const Blogpost = () => {
 
     const [viewTargetNotification, setViewTargetNotification] = useState<viewTargetNotificationProps>(undefined);
     const [blogpost, setBlogpost] = useState<postProps | null>(null);
-
-    const handleFetchBlogpost = (author: string, slug: string) => {
-        const Blogposts = JSON.parse(
-            localStorage.getItem("blogposts") || "[]"
-        ) as postProps[];
-        const getBlogpost = Blogposts.find(
-            (blogpost) =>
-                blogpost.author?.trim() === author.trim() &&
-                blogpost.slug?.trim() === slug.trim()
-        ) as postProps;
-        if (getBlogpost) {
-            setBlogpost(getBlogpost);
-        } else {
-            setBlogpost(null);
-        }
-    };
+    const [authorInfor, setAuthorInfor] = useState<userProps | null>(null);
 
     useEffect(() => {
-        if (author?.trim() && slug?.trim()) {
-            handleFetchBlogpost(author, slug);
-        }
-    }, [author, slug]);
+        if (!author || !slug) return;
 
+        // Fetch a single blogpost
+        axios(apiEndPont + "/post/" + author + "/" + slug, {
+            withCredentials: true,
+            baseURL: apiEndPont
+        })
+            .then(async (res) => {
+                const singleBlogpost: postProps = await res.data.data;
+                setBlogpost(singleBlogpost);
+
+                // Fetch author short details
+                const url = apiEndPont + "/user/" + singleBlogpost.author;
+                axios(url, {
+                    withCredentials: true,
+                    baseURL: apiEndPont
+                })
+                    .then(async (res) => {
+                        const userInfor: userProps = await res.data.data;
+                        setAuthorInfor(userInfor);
+                    })
+                    .catch((error) =>
+                        console.error(error)
+                    );
+            })
+            .catch((error) => {
+                console.error(error);
+            });
+    }, [author, slug]);
 
     useEffect(() => {
         if (location.state) {
@@ -57,11 +68,12 @@ const Blogpost = () => {
     return (
         <main className="container">
             <div className="space-y-8">
-                {blogpost ? (
+                {blogpost && authorInfor ? (
                     blogpost.status.toLowerCase() === "published" ? (
                         <Displayblogpost
                             displayType="_HTML"
                             blogpost={blogpost}
+                            authorInfor={authorInfor}
                             updateBlogpost={({ blogpost, type }) => {
                                 if (type === "EDIT") {
                                     setBlogpost((pre) => ({ ...pre, ...blogpost }));

@@ -12,11 +12,11 @@ const Createblogpost = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const state = location.state;
-    const [getBlogpost, setGetBlogpost] = useState<postProps | null >(null);
+    const [getExistingPost, setgetExistingPost] = useState<postProps | null >(null);
 
     useEffect(() => { 
         if (state?.blogpost) {
-            setGetBlogpost(state.blogpost);
+            setgetExistingPost(state.blogpost);
         }
     }, [state?.blogpost]);
 
@@ -64,7 +64,7 @@ const Createblogpost = () => {
                     {
                         id: "add-post",
                         tab: <Addpost
-                            oldBlogpost={getBlogpost}
+                            existingPost={getExistingPost}
                         />
                     },
                     {

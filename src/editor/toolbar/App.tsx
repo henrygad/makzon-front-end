@@ -27,8 +27,8 @@ const Actions = ({
     arrOfFontSizes,
     arrOfFontFamily,
     textEditorRef,
-    imageGalary,
-    videoGalary,
+    handleGalaryFile,
+    onFileAdd,
     handleLocalFile,
     handleGlobalChangesOnInputArea,
 }: toolbarProps) => {
@@ -124,13 +124,15 @@ const Actions = ({
                         getNodesWithinTextEditor={getNodesWithinTextEditor}
                     />
                     <Image
-                        galary={imageGalary}
+                        handleGalaryFile={handleGalaryFile}
+                        onFileAdd={onFileAdd}
                         handleLocalFile={handleLocalFile}
                         handleGlobalChangesOnInputArea={handleGlobalChangesOnInputArea}
                         getNodesWithinTextEditor={getNodesWithinTextEditor}
                     />
                     <Video
-                        galary={videoGalary}
+                        handleGalaryFile={handleGalaryFile}
+                        onFileAdd={onFileAdd}
                         handleLocalFile={handleLocalFile}
                         handleGlobalChangesOnInputArea={handleGlobalChangesOnInputArea}
                         getNodesWithinTextEditor={getNodesWithinTextEditor}

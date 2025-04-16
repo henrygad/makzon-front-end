@@ -11,6 +11,7 @@ type Props = {
   onClick?: () => void;
 };
 
+
 const Shortdetail = ({ user, short, onClick }: Props) => {
   return (
     <span className="flex items-start gap-1 cursor-pointer" onClick={onClick}>

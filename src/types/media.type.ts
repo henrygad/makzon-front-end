@@ -6,6 +6,7 @@ type mediaProps = {
     fieldname: string;
     mimetype: string;
     size: number;
+    uploader: string
 };
 
 export default mediaProps;

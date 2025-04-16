@@ -1,33 +1,38 @@
 import { ReactElement, useState } from "react";
+import { MdDeleteOutline } from "react-icons/md";
 
 type Props = {
-    url: string,
-    setUrl?: React.Dispatch<React.SetStateAction<string>>    
-    caption?: string,
-    placeHolder?: string | ReactElement
-    className: string,
-    selected?: boolean
-    removeSelection?: () => void
+    url: string,   
+    alt?: string
+    placeHolder?: ReactElement
+    loadingPlaceHolder?: ReactElement
+    parentClassName?: string,
+    className: string,       
     useCancle: boolean,
+    onCancle?: (url: string) => void
     onClick?: (e: React.MouseEvent<HTMLImageElement, MouseEvent>) => void
+
 };
 
 const Displayimage = ({
     url,
-    setUrl = () => undefined,    
-    caption = "",    
-    placeHolder = "",
+    alt,
+    placeHolder,
+    loadingPlaceHolder,
+    parentClassName,
     className,
     useCancle,
-    selected,
-    removeSelection = () => undefined,
+    onCancle = () => undefined,   
     onClick = () => undefined }: Props) => {
-    const [loading, setLoading] = useState(false);
+
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
     const DisplayLoading = () => {
-        return <span
-            className="absolute top-0 bottom-0 right-0 left-0 border border-slate-200 bg-slate-200 animate-pulse rounded-md"></span>;
+         if (loadingPlaceHolder) {
+             return loadingPlaceHolder;
+         }
+        return <span className="absolute top-0 bottom-0 right-0 left-0 border border-slate-200 bg-slate-200 animate-pulse rounded-md"></span>;
     };
 
     const Displayplaceholder = () => {
@@ -37,48 +42,47 @@ const Displayimage = ({
         return <span className="absolute top-0 bottom-0 right-0 left-0 border border-slate-200 bg-slate-200 rounded-md"></span>;
     };
 
-    return <span className="flex flex-col justify-start items-start relative h-auto w-auto">
-        <span
-            className={`block relative ${error || loading || !url.trim() ? "opacity-0" : ""}`}
-        >
-            {useCancle ? <span
-                onClick={() => setUrl("")}
-                className="absolute top-1 right-2 font-semibold text-sm cursor-pointer">
-                x
-            </span> :
-                null
-            }
-            {selected ?
+    return <span className={`${parentClassName} inline-block relative`} >
+        <>
+            {/* use cancle */}
+            {useCancle ?
                 <span
-                    className="block absolute top-0 bottom-0 right-0 left-0 bg-blue-400 opacity-45 cursor-pointer"
-                    onClick={removeSelection}></span> :
-                null}
+                    onClick={() => onCancle(url)}
+                    className={`${error || loading ? "opacity-0" : ""} absolute top-2 right-2 font-semibold text-sm cursor-pointer`}
+                >
+                    <MdDeleteOutline color="red" size={14} />
+                </span> :
+                null
+            }         
             {/* image */}
             <img
-                src={url}
-                alt={caption}
-                className={`${className}`}
-                onLoadStart={() => {
-                    setError(false);
-                    setLoading(true);
-                }}
-                onLoad={() => {
-                    setError(false);
-                    setLoading(false);
-                }}
+                src={url || " "}
+                alt={alt}
+                className={`${error || loading ? "opacity-0" : ""} ${className} border`}                
                 onError={() => {
-                    setError(true);
                     setLoading(false);
+                    setError(true);
+
+                }}                           
+                onLoad={() => {
+                    setLoading(false);
+                    setError(false);
                 }}
                 onClick={onClick}
             />
-        </span>
-        {/* image loader placeholder*/}
-        {loading ? <DisplayLoading /> : null}
-        {/* error placeholder */}
-        {error || !url.trim() ? <Displayplaceholder /> : null}        
+        </>
+        {/* loader placeholder*/}
+        {loading ?
+            <DisplayLoading /> :
+            <>
+                {/* error placeholder */}
+                {error ?
+                    <Displayplaceholder /> :
+                    null
+                }
+            </>
+        }
     </span>;
 };
 
 export default Displayimage;
-// www.example.com/images/1

@@ -55,9 +55,10 @@ export interface anchorLinkProps extends actionsProps {
     targetNode: Node | ParentNode | null | undefined
 }
 
-export interface mediaProps extends actionsProps {
-    galary?: { url: string }[]
-    handleLocalFile?: (file: FileList | null) => Promise<string | ArrayBuffer>
+export interface mediaProps extends actionsProps {        
+    handleLocalFile?: (file: FileList) => Promise<string | ArrayBuffer>
+    handleGalaryFile?: () => Promise<string>
+    onFileAdd?: (value: Blob | string) => Promise<string>
 }
 
 export interface emojiProps extends actionsProps {
@@ -71,7 +72,6 @@ export interface textFormatProps extends actionsProps, useToolBarProps {
     arrOfFontSizes: { name: string, style: string[] }[]
     arrOfFontFamily: { name: string, style: string[] }[]
     targetNode: Node | ParentNode | null | undefined
-
 }
 
 export interface inputProps extends addValue {
@@ -91,11 +91,11 @@ export interface toolbarProps extends useToolBarProps{
     arrOfHeadings: { name: string, style: string[] }[]
     arrOfFontSizes: { name: string, style: string[] }[]
     arrOfFontFamily: { name: string, style: string[] }[]
-    toolBarClassName?: string
-    imageGalary?: { url: string }[],
-    videoGalary?: { url: string }[],
+    toolBarClassName?: string   
     handleGlobalChangesOnInputArea: () => void;
-    handleLocalFile?: (file: FileList | null) => Promise<string | ArrayBuffer>
+    handleLocalFile?: (file: FileList) => Promise<string | ArrayBuffer>
+    handleGalaryFile?: () => Promise<string>
+    onFileAdd?: (value: Blob | string) => Promise<string>
 }
 
 export interface editorProps extends addValue, useToolBarProps {
@@ -113,8 +113,8 @@ export interface editorProps extends addValue, useToolBarProps {
     arrOfHeadings?: { name: string, style: string[] }[]
     arrOfFontSizes?: { name: string, style: string[] }[]
     arrOfFontFamily?: { name: string, style: string[] }[]
-    imageGalary?: { url: string }[],
-    videoGalary?: { url: string }[],
-    handleLocalFile?: (file: FileList | null) => Promise<string | ArrayBuffer>
+    handleLocalFile?: (file: FileList) => Promise<string | ArrayBuffer>
+    handleGalaryFile?: () => Promise<string>
+    onFileAdd?: (value: Blob | string) => Promise<string>
 }
 

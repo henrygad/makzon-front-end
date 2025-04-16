@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import mediaProps from "../../types/media.type";
+//import image from "../../assert/profilepic.png";
 
 type Initialstate = {
     media: {      

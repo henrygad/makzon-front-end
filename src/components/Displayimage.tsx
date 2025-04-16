@@ -2,8 +2,7 @@ import { ReactElement, useState } from "react";
 import { MdDeleteOutline } from "react-icons/md";
 
 type Props = {
-    url: string,
-    setUrl?: React.Dispatch<React.SetStateAction<string>>
+    url: string,    
     alt?: string
     placeHolder?: ReactElement
     loadingPlaceHolder?: ReactElement
@@ -14,7 +13,6 @@ type Props = {
     useCancle: boolean,
     onCancle?: (url: string) => void
     onClick?: (e: React.MouseEvent<HTMLImageElement, MouseEvent>) => void
-
 };
 
 const Displayimage = ({

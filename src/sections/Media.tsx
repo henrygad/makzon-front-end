@@ -1,36 +1,54 @@
+import axios from "axios";
 import Displaymedia from "../components/Displaymedia";
 import { useAppDispatch, useAppSelector } from "../redux";
-import {  addSelectedMedia, clearSelectedMedia, deleteMdia } from "../redux/slices/userMediaSlices";
-import mediaProps from "../types/media.type";
+import { addSelectedMedia, clearSelectedMedia, deleteMdia } from "../redux/slices/userMediaSlices";
 import { useEffect, useState } from "react";
 import { MdDeleteOutline } from "react-icons/md";
+import Displayscreenloading from "../components/Displayscreenloading";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 
 const Media = () => {
-    const { data: Media, loading, selectedMedia} = useAppSelector(state => state.userMediaSlices.media);
+    const { data: Media, loading: loadingMedia, selectedMedia } = useAppSelector(state => state.userMediaSlices.media);
     const appDispatch = useAppDispatch();
     const [useSelect, setUseSelect] = useState(false);
 
-    const handleDelete = (_id: string) => {
-        const Getmedia: mediaProps[] = JSON.parse(localStorage.getItem("media") || "[]");
-        localStorage.setItem("media", JSON.stringify(Getmedia.filter(md => md._id !== _id)));
-        appDispatch(deleteMdia({ _id }));
-        appDispatch(clearSelectedMedia([]));
+    const [loading, setLoading] = useState(false);
+
+    const handleDelete = async (_id: string) => {
+        setLoading(true);
+        try {
+            const url = apiEndPont + "/media/" + _id;
+            await axios.delete(url,
+                {
+                    baseURL: apiEndPont,
+                    withCredentials: true
+                }
+            );                        
+            appDispatch(deleteMdia({ _id }));
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+
+
     };
 
     const handleSelectAll = () => {
         if (Media) {
             Media.map(md => {
-                appDispatch(addSelectedMedia({...md}));
+                appDispatch(addSelectedMedia({ ...md }));
             });
         }
     };
 
     const handleMultipleMediaDelete = () => {
         if (selectedMedia) {
-            selectedMedia.map(md => {
-                handleDelete(md.filename);
+            selectedMedia.map(async(md) => {
+                await handleDelete(md.filename);
             });
+            appDispatch(clearSelectedMedia([]));
         }
     };
 
@@ -91,13 +109,13 @@ const Media = () => {
             </ul>
         </menu>
         <div className={`flex flex-wrap items-center gap-2 ${useSelect ? "p-3" : ""}`}>
-            {!loading ?
+            {!loadingMedia ?
                 Media &&
                     Media.length ?
                     Media.map(md =>
                         <Displaymedia
                             key={md._id}
-                            media={md}                            
+                            media={md}
                             useSelect={useSelect}
                             handleDelete={handleDelete}
                         />
@@ -106,6 +124,8 @@ const Media = () => {
                 <div>loading...</div>
             }
         </div>
+        {/* diplay loader */}
+        <Displayscreenloading  loading={loading} />
     </section>;
 };
 
