@@ -192,7 +192,7 @@ const Loginform = () => {
             <span className="block flex-1 border border-green-500 rounded-md "></span>  OR <span className="block flex-1 border border-green-500 rounded-md"></span>
           </span>
           <span className="flex flex-col justify-center gap-1">
-           < Googleloginbtn />
+            < Googleloginbtn text="Login With Google" />
           </span>
         </span>
       </form>

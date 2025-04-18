@@ -149,23 +149,25 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
         />
         {dialog ?
             <div
-                className="container fixed top-0 bottom-0 right-0 left-0 flex items-end z-50"
+                className="container fixed top-0 bottom-5 right-0 left-0 flex items-end z-50"
             >
                 <form
-                    className="relative flex-1 flex items-end gap-4 pt-2  pb-6 px-6 bg-white border rounded-md shadow-2xl"
+                    className="relative flex-1 px-6 pt-4 pb-6 bg-white border rounded-md shadow-2xl"
                 >
-                    <span
-                        className="absolute top-2 right-6 text-sm text-slate-500 font-text cursor-pointer"
-                        onClick={handleDialog}
-                    >
-                        x
-                    </span>
-                    <span className="w-full space-y-3">
+                    <span className="flex relative mb-6">
+                        <span
+                            className="absolute top-0 right-0 text-base text-slate-500 font-text cursor-pointer"
+                            onClick={handleDialog}
+                        >
+                            x
+                        </span>
                         <span className="block font-sec text-slate-600 text-base font-semibold text-start">
                             {replyId ? "Reply" : "Comment"}
                         </span>
+                    </span>                    
+                    <>                       
                         {replyId ?
-                            <span className="w-full flex gap-2 items-center bg-white">
+                            <span className="flex gap-2 items-center bg-white mb-2">
                                 <span className="text-sm font-text text-slate-600">Replying to</span>
                                 <span className="flex flex-wrap gap-1 text-sm font-text text-slate-600 font-semibold">
                                     {
@@ -179,7 +181,9 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                                 </span>
                             </span> :
                             null
-                        }
+                        }                        
+                    </>
+                    <span className="flex gap-4 items-center">  
                         <textarea
                             ref={textAreaRef}
                             name="comemnt-text-area"
@@ -193,13 +197,14 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                             onChange={(e) => setCommentBody(e.target.value)}
                             className="block text-base font-text font-normal break-words hyphens-auto w-full h-[40px] px-4 py-2 border border-slate-800 rounded-2xl shadow-md resize-none overflow-y-hidden"
                         ></textarea>
-                    </span>
-                    <input
-                        type="button"
-                        value={"Send"}
-                        className="text-base font-text text-white bg-green-800 py-1.5 px-4 rounded-full shadow-sm shadow-green-100 cursor-pointer"
-                        onClick={addComment}
-                    />
+                        <input
+                            type="button"
+                            value={"Send"}
+                            className="text-base font-text text-white bg-green-800 py-1.5 px-4 rounded-full shadow-sm shadow-green-100 cursor-pointer"
+                            onClick={addComment}
+                        />
+
+                    </span>                   
                 </form>
             </div> :
             null

@@ -195,7 +195,7 @@ const Displayblogpost = ({
         })
             .then(async (res) => {
                 const parentComments: commentProps[] = await res.data.data;
-                setComments(parentComments);
+                setComments(parentComments);                
 
                 // fetch children comment
                 parentComments.forEach((comment) => {
