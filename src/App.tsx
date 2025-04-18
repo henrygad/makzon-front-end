@@ -24,7 +24,6 @@ import axios from "axios";
 import Displayscreenloading from "./components/Displayscreenloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
-
 const App = () => {
   const { data: User } = useAppSelector(
     (state) => state.userProfileSlices.userProfile

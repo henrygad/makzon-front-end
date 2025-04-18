@@ -32,7 +32,7 @@ const Userprofile = ({ User }: { User: userProps }) => {
         },
     ];
 
-    return <div className="overflow-hidden">
+    return <div>
         <div className="flex">
             {/* disply user infor*/}
             <Displayuserinfor
@@ -132,7 +132,7 @@ const Userprofile = ({ User }: { User: userProps }) => {
                     id: "blogposts",
                     tab: <Profileblogposts
                         loading={loading}
-                        blogposts={Blogposts}
+                        blogposts={Blogposts.filter(post => post.status.toLowerCase() == "published")}
                         updateBlogpost={
                             ({ blogpost, type }) => {
                                 if (type === "EDIT") {

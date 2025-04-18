@@ -98,7 +98,7 @@ const Displaydraft = ({ blogpost }: { blogpost: postProps }) => {
                         null
                 }
             </span>
-        </article>;
+        </article>
         <Displayscreenloading loading={loading} />
     </>;
 };

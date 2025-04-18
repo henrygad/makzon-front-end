@@ -7,7 +7,7 @@ type commentProps = {
     author: string,
     body: { _html: string, text: string },
     url_leading_to_comment_parent: string, 
-    replingTo: string[],
+    replyingTo: string[],
     likes: string[],   
     children?: commentProps[]
 };

@@ -2,22 +2,26 @@ import { FaRegComments } from "react-icons/fa";
 import postProps from "../types/post.type";
 import { useEffect, useRef, useState } from "react";
 import commentProps from "../types/comment.type";
-import { useAppSelector } from "../redux";
 import useDialog from "../hooks/useDialog";
 import useSendNotification from "../hooks/useSendNotification";
 import useTrimWords from "../hooks/useTrimWords";
+import axios from "axios";
+import Displayscreenloading from "./Displayscreenloading";
+import { useAppSelector } from "../redux";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
     blogpost: postProps,
     replyId: string | null
     parentComment: commentProps | null
     replying: string[]
-    setComments: React.Dispatch<React.SetStateAction<commentProps[]>>
+    setComments: React.Dispatch<React.SetStateAction<commentProps[] | null>>
     callBack?: (comment: commentProps) => void;
 };
 
 const Comment = ({ blogpost, replyId = null, parentComment, replying, setComments, callBack = () => null }: Props) => {
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
+    const [loading, setLoading] = useState(false);
     const [commentBody, setCommentBody] = useState("");
     const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -35,79 +39,94 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
         }
     };
 
-    const addComment = (e: React.FormEvent) => {
+    const addComment = async (e: React.FormEvent) => {
         e.preventDefault();
-        const newComment: commentProps = {
-            _id: Date.now().toString(),
-            postId: blogpost._id || "",
-            replyId,
-            author: User.userName,
-            body: { _html: "", text: commentBody },
-            url_leading_to_comment_parent: handleCommentUrl(),
-            replingTo: replying,
-            likes: []
-        };
+        setLoading(true);
+        try {
+            const data: commentProps = {
+                _id: "",
+                author: User.userName,
+                postId: blogpost._id!,
+                replyId,
+                body: { _html: "", text: commentBody },
+                url_leading_to_comment_parent: handleCommentUrl(),
+                replyingTo: replying,
+                likes: []
+            };
+            const url = apiEndPont + "/comment";
+            const res = await axios.post(url, data, {
+                baseURL: apiEndPont,
+                withCredentials: true
+            });
+            const newComment: commentProps = await res.data.data;
+            console.log(newComment);
 
-        const Comments: postProps[] = JSON.parse(localStorage.getItem("comments") || "[]");
-        localStorage.setItem("comments", JSON.stringify([newComment, ...Comments]));
-        setComments(pre => {
-            if (newComment.replyId === null) {
-                /* it a parent comment */
-                return [newComment, ...pre];
-            } else if (newComment.replyId !== null) {
-                /* it a child comment */
-                return pre.map(parentComment => {
-                    if (parentComment._id === newComment.replyId) {
-                        return { ...parentComment, children: [newComment, ...(parentComment.children || [])] };
-                    } else {
-                        /* call a recursive function if need */
-                        return parentComment;
-                    }
+            setComments(pre => {
+                if (!pre) return pre;
+
+                if (newComment.replyId === null) {
+                    /* it a parent comment */
+                    return [newComment, ...pre];
+                } else if (newComment.replyId !== null) {
+                    /* it a child comment */
+                    return pre.map(parentComment => {
+                        if (parentComment._id === newComment.replyId) {
+                            return { ...parentComment, children: [newComment, ...(parentComment.children || [])] };
+                        } else {
+                            /* call a recursive function if need */
+                            return parentComment;
+                        }
+                    });
+                } else {
+                    return pre;
+                }
+
+            });
+            setCommentBody("");
+            handleDialog();
+            callBack(newComment);
+
+            /* run notification api call when a friend comment on user post or comment */
+            if (replyId) {
+                sendNotification({
+                    type: "commented",
+                    from: newComment.author,
+                    targetTitle: trim(parentComment?.body.text || "", 20),
+                    options: {
+                        type: "reply-comment",
+                        parentCommentId: replyId,
+                        targetCommentId: newComment._id
+                    },
+                    to: parentComment?.author || "",
+                    message: `replyed to your comment, ${trim(parentComment?.body.text || "", 20)}`,
+                    checked: false,
+                    url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
                 });
             } else {
-                return pre;
+                sendNotification({
+                    type: "commented",
+                    from: newComment.author,
+                    targetTitle: blogpost.title,
+                    options: {
+                        type: "blogpost-comment",
+                        parentCommentId: null,
+                        targetCommentId: newComment._id
+                    },
+                    to: blogpost.author || "",
+                    message: `commented on, ${blogpost.title}`,
+                    checked: false,
+                    url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
+                });
             }
-
-        });
-        setCommentBody("");
-        handleDialog();
-        callBack(newComment);
-
-        if (replyId) {
-            sendNotification({
-                type: "commented",
-                from: newComment.author,
-                targetTitle: trim(parentComment?.body.text || "", 20),
-                options: {
-                    type: "reply-comment",
-                    parentCommentId: replyId,
-                    targetCommentId: newComment._id
-                },
-                to: parentComment?.author || "",
-                message: `replyed to your comment, ${trim(parentComment?.body.text || "", 20)}`,
-                checked: false,
-                url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
-            });
-        } else {
-            sendNotification({
-                type: "commented",
-                from: newComment.author,
-                targetTitle: blogpost.title,
-                options: {
-                    type: "blogpost-comment",
-                    parentCommentId: null,
-                    targetCommentId: newComment._id
-                },
-                to: blogpost.author || "",
-                message: `commented on, ${blogpost.title}`,
-                checked: false,
-                url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
-            });
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
         }
 
     };
 
-    const handleResizeTextArea = () => {
+    const handleAutoResizeTextareOnkeydown = () => {
         if (textAreaRef.current) {
             textAreaRef.current.style.height = (textAreaRef.current.scrollHeight).toString() + "px";
             textAreaRef.current.style.maxHeight = "120px";
@@ -120,7 +139,7 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
     };
 
     useEffect(() => {
-        window.addEventListener("keydown", handleResizeTextArea);
+        window.addEventListener("keydown", handleAutoResizeTextareOnkeydown);
     }, []);
 
     return (<>
@@ -185,6 +204,7 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
             </div> :
             null
         }
+        <Displayscreenloading loading={loading} />
     </>
     );
 };

@@ -14,7 +14,7 @@ const Drafts = () => {
                         key={draft._id}
                         blogpost={draft}
                     />
-                ) :
+                ):
                 <span>No draft yet</span>
             }
         </div>

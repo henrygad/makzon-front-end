@@ -182,7 +182,7 @@ const Addpost = ({ existingPost }: Props) => {
                 setLoadingUploadedPost(false);
             }
         }
-        
+
         if (existingPost && existingPost.status.toLowerCase() === "drafted") {
             setLoadingUploadedPost(true);
             try {
@@ -231,7 +231,7 @@ const Addpost = ({ existingPost }: Props) => {
                     },
                 });
                 const getNewDraft: postProps = await res.data.data;
-                appDispatch(addDraft(getNewDraft));                
+                appDispatch(addDraft(getNewDraft));
             } catch (error) {
                 console.error(error);
             } finally {
@@ -255,14 +255,13 @@ const Addpost = ({ existingPost }: Props) => {
             }
         }
 
-    }; 
+    };
 
     const handlePublishBtn = async () => {
         if ((!slug.trim() && !title.trim()) || isEmpty) return;
 
-        if (existingPost) {
-            if (existingPost.status.toLowerCase() === "published") {
-                // Edit existing published post data
+        if (existingPost) { // if there is an existing post
+            if (existingPost.status.toLowerCase() === "published") { // And it already published then edit and publish post 
                 const editBlogpost: postProps = {
                     ...existingPost,
                     image,
@@ -273,8 +272,7 @@ const Addpost = ({ existingPost }: Props) => {
                 };
                 await publish(editBlogpost, imageBlob, true);
 
-            } else if (existingPost.status.toLowerCase() === "unpublished") {
-                // Edit existing unpublished post data
+            } else if (existingPost.status.toLowerCase() === "unpublished") {// or if it unpublished, edit and published post
                 const editBlogpost: postProps = {
                     ...existingPost,
                     image,
@@ -286,23 +284,37 @@ const Addpost = ({ existingPost }: Props) => {
                 };
                 await publish(editBlogpost, imageBlob, true);
 
-            } else if (existingPost.status.toLowerCase() === "drafted") {
-                // Edit and published existing drafted post data
-                const editBlogpost: postProps = {
-                    ...existingPost,
-                    _id: existingPost.publishedId,
-                    publishedId: undefined,
-                    image,
-                    title,
-                    body: article.text,
-                    _html: { title, body: article._html },
-                    catigories: catigories.map((catigory) => catigory.cat),
-                    status: "published",
-                };
-                await publish(editBlogpost, imageBlob, true);
+            } else if (existingPost.status.toLowerCase() === "drafted") { //  Or if it is a drafted post
+                if (existingPost.publishedId) { // Then edit and published drafted post data                    
+                    const editBlogpost: postProps = {
+                        ...existingPost,
+                        _id: existingPost.publishedId,
+                        publishedId: undefined,
+                        image,
+                        title,
+                        body: article.text,
+                        _html: { title, body: article._html },
+                        catigories: catigories.map((catigory) => catigory.cat),
+                        status: "published",
+                    };
+                    await publish(editBlogpost, imageBlob, true);
+                } else { // Or create new publish post from drafted post
+                    const createBlogpost = {
+                        title,
+                        image,
+                        body: article.text,
+                        _html: { title, body: article._html },
+                        catigories: catigories.map((catigory) => catigory.cat),
+                        slug: handleFilterSlug(slug || title, slugPatter).trim(),
+                        status: "published",
+                        likes: [],
+                        shares: [],
+                        views: [],
+                    };
+                    await publish(createBlogpost, imageBlob, false);
+                }
             }
-        } else {
-            // Create new post data
+        } else {// Create new publish post data            
             const createBlogpost = {
                 title,
                 image,
@@ -409,7 +421,7 @@ const Addpost = ({ existingPost }: Props) => {
         if (existingPost) {
             setTitle(existingPost.title || "");
             setImage(existingPost.image);
-            setDisplayImage(apiEndPont + "/media/" + existingPost.image);
+            if (existingPost.image)setDisplayImage(apiEndPont + "/media/" + existingPost.image);
             setArticle({
                 _html: existingPost._html.body,
                 text: existingPost.body,

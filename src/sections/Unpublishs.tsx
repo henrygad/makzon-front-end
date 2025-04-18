@@ -7,7 +7,7 @@ const Unpublishs = () => {
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
     const appDispatch = useAppDispatch();
 
-    const unpublishedPost = Allblogposts.filter(blogpost => blogpost.status.toLowerCase() === "unpublished");    
+    const unpublishedPost = Allblogposts.filter(blogpost => blogpost.status.toLowerCase() === "unpublished");
 
     return <section>
         <div className="space-y-6">

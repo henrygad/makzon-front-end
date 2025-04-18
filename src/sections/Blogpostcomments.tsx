@@ -7,8 +7,8 @@ import useAutoNavigate from "../hooks/useAutoNavigate";
 
 type Props = {
   blogpost: postProps;
-  comments: commentProps[];
-  setComments: React.Dispatch<React.SetStateAction<commentProps[]>>;
+  comments: commentProps[] | null;
+  setComments: React.Dispatch<React.SetStateAction<commentProps[] | null>>;
   autoViewComment?: {
     blogpostParentComment: string | null,
     targetComment: string,
@@ -37,28 +37,31 @@ const Blogpostcomments = ({ blogpost, comments, setComments, autoViewComment, au
     }
   }, [location.hash, sectionRef]);
 
-
   return (
     <section ref={sectionRef}>
       <div className="space-y-4">
         {/* display normal comments */}
-        {comments && comments.length ? (
-          comments.map((comment) =>
-            comment.replyId === null ? (
-              <Displaycomment
-                key={comment._id}
-                blogpost={blogpost}
-                replyId={comment._id}
-                comment={comment}
-                setComments={setComments}
-                  autoViewComment={autoViewComment}
-                  autoViewLike={autoViewLike}
-              />
-            ) : null
-          )
-        ) : (
-          <span>Be the first to comment</span>
-        )}        
+        {comments ?
+          <> 
+            {
+              comments.length ? 
+                comments.map((comment) =>
+                  <Displaycomment
+                    key={comment._id}
+                    blogpost={blogpost}
+                    replyId={comment._id}
+                    comment={comment}
+                    setComments={setComments}
+                    autoViewComment={autoViewComment}
+                    autoViewLike={autoViewLike}
+                  />
+                ) :
+                <span>Be the first to comment</span>
+            }
+          </>
+          :
+          <span>loading...</span>
+        }        
       </div>
     </section>
   );

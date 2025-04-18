@@ -8,12 +8,15 @@ import Like from "./Likecomment";
 import { MdDeleteOutline } from "react-icons/md";
 import { useAppSelector } from "../redux";
 import Displaylike from "./Displaylike";
+import axios from "axios";
+import Displayscreenloading from "./Displayscreenloading";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
   blogpost: postProps;
   replyId: string | null;
   comment: commentProps;
-  setComments: React.Dispatch<React.SetStateAction<commentProps[]>>;
+  setComments: React.Dispatch<React.SetStateAction<commentProps[] | null>>;
   autoViewComment?: {
     blogpostParentComment: string | null;
     targetComment: string;
@@ -52,50 +55,59 @@ const Commentui = ({
 
   const [authorData, setAuthorData] = useState<userProps | null>(null);
 
-  const handleFetchAuthorData = (userName: string) => {
-    const data = { userName } as userProps;
-    setAuthorData(data);
-  };
+  const [loading, setLoading] = useState(false);
 
-  const handleDeleteComment = (deletedComment: commentProps) => {
-    const Comments = JSON.parse(
-      localStorage.getItem("comments") || "[]"
-    ) as commentProps[];
-    localStorage.setItem(
-      "comments",
-      JSON.stringify(
-        Comments.filter((comment) => comment._id !== deletedComment._id)
-      )
-    );
-    setComments((pre) => {
-      if (deletedComment.replyId === null) {
-        /* it a parent comment */
-        return pre.filter((comment) => comment._id !== deletedComment._id);
-      } else if (deletedComment.replyId !== null) {
-        /* it a child comment */
-        return pre.map((parentComment) => {
-          if (parentComment._id === deletedComment.replyId) {
-            return {
-              ...parentComment,
-              children: (parentComment.children || []).filter(
-                (childComment) => childComment._id !== deletedComment._id
-              ),
-            };
-          } else {
-            /* call a recursive function if need */
-            return parentComment;
-          }
-        });
-      } else {
-        return pre;
-      }
-    });
+  const handleDeleteComment = async (deleteCommentData: commentProps) => {
+    setLoading(true);
+    try {
+      const url = "";
+      await axios.delete(url, {
+        baseURL: apiEndPont,
+        withCredentials: true
+      });
+      setComments((pre) => {
+        if (!pre) return pre;
+
+        if (deleteCommentData.replyId === null) {
+          /* it a parent comment */
+          return pre.filter((comment) => comment._id !== deleteCommentData._id);
+        } else if (deleteCommentData.replyId !== null) {
+          /* it a child comment */
+          return pre.map((parentComment) => {
+            if (parentComment._id === deleteCommentData.replyId) {
+              return {
+                ...parentComment,
+                children: (parentComment.children || []).filter(
+                  (childComment) => childComment._id !== deleteCommentData._id
+                ),
+              };
+            } else {
+              /* call a recursive function if need */
+              return parentComment;
+            }
+          });
+        } else {
+          return pre;
+        }
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    if (comment.author) {
-      handleFetchAuthorData(comment.author);
-    }
+    if (!comment.author) return;
+    const url = apiEndPont + "/user/" + comment.author;
+    axios(url)
+      .then(async (res) => {
+        const user: userProps = await res.data.data;
+        setAuthorData(user);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   }, [comment.author]);
 
   useEffect(() => {
@@ -109,7 +121,7 @@ const Commentui = ({
     }
   }, [autoViewComment, comment._id]);
 
-  return (
+  return <>
     <div className="block p-1">
       {/* comment */}
       <span
@@ -136,7 +148,7 @@ const Commentui = ({
               blogpost={blogpost}
               parentComment={comment}
               replyId={replyId}
-              replying={[...comment.replingTo, comment.author]}
+              replying={comment.replyingTo.includes(comment.author) ? comment.replyingTo : [...comment.replyingTo, comment.author]}
               setComments={setComments}
               callBack={() => setToggleChildTab("comments")}
             />
@@ -215,7 +227,8 @@ const Commentui = ({
         null
       }
     </div>
-  );
+    <Displayscreenloading loading={loading} />
+  </>;
 };
 
 const Displaycomment = ({
@@ -230,7 +243,7 @@ const Displaycomment = ({
 
   useEffect(() => {
     if (autoViewComment?.blogpostParentComment === comment._id ||
-      (autoViewLike?.targetLike &&  autoViewLike.comment?.blogpostParentComment === comment._id)
+      (autoViewLike?.targetLike && autoViewLike.comment?.blogpostParentComment === comment._id)
     ) {
       setToggleChildTab("comments");
     }

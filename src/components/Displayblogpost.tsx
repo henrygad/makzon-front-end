@@ -52,7 +52,7 @@ const Displayblogpost = ({
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
     const appDispatch = useAppDispatch();
 
-    const [comments, setComments] = useState<commentProps[]>([]);
+    const [comments, setComments] = useState<commentProps[] | null>(null);
     const blogpostRef = useRef<HTMLDivElement | null>(null);
     const sanitize = useSanitize();
 
@@ -109,15 +109,6 @@ const Displayblogpost = ({
         },
     ];
 
-    const handleFetchBlogpostComments = (_id: string) => {
-        const Comments: commentProps[] = JSON.parse(localStorage.getItem("comments") || "[]");
-        const blogpostComments = Comments.filter(comment => comment.postId === _id);
-        setComments(blogpostComments.map(parentComment => {
-            const children = Comments.filter(comment => comment.replyId === parentComment._id);
-            return { ...parentComment, children };
-        }));
-    };
-
     const handleSave = (_id: string) => {
         if ((User.saves || []).includes(_id)) {
             return;
@@ -170,7 +161,7 @@ const Displayblogpost = ({
                 baseURL: apiEndPont,
                 withCredentials: true
             });
-            const unpublishBlogpost = await res.data.data;            
+            const unpublishBlogpost = await res.data.data;
             updateBlogpost({ blogpost: unpublishBlogpost, type: "EDIT" });
         } catch (error) {
             console.error(error);
@@ -196,9 +187,38 @@ const Displayblogpost = ({
     };
 
     useEffect(() => {
-        if (blogpost._id) {
-            handleFetchBlogpostComments(blogpost._id);
-        }
+        if (!blogpost._id) return;
+        const url = apiEndPont + "/comment?postId=" + blogpost._id + "&replyId=null&skip=0&limit=20";
+        axios(url, {
+            baseURL: apiEndPont,
+            withCredentials: true
+        })
+            .then(async (res) => {
+                const parentComments: commentProps[] = await res.data.data;
+                setComments(parentComments);
+
+                // fetch children comment
+                parentComments.forEach((comment) => {
+                    const url = apiEndPont + "/comment?replyId=" + comment._id + "&skip=0&limit=20";
+                    axios(url, {
+                        baseURL: apiEndPont,
+                        withCredentials: true
+                    })
+                        .then(async (res) => {
+                            const childComment = await res.data.data;
+                            setComments(parentCom => parentCom ?
+                                parentCom.map((com) => ({ ...com, children: childComment })) :
+                                parentCom
+                            );
+                        })
+                        .catch((err) =>
+                            console.error(err)
+                        );
+                });
+            })
+            .catch(err => {
+                console.error(err);
+            });
     }, [blogpost._id]);
 
     return <>
@@ -206,8 +226,8 @@ const Displayblogpost = ({
             ref={blogpostRef}
             className={`space - y - 4 p-2 ${displayType === "TEXT" ? "border" : ""} rounded-md`}
         >
+            {/* author info */}
             <span className="flex items-start justify-between gap-6">
-                {/* author info */}
                 <Displayuserinfor
                     short={true}
                     user={authorInfor}
@@ -240,11 +260,12 @@ const Displayblogpost = ({
                 />
             </span>
             <article className="font-text text-base">
+                {/* post date */}
                 <span className="flex gap-4 text-sm text-stone-700 font-sec">
-                    {/* post date */}
                     <span>Post: 02 01 25; 11:00am</span>
                     <span>Updated: 03 01 25; 1:00pm</span>
                 </span>
+                {/* list catigoris */}
                 <ul className="flex gap-1 text-sm text-slate-800">
                     {blogpost.catigories && blogpost.catigories.length
                         ? blogpost.catigories.map((catigory, index) => (
@@ -270,9 +291,10 @@ const Displayblogpost = ({
                         </span>
                     }
                 </>
+                {/* display post image */}
                 <>
                     {
-                        blogpost.image.trim() ? (
+                        blogpost.image ? (
                             <Displayimage
                                 url={apiEndPont + "/media/" + blogpost.image}
                                 alt={blogpost.title}
@@ -308,8 +330,9 @@ const Displayblogpost = ({
                     <span className="border-2 min-w-10 max-w-10 rounded-md"></span>
                 </span>
             </article>
+            {/* post stat */}
             <span className="flex justify-around gap-4">
-                {/* post stat */}
+                {/* comment btn */}
                 <button
                     id="blogpost-comment-btn"
                     className="flex items-center gap-2 cursor-pointer"
@@ -327,6 +350,7 @@ const Displayblogpost = ({
                         {comments && comments.length}
                     </span>
                 </button>
+                {/* like btn */}
                 <button
                     id="blogpost-like-btn"
                     className="flex items-center gap-2 cursor-pointer"
@@ -341,6 +365,7 @@ const Displayblogpost = ({
                         {blogpost?.likes && blogpost.likes.length || 0}
                     </span>
                 </button>
+                {/* share btn */}
                 <button
                     id="blogpost-share-btn"
                     className="flex items-center gap-2 cursor-pointer"
@@ -353,6 +378,7 @@ const Displayblogpost = ({
                         {blogpost?.shares && blogpost.shares.length || 0}
                     </span>
                 </button>
+                {/* view btn */}
                 <span
                     id="blogpost-view-btn"
                     className="flex items-center gap-2"
