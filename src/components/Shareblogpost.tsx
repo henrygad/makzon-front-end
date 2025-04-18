@@ -8,7 +8,8 @@ import { BsInstagram } from "react-icons/bs";
 import { FaXTwitter } from "react-icons/fa6";
 import Dialog from "./Dialog";
 import useDialog from "../hooks/useDialog";
-
+import axios from "axios";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
     blogpost: postProps,
@@ -20,26 +21,30 @@ const Shareblogpost = ({ blogpost, updateBlogpost }: Props) => {
 
     const { dialog, handleDialog} = useDialog();
 
-    const handleShareBlogpost = (_id: string) => {
+    const handleShareBlogpost = async(_id: string) => {
         const sessionId = User.sessionId || User.userName;
+        if (blogpost.shares &&
+            blogpost.shares.includes(sessionId)) {
+            return;
+        }
 
-        if (blogpost?.shares) {
-            if (blogpost.shares.includes(sessionId)) {
-                return;
-            } else {
-                const updatedBlogpost = {
-                    ...blogpost,
-                    shares: [sessionId, ...(blogpost.shares || [])]
-                };
-                const Blogposts: postProps[] = JSON.parse(localStorage.getItem("blogposts") || "[]");
-                localStorage.setItem("blogposts", JSON.stringify(Blogposts.map(
-                    (blogpost: postProps) => blogpost._id === _id ? { ...updatedBlogpost } : blogpost
-                )));
-                updateBlogpost({ blogpost: updatedBlogpost, type: "EDIT" });
-            }
+        try {
+            const url = apiEndPont + "/post/partial/" + _id;
+            const data: postProps = {
+                ...blogpost,
+                shares: [sessionId, ...(blogpost.shares || [])]
+            };
+            const res = await axios.patch(url, data, {
+                baseURL: apiEndPont,
+                withCredentials: true
+            });
+            const sharedBlogpost = await res.data.data;
+            updateBlogpost({ blogpost: sharedBlogpost, type: "EDIT" });
+        } catch (error) {
+            console.error(error);
+
         }
     };
-
 
     return <>
         <LuShare2

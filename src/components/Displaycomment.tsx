@@ -60,18 +60,19 @@ const Commentui = ({
   const handleDeleteComment = async (deleteCommentData: commentProps) => {
     setLoading(true);
     try {
-      const url = "";
+      const url = apiEndPont + "/comment/" + deleteCommentData._id;
       await axios.delete(url, {
         baseURL: apiEndPont,
         withCredentials: true
       });
+      console.log(deleteCommentData);
       setComments((pre) => {
         if (!pre) return pre;
 
         if (deleteCommentData.replyId === null) {
           /* it a parent comment */
           return pre.filter((comment) => comment._id !== deleteCommentData._id);
-        } else if (deleteCommentData.replyId !== null) {
+        } else  {
           /* it a child comment */
           return pre.map((parentComment) => {
             if (parentComment._id === deleteCommentData.replyId) {
@@ -86,8 +87,6 @@ const Commentui = ({
               return parentComment;
             }
           });
-        } else {
-          return pre;
         }
       });
     } catch (error) {

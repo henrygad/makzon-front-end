@@ -16,10 +16,10 @@ import Blogpostcomments from "../sections/Blogpostcomments";
 import Blogpostlikes from "../sections/Blogpostlikes";
 import Shareblogpost from "./Shareblogpost";
 import Viewblogpost from "./Viewblogpost";
-import { useAppDispatch, useAppSelector } from "../redux";
-import { editProfile } from "../redux/slices/userProfileSlices";
+import { useAppSelector } from "../redux";
 import axios from "axios";
 import Displayscreenloading from "./Displayscreenloading";
+import Saveblogpost from "./Saveblogpost";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
@@ -50,7 +50,6 @@ const Displayblogpost = ({
 }: Props) => {
     const navigate = useNavigate();
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
-    const appDispatch = useAppDispatch();
 
     const [comments, setComments] = useState<commentProps[] | null>(null);
     const blogpostRef = useRef<HTMLDivElement | null>(null);
@@ -65,11 +64,6 @@ const Displayblogpost = ({
             func: () => {
                 handleToView(blogpost);
             },
-        },
-        {
-            name: "Save post",
-            icon: <span>S</span>,
-            func: () => handleSave(blogpost._id || ""),
         },
         {
             name: "Report",
@@ -108,19 +102,6 @@ const Displayblogpost = ({
             func: () => handleDelete(blogpost._id || ""),
         },
     ];
-
-    const handleSave = (_id: string) => {
-        if ((User.saves || []).includes(_id)) {
-            return;
-        } else {
-            const updatedUser: userProps = {
-                ...User,
-                saves: [_id, ...(User.saves || []),]
-            };
-            localStorage.setItem("user", JSON.stringify({ ...updatedUser }));
-            appDispatch(editProfile(updatedUser));
-        }
-    };
 
     const handleToView = (blogpost: postProps, hashId: string | null = null) => {
         if (displayType.trim().toLowerCase() === "_html") return;
@@ -195,7 +176,7 @@ const Displayblogpost = ({
         })
             .then(async (res) => {
                 const parentComments: commentProps[] = await res.data.data;
-                setComments(parentComments);                
+                setComments(parentComments);
 
                 // fetch children comment
                 parentComments.forEach((comment) => {
@@ -226,7 +207,7 @@ const Displayblogpost = ({
             ref={blogpostRef}
             className={`space - y - 4 p-2 ${displayType === "TEXT" ? "border" : ""} rounded-md`}
         >
-            {/* author info */}
+            {/* author info and side menu */}
             <span className="flex items-start justify-between gap-6">
                 <Displayuserinfor
                     short={true}
@@ -364,6 +345,10 @@ const Displayblogpost = ({
                     >
                         {blogpost?.likes && blogpost.likes.length || 0}
                     </span>
+                </button>
+                {/* Save */}
+                <button>
+                    <Saveblogpost User={User} blogpost={blogpost} />
                 </button>
                 {/* share btn */}
                 <button

@@ -5,6 +5,8 @@ import { useAppSelector } from "../redux";
 import useSendNotification from "../hooks/useSendNotification";
 import postProps from "../types/post.type";
 import useTrimWords from "../hooks/useTrimWords";
+import axios from "axios";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
     blogpost: postProps
@@ -21,17 +23,24 @@ const Likecomment = ({ blogpost, comment, setCommentLikes }: Props) => {
 
     const trim = useTrimWords();
 
-    const like = (_id: string, userName: string) => {
-        const Comments: commentProps[] = JSON.parse(localStorage.getItem("comments") || "[]");
-        localStorage.setItem("comments", JSON.stringify(Comments.map(
-            (comment: commentProps) => comment._id === _id ? { ...comment, likes: [userName, ...(comment.likes || [])] } : comment
-        )));
-        setCommentLikes(pre => ([userName, ...pre]));
-        setIsLiked(true);
+    const like = async (comment: commentProps, userName: string) => {
+        try {
+            const url = apiEndPont + "/comment/" + comment._id;
+            const data: commentProps = { ...comment, likes: [userName, ...(comment.likes || [])] };
+            await axios.patch(url, data, {
+                withCredentials: true,
+                baseURL: apiEndPont
+            });
+            setCommentLikes(pre => ([userName, ...pre]));
+            setIsLiked(true);
+        } catch (error) {
+            console.error(error);            
+        }
 
         let options: unknown;
         let targetTitle: string;
 
+        // when use like comment send notification
         if (comment.replyId) {
             targetTitle = trim(comment?.body.text || "", 20);
             options = {
@@ -59,20 +68,27 @@ const Likecomment = ({ blogpost, comment, setCommentLikes }: Props) => {
         });
     };
 
-    const unLike = (_id: string, userName: string) => {
-        const Comments: commentProps[] = JSON.parse(localStorage.getItem("comments") || "[]");
-        localStorage.setItem("comments", JSON.stringify(Comments.map(
-            (comment: commentProps) => comment._id === _id ? { ...comment, likes: (comment.likes || []).filter(like => like !== userName) } : comment
-        )));
-        setCommentLikes(pre => pre.filter(like => like !== userName));
-        setIsLiked(false);
+    const unLike =async (comment: commentProps, userName: string) => {
+        try {
+            const url = apiEndPont + "/comment/" + comment._id;
+            const data: commentProps = { ...comment, likes: (comment.likes || []).filter(like => like !== userName) };
+            await axios.patch(url, data, {
+                withCredentials: true,
+                baseURL: apiEndPont
+            });
+            setCommentLikes(pre => pre.filter(like => like !== userName));
+            setIsLiked(false);
+        } catch (error) {
+            console.error(error);
+        }
+              
     };
 
-    const handleCommentLiking = (_id: string, userName: string) => {
+    const handleCommentLiking = (comment: commentProps, userName: string) => {
         if (isLiked) {
-            unLike(_id, userName);
+            unLike(comment, userName);
         } else {
-            like(_id, userName);
+            like(comment, userName);
         }
         setAnimateLikeBtn(true);
 
@@ -80,7 +96,6 @@ const Likecomment = ({ blogpost, comment, setCommentLikes }: Props) => {
             setAnimateLikeBtn(false);
         }, 100);
     };
-
 
     useEffect(() => {
         if (comment?.likes && comment.likes.length) {
@@ -97,7 +112,7 @@ const Likecomment = ({ blogpost, comment, setCommentLikes }: Props) => {
                 ${animateLikeBtn ? "-translate-y-1" : "translate-y-0"} 
                 ${isLiked ? "text-pink-600" : ""} 
              `}
-            onClick={() => handleCommentLiking(comment._id || "", User.userName)}
+            onClick={() => handleCommentLiking(comment || "", User.userName)}
         />
     );
 };

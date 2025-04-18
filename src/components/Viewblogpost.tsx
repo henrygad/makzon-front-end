@@ -3,6 +3,8 @@ import postProps from "../types/post.type";
 import { useAppSelector } from "../redux";
 import { IoStatsChart } from "react-icons/io5";
 import useSendNotification from "../hooks/useSendNotification";
+import axios from "axios";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
     displayType: string,
@@ -17,29 +19,37 @@ const Viewblogpost = ({ displayType, blogpostRef, blogpost, updateBlogpost }: Pr
     const sendNotification = useSendNotification();
 
     const viewBlogpost = async (_id: string, sessionId: string) => {
-        if (blogpost.views?.includes(sessionId)) {
+        if (blogpost.views &&
+            blogpost.views?.includes(sessionId)) {
             return;
-        } else {
-            const updatedBlogpost = {
+        }
+        let viewedBlogpost: postProps | null = null;
+        try {
+            const url = apiEndPont + "/post/partial/" + _id;
+            const data: postProps = {
                 ...blogpost,
                 views: [sessionId, ...(blogpost.views || [])]
             };
-            const Blogposts: postProps[] = JSON.parse(localStorage.getItem("blogposts") || "[]");
-            localStorage.setItem("blogposts", JSON.stringify(Blogposts.map(
-                (blogpost: postProps) => blogpost._id === _id ? { ...updatedBlogpost } : blogpost
-            )));
-            updateBlogpost({ blogpost: updatedBlogpost, type: "EDIT" });
-
-            if (updatedBlogpost.views.length === 101) {
-                sendNotification({
-                    type: "viewed",
-                    from: "Makzon",
-                    to: blogpost.author || "",
-                    message: `${updatedBlogpost.views.length}+ have viewed your blogpost, ${blogpost.title || ""}`,
-                    checked: false,
-                    url: blogpost.author + "/" + blogpost.slug + "#blogpost-views",
-                });                
-            }
+            const res = await axios.patch(url, data, {
+                baseURL: apiEndPont,
+                withCredentials: true
+            });
+            viewedBlogpost = await res.data.data as postProps;
+            updateBlogpost({ blogpost: viewedBlogpost, type: "EDIT" });
+        } catch (error) {
+            console.error(error);
+        }        
+        
+        if (viewedBlogpost?.views &&
+            viewedBlogpost.views.length === 101) {
+            sendNotification({
+                type: "viewed",
+                from: "Makzon",
+                to: blogpost.author || "",
+                message: `${viewedBlogpost.views.length}+ have viewed your blogpost, ${blogpost.title || ""}`,
+                checked: false,
+                url: blogpost.author + "/" + blogpost.slug + "#blogpost-views",
+            });
         }
 
     };

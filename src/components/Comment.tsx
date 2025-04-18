@@ -42,6 +42,8 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
     const addComment = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
+        handleDialog();
+        let newComment: commentProps | null = null;
         try {
             const data: commentProps = {
                 _id: "",
@@ -58,70 +60,69 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                 baseURL: apiEndPont,
                 withCredentials: true
             });
-            const newComment: commentProps = await res.data.data;
-            console.log(newComment);
+            newComment = await res.data.data as commentProps;
 
             setComments(pre => {
                 if (!pre) return pre;
 
-                if (newComment.replyId === null) {
+                if (newComment &&
+                    newComment.replyId === null) {
                     /* it a parent comment */
                     return [newComment, ...pre];
-                } else if (newComment.replyId !== null) {
+                } else {
                     /* it a child comment */
                     return pre.map(parentComment => {
-                        if (parentComment._id === newComment.replyId) {
+                        if (newComment &&
+                            newComment.replyId === parentComment._id) {
                             return { ...parentComment, children: [newComment, ...(parentComment.children || [])] };
                         } else {
                             /* call a recursive function if need */
                             return parentComment;
                         }
                     });
-                } else {
-                    return pre;
                 }
-
             });
             setCommentBody("");
             handleDialog();
             callBack(newComment);
-
-            /* run notification api call when a friend comment on user post or comment */
-            if (replyId) {
-                sendNotification({
-                    type: "commented",
-                    from: newComment.author,
-                    targetTitle: trim(parentComment?.body.text || "", 20),
-                    options: {
-                        type: "reply-comment",
-                        parentCommentId: replyId,
-                        targetCommentId: newComment._id
-                    },
-                    to: parentComment?.author || "",
-                    message: `replyed to your comment, ${trim(parentComment?.body.text || "", 20)}`,
-                    checked: false,
-                    url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
-                });
-            } else {
-                sendNotification({
-                    type: "commented",
-                    from: newComment.author,
-                    targetTitle: blogpost.title,
-                    options: {
-                        type: "blogpost-comment",
-                        parentCommentId: null,
-                        targetCommentId: newComment._id
-                    },
-                    to: blogpost.author || "",
-                    message: `commented on, ${blogpost.title}`,
-                    checked: false,
-                    url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
-                });
-            }
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+
+        if (!newComment) return;
+        /* Send notification call when a friend comment on a user post or comment */
+        if (replyId) {
+            sendNotification({
+                type: "commented",
+                from: newComment.author,
+                targetTitle: trim(parentComment?.body.text || "", 20),
+                options: {
+                    type: "reply-comment",
+                    parentCommentId: replyId,
+                    targetCommentId: newComment._id
+                },
+                to: parentComment?.author || "",
+                message: `replyed to your comment, ${trim(parentComment?.body.text || "", 20)}`,
+                checked: false,
+                url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
+            });
+        } else {
+            sendNotification({
+                type: "commented",
+                from: newComment.author,
+                targetTitle: blogpost.title,
+                options: {
+                    type: "blogpost-comment",
+                    parentCommentId: null,
+                    targetCommentId: newComment._id
+                },
+                to: blogpost.author || "",
+                message: `commented on, ${blogpost.title}`,
+                checked: false,
+                url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
+            });
         }
 
     };
@@ -149,10 +150,10 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
         />
         {dialog ?
             <div
-                className="container fixed top-0 bottom-5 right-0 left-0 flex items-end z-50"
+                className="container fixed top-0 bottom-2 right-0 left-0 flex items-end z-50"
             >
                 <form
-                    className="relative flex-1 px-6 pt-4 pb-6 bg-white border rounded-md shadow-2xl"
+                    className="relative flex-1 px-4 pt-4 pb-6 bg-white border rounded-2xl shadow-2xl"
                 >
                     <span className="flex relative mb-6">
                         <span
@@ -161,11 +162,11 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                         >
                             x
                         </span>
-                        <span className="block font-sec text-slate-600 text-base font-semibold text-start">
+                        <span className="block font-sec text-slate-600 text-xl font-semibold text-start">
                             {replyId ? "Reply" : "Comment"}
                         </span>
-                    </span>                    
-                    <>                       
+                    </span>
+                    <>
                         {replyId ?
                             <span className="flex gap-2 items-center bg-white mb-2">
                                 <span className="text-sm font-text text-slate-600">Replying to</span>
@@ -181,9 +182,9 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                                 </span>
                             </span> :
                             null
-                        }                        
+                        }
                     </>
-                    <span className="flex gap-4 items-center">  
+                    <span className="flex gap-4 items-center">
                         <textarea
                             ref={textAreaRef}
                             name="comemnt-text-area"
@@ -200,11 +201,10 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                         <input
                             type="button"
                             value={"Send"}
-                            className="text-base font-text text-white bg-green-800 py-1.5 px-4 rounded-full shadow-sm shadow-green-100 cursor-pointer"
+                            className="text-base font-text text-white bg-green-800 py-1.5 px-3 rounded-full shadow-sm shadow-green-100 cursor-pointer"
                             onClick={addComment}
                         />
-
-                    </span>                   
+                    </span>
                 </form>
             </div> :
             null

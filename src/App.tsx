@@ -58,24 +58,25 @@ const App = () => {
       withCredentials: true,
     })
       .then(async (res) => {
-        const userData = (await res.data.data) as userProps;
+        const data = (await res.data.data) as userProps;
+        const user = { ...User, ...data, login: true };
 
         appDispatch(
           fetchProfile({
-            data: { ...User, ...userData, login: true },
+            data: user,
             loading: false,
             error: "",
           })
         );
 
         // Set local cookies if User.login if still false
-        if (User.login === false) {
+        if (user.login === false) {
           // set a new cookie
           Cookies.set(
             "makzonFrtendSession",
             JSON.stringify({
-              userName: userData.userName,
-              email: userData.email,
+              userName: user.userName,
+              email: user.email,
               login: true,
               sessionId: User.sessionId,
             }),
@@ -141,21 +142,23 @@ const App = () => {
           .catch((error) => console.error(error));
 
         //fetch user saves post
-        axios(apiEndPont + "/post/user/saves", {
-          baseURL: apiEndPont,
-          withCredentials: true,
-        })
-          .then(async (res) => {
-            const userSavedBlogposts: postProps[] = await res.data.data;
-            appDispatch(
-              fetchSavedBlogposts({
-                data: userSavedBlogposts,
-                loading: false,
-                error: "",
-              })
-            );
+        if (user.saves?.length) {
+          axios(apiEndPont + "/post/user/saves", {
+            baseURL: apiEndPont,
+            withCredentials: true,
           })
-          .catch((error) => console.error(error));
+            .then(async (res) => {
+              const userSavedBlogposts: postProps[] = await res.data.data;
+              appDispatch(
+                fetchSavedBlogposts({
+                  data: userSavedBlogposts,
+                  loading: false,
+                  error: "",
+                })
+              );
+            })
+            .catch((error) => console.error(error));
+        }
 
         //fetch user media
         axios(apiEndPont + "/media", {
