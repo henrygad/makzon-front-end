@@ -1,6 +1,20 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { Blogpost, Createblogpost, Login, Notification, Page404, Profile, Security, Settings, Signup, Timeline, Treading, Updateprofile, Verifyuser, } from "./pages";
+import {
+  Blogpost,
+  Createblogpost,
+  Login,
+  Notification,
+  Page404,
+  Profile,
+  Security,
+  Settings,
+  Signup,
+  Timeline,
+  Trending,
+  Updateprofile,
+  Verifyuser,
+} from "./pages";
 import userProps from "./types/user.type";
 import postProps from "./types/post.type";
 import { useAppDispatch, useAppSelector } from "./redux";
@@ -14,7 +28,7 @@ import mediaProps from "./types/media.type";
 import { fetchMedia } from "./redux/slices/userMediaSlices";
 import Displaymultiplemedismodel from "./sections/Displaymultiplemedismodel";
 import Displaysinglemedialmodel from "./sections/Displaysinglemedialmodel";
-import { fetchNotifications } from "./redux/slices/userNotificationSlices";
+import { addNotifications, fetchNotifications } from "./redux/slices/userNotificationSlices";
 import notificationProps from "./types/notification.type";
 import Header from "./sections/Header";
 import Footer from "./sections/Footer";
@@ -30,7 +44,12 @@ const App = () => {
   );
   const appDispatch = useAppDispatch();
 
-  /* get client session */
+  const [newUsers, setNewUsers] = useState<userProps[] | null>(null);
+  const [trendingBlogposts, setTrendingBlogposts] = useState<postProps[] | null>(null);
+
+  const [notificationUpdate, setNotificationUpdate] = useState<notificationProps | null>(null);
+
+  // Get client session on arrive
   useEffect(() => {
     axios(apiEndPont + "/", {
       baseURL: apiEndPont + "/",
@@ -49,9 +68,33 @@ const App = () => {
       .catch((err) => {
         console.error(err);
       });
+
+    // fetch new users
+    axios(apiEndPont + "/user/all", {
+      baseURL: apiEndPont,
+      withCredentials: true,
+    })
+      .then(async (res) => {
+        const userMedia: userProps[] = await res.data.data;
+        setNewUsers(userMedia);
+      })
+      .catch((error) => console.error(error));
+
+    // fetch Trending blogpost
+    axios(apiEndPont + "/post/trending", {
+      baseURL: apiEndPont + "/",
+      withCredentials: true,
+    })
+      .then(async (res) => {
+        const trendingBlogpost: postProps[] = await res.data.data;
+        setTrendingBlogposts(trendingBlogpost);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   }, []);
 
-  /* get user profile data */
+  //get user profile data
   useEffect(() => {
     axios(apiEndPont + "/user", {
       baseURL: apiEndPont,
@@ -88,7 +131,7 @@ const App = () => {
           );
         }
 
-        //fetch user notifications
+        // fetch user notifications
         axios(apiEndPont + "/notification", {
           baseURL: apiEndPont,
           withCredentials: true,
@@ -105,13 +148,11 @@ const App = () => {
           })
           .catch((error) => console.error(error));
 
-        //fetch user blogposts
-        axios(apiEndPont + "/post/user?skip=0&limit=20",
-          {
-            baseURL: apiEndPont,
-            withCredentials: true,
-          }
-        )
+        // fetch user blogposts
+        axios(apiEndPont + "/post/user?skip=0&limit=20", {
+          baseURL: apiEndPont,
+          withCredentials: true,
+        })
           .then(async (res) => {
             const userBlogposts: postProps[] = await res.data.data;
             appDispatch(
@@ -124,7 +165,7 @@ const App = () => {
           })
           .catch((error) => console.error(error));
 
-        //fetch user draft posts
+        // fetch user draft posts
         axios(apiEndPont + "/draft", {
           baseURL: apiEndPont,
           withCredentials: true,
@@ -141,9 +182,9 @@ const App = () => {
           })
           .catch((error) => console.error(error));
 
-        //fetch user saves post
+        // fetch user saves post
         if (user.saves?.length) {
-          axios(apiEndPont + "/post/user/saves", {
+          axios(apiEndPont + "/post/saves", {
             baseURL: apiEndPont,
             withCredentials: true,
           })
@@ -160,7 +201,7 @@ const App = () => {
             .catch((error) => console.error(error));
         }
 
-        //fetch user media
+        // fetch user media
         axios(apiEndPont + "/media", {
           baseURL: apiEndPont,
           withCredentials: true,
@@ -176,6 +217,7 @@ const App = () => {
             );
           })
           .catch((error) => console.error(error));
+
       })
       .catch((error) => {
         const getError = error as errorProps;
@@ -198,22 +240,40 @@ const App = () => {
       });
   }, [User.login]);
 
+  // fetch live update
+  useEffect(() => {
+    if (!User.login) return;
+
+    // Stream live notification;
+    const notificationEventSource = new EventSource(apiEndPont + "/notification/stream", {
+      withCredentials: true,
+    });
+    notificationEventSource.onmessage = (event) => {
+      const notificationUpdate: notificationProps = JSON.parse(event.data.notification);      
+      setNotificationUpdate(notificationUpdate);
+      appDispatch(addNotifications(notificationUpdate));
+    };
+    notificationEventSource.onerror = (error) => {
+      console.error(error);
+      notificationEventSource.close();
+    };
+
+  }, [User.login]);
+
 
   return (
     <>
-      <Header />
+      <Header notificationUpdate={notificationUpdate} setNotificationUpdate={setNotificationUpdate} />
       <Suspense fallback={<Displayscreenloading loading={true} />}>
         <Routes>
           <Route path="*" element={<Page404 />} />
           <Route
             path="/"
-            element={
-              !User.login ? (
-                <Treading />
-              ) : (
-                <Navigate to={`/profile/${User.userName}`} />
-              )
-            }
+            element={<Trending
+              newUsers={newUsers}
+              trendingBlogposts={trendingBlogposts}
+              setTrendingBlogposts={setTrendingBlogposts}
+            />}
           />
           <Route path="/:author/:slug" element={<Blogpost />} />
           <Route

@@ -21,10 +21,14 @@ const Shareblogpost = ({ blogpost, updateBlogpost }: Props) => {
 
     const { dialog, handleDialog} = useDialog();
 
-    const handleShareBlogpost = async(_id: string) => {
+    const handleShareBlogpost = async (_id: string) => {
+        const clear = setTimeout(() => {
+            handleDialog();           
+        }, 500);
+       
         const sessionId = User.sessionId || User.userName;
         if (blogpost.shares &&
-            blogpost.shares.includes(sessionId)) {
+            blogpost.shares.includes(sessionId)) {           
             return;
         }
 
@@ -42,8 +46,8 @@ const Shareblogpost = ({ blogpost, updateBlogpost }: Props) => {
             updateBlogpost({ blogpost: sharedBlogpost, type: "EDIT" });
         } catch (error) {
             console.error(error);
-
-        }
+        } 
+        return () => clearTimeout(clear);
     };
 
     return <>

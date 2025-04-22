@@ -20,7 +20,9 @@ const Follow = ({ friend }: { friend: string }) => {
                 baseURL: apiEndPont
             });
             const friendUserName: string = await res.data.data.friendUserName;
+            
             let updateUserFollowing: userProps = User;
+            
             if (User.followings.includes(friendUserName)) {
                 updateUserFollowing = { ...User, followings: User.followings.filter(flw => flw !== friendUserName) };
             } else {
@@ -31,7 +33,8 @@ const Follow = ({ friend }: { friend: string }) => {
         } catch (error) {
             console.error(error);
         }
-        sendNotification({
+
+         sendNotification({
             type: "followed",
             targetTitle: "Someone followed you",
             from: User.userName,

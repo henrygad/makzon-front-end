@@ -1,45 +1,51 @@
-import { ReactElement, useEffect, useState } from "react";
-import { useAppDispatch } from "../redux";
-import { removepopUpNotification } from "../redux/slices/userNotificationSlices";
+import { useEffect, useState } from "react";
+import notificationProps from "../types/notification.type";
+import { Single } from "./Displaynotification";
 
+type props = {
+    notificationUpdate: notificationProps | null  
+    setNotificationUpdate: React.Dispatch<React.SetStateAction<notificationProps | null>>    
+}
 
-const Popupnotification = ({ display, children }: { display: boolean, children: ReactElement }) => {
-    const [animate, setAnimate] = useState(false);
-    const appDispatch = useAppDispatch();
+const Popupnotification = ({ notificationUpdate, setNotificationUpdate }: props) => {
+    const [animate, setAnimate] = useState(false);    
 
     useEffect(() => {
-        if (display) {
+        if (notificationUpdate) {
+            // display notification popup
             setAnimate(true);
             const clear = setTimeout(() => {
-                setAnimate(false);
-                appDispatch(removepopUpNotification());
+                // close notificatio popup
+                setAnimate(false);  
+                setNotificationUpdate(null);
                 clearTimeout(clear);
             }, 4000);
         }
-    }, [display]);
+    }, [notificationUpdate]);
+
 
     return (
         <>
-            {display ?
+            {notificationUpdate ?
                 <span
                     className="container block fixed top-1 right-0 left-0 w-full z-50"
                 >
                     <span
-                        className={`relative block w-full transition-transform 
-                            ${animate ? "translate-y-0" : "-translate-y-10"}
-                             bg-white p-4 border border-blue-50 rounded-lg shadow-md shadow-blue-50`}
-                        onClick={() => appDispatch(removepopUpNotification())}
-                    >
+                        className={`relative block w-full transition-transform ${animate ? "translate-y-0" : "-translate-y-10"} shadow-md shadow-blue-50`}>
                         <button
-                            className="absolute top-6 right-8 text-sm font-text text-slate-800"
+                            className="block absolute top-2 right-3 text-base font-text text-slate-800"
                             onClick={(e) => {
-                                appDispatch(removepopUpNotification());
                                 e.stopPropagation();
+                                setAnimate(false);
+                                setNotificationUpdate(null);
                             }}
                         >
                             x
                         </button>
-                        {children}
+                        <Single
+                            notification={notificationUpdate}
+                            useDelete={false}
+                        />
                     </span>
                 </span> :
                 null

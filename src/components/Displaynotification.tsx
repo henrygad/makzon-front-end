@@ -11,6 +11,9 @@ import {
   viewedNotifications,
 } from "../redux/slices/userNotificationSlices";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import useSanitize from "../hooks/useSanitize";
+import userProps from "../types/user.type";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type viewTargetNotificationProps =
@@ -43,15 +46,29 @@ const Displayicon = ({ type }: { type: string }) => {
 };
 
 const Displayuseravatar = ({ userName }: { userName: string }) => {
-  const [avatar, setAvater] = useState("");
+  const [userInfor, setUserInfor] = useState<userProps | null>(null);
 
   useEffect(() => {
-    setAvater(userName);
+    // Fetch author short details
+    const url = apiEndPont + "/user/" + userName;
+    axios(url, {
+      withCredentials: true,
+      baseURL: apiEndPont
+    })
+      .then(async (res) => {
+        const userInfor: userProps = await res.data.data;
+        setUserInfor(userInfor);
+      })
+      .catch((error) =>
+        console.error(error)
+      );
   }, [userName]);
+
+  if (!userInfor) return <span>loading</span>;
 
   return (
     <Displayimage
-      url={apiEndPont+"/media/"+avatar}
+      url={userInfor.avatar ? apiEndPont + "/media/" + userInfor?.avatar : ""}
       alt={userName}
       useCancle={false}
       className="h-9 w-9 rounded-full object-contain"
@@ -68,23 +85,26 @@ const Displayuseravatar = ({ userName }: { userName: string }) => {
   );
 };
 
+type singleProps = {
+  notification: notificationProps;
+  isSelect?: boolean,
+  selections?: string[],
+  setSelections?: React.Dispatch<React.SetStateAction<string[]>>
+  useDelete?: boolean;
+}
+
 export const Single = ({
   notification,
   isSelect,
   selections,
   setSelections = () => null,
   useDelete = true,
-}: {
-  notification: notificationProps;
-  isSelect?: boolean,
-  selections?: string[],
-  setSelections?: React.Dispatch<React.SetStateAction<string[]>>
-  useDelete?: boolean;
-}) => {
+}: singleProps) => {
   const navigate = useNavigate();
   const appDispatch = useAppDispatch();
+  const sanitize = useSanitize();
 
-  const handleViewNotification = (notic: notificationProps) => {
+  const handleViewNotification = async (notic: notificationProps) => {
     let viewTargetNotification: viewTargetNotificationProps = undefined;
 
     if (notic.type.trim().toLowerCase().includes("followed")) {
@@ -130,43 +150,44 @@ export const Single = ({
       viewTargetNotification = undefined;
     }
 
-    const Notifications: notificationProps[] = JSON.parse(
-      localStorage.getItem("notifications") || "[]"
-    );
-    localStorage.setItem(
-      "notifications",
-      JSON.stringify(
-        Notifications.map((notification) =>
-          notification._id === notic._id
-            ? { ...notification, checked: true }
-            : notification
-        )
-      )
-    );
-    appDispatch(viewedNotifications({ _id: notic._id || "" }));
-
-    if (notic.url.trim().startsWith("/")) {
-      navigate(notic.url.trim(), { state: viewTargetNotification });
-      return;
+    const url = sanitize(notic.url).__html;
+    if (url.startsWith("/")) {
+      navigate(url, { state: viewTargetNotification });
+    } else {
+      navigate("/" + url, { state: viewTargetNotification });
     }
 
-    navigate("/" + notic.url.trim(), { state: viewTargetNotification });
+    try {
+      const url = apiEndPont + "/notification/" + notic._id;
+      const res = await axios.patch(url, null, {
+        baseURL: apiEndPont,
+        withCredentials: true
+      });
+      const viewedNotic: notificationProps = await res.data.data;
+      appDispatch(viewedNotifications({ _id: viewedNotic._id! }));
+    } catch (error) {
+      console.error(error);
+    }
+
   };
 
-  const handleDeleteNotic = (
+  const handleDeleteAllNotics = async (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
     _id: string
   ) => {
-    const Notifications: notificationProps[] = JSON.parse(
-      localStorage.getItem("notifications") || "[]"
-    );
-    localStorage.setItem(
-      "notifications",
-      JSON.stringify(Notifications.filter((notic) => notic._id !== _id))
-    );
-
-    appDispatch(deleteNotifications({ _id }));
     e.stopPropagation();
+
+    try {
+      const url = apiEndPont + "/notification/" + _id;
+      await axios.delete(url, {
+        baseURL: apiEndPont,
+        withCredentials: true,
+      });
+      appDispatch(deleteNotifications({ _id }));
+    } catch (error) {
+      console.error(error);
+    }
+
   };
 
   return (
@@ -180,8 +201,9 @@ export const Single = ({
             setSelections(pre => ([...pre, notification._id || ""]));
           }
           return;
+        } else {
+          handleViewNotification(notification);
         }
-        handleViewNotification(notification);
       }}
     >
       <span className="flex items-start gap-2">
@@ -194,7 +216,7 @@ export const Single = ({
             {useDelete && !isSelect ?
               (
                 <button
-                  onClick={(e) => handleDeleteNotic(e, notification._id || "")}
+                  onClick={(e) => handleDeleteAllNotics(e, notification._id || "")}
                 >
                   <MdDeleteOutline size={16} color="gray" />
                 </button>
@@ -212,25 +234,28 @@ export const Single = ({
   );
 };
 
+type multipleProps = {
+  notifications: notificationProps[];
+  isSelect: boolean,
+  selections: string[],
+  setSelections: React.Dispatch<React.SetStateAction<string[]>>
+};
+
+
 export const Multiple = ({
   notifications,
   isSelect,
   selections,
   setSelections
-}: {
-  notifications: notificationProps[];
-  isSelect: boolean,
-  selections: string[],
-  setSelections: React.Dispatch<React.SetStateAction<string[]>>
-}) => {
+}: multipleProps) => {
   const [lastNotic, setLastNotic] = useState<notificationProps>(
     notifications[0]
   );
   const navigate = useNavigate();
-
+  const sanitize = useSanitize();
   const appDispatch = useAppDispatch();
 
-  const handleViewNotification = (notic: notificationProps) => {
+  const handleViewNotification = async (notic: notificationProps) => {
     let viewTargetNotification: viewTargetNotificationProps = undefined;
 
     if (notic.type.trim().toLowerCase().includes("followed")) {
@@ -276,46 +301,46 @@ export const Multiple = ({
       viewTargetNotification = undefined;
     }
 
-    const Notifications: notificationProps[] = JSON.parse(
-      localStorage.getItem("notifications") || "[]"
-    );
-    localStorage.setItem(
-      "notifications",
-      JSON.stringify(
-        Notifications.map((notification) =>
-          notification._id === notic._id
-            ? { ...notification, checked: true }
-            : notification
-        )
-      )
-    );
-    appDispatch(viewedNotifications({ _id: notic._id || "" }));
-
-    if (notic.url.trim().startsWith("/")) {
-      navigate(notic.url.trim(), { state: viewTargetNotification });
-      return;
+    const url = sanitize(notic.url).__html;
+    if (url.startsWith("/")) {
+      navigate(url, { state: viewTargetNotification });
+    } else {
+      navigate("/" + url, { state: viewTargetNotification });
     }
 
-    navigate("/" + notic.url.trim(), { state: viewTargetNotification });
+    try {
+      const url = apiEndPont + "/notification/" + notic._id;
+      const res = await axios.patch(url, null, {
+        baseURL: apiEndPont,
+        withCredentials: true
+      });
+      const viewedNotic: notificationProps = await res.data.data;
+      appDispatch(viewedNotifications({ _id: viewedNotic._id! }));
+    } catch (error) {
+      console.error(error);
+    }
+
   };
 
-  const handleDeleteNotic = (
+  const handleDeleteAllNotics = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
-    const deleteAll = (_id: string) => {
-      const Notifications: notificationProps[] = JSON.parse(
-        localStorage.getItem("notifications") || "[]"
-      );
-      localStorage.setItem(
-        "notifications",
-        JSON.stringify(Notifications.filter((notic) => notic._id !== _id))
-      );
 
-      appDispatch(deleteNotifications({ _id }));
+    const deleteNotic = async (_id: string) => {
+      try {
+        const url = apiEndPont + "/notification/" + _id;
+        await axios.delete(url, {
+          baseURL: apiEndPont,
+          withCredentials: true,
+        });
+        appDispatch(deleteNotifications({ _id }));
+      } catch (error) {
+        console.error(error);
+      }
     };
 
-    notifications.forEach(notic => {
-      deleteAll(notic._id || "");
+    notifications.forEach(async (notic) => {
+      await deleteNotic(notic._id!);
     });
     e.stopPropagation();
   };
@@ -332,11 +357,12 @@ export const Multiple = ({
           if (selections?.includes(lastNotic._id || "")) {
             setSelections(pre => pre.filter(_id => !pre.includes(_id)));
           } else {
-            setSelections(pre=> ([...pre, ...notifications.map(notic => notic._id || "")]));
+            setSelections(pre => ([...pre, ...notifications.map(notic => notic._id || "")]));
           }
           return;
+        } else {
+          handleViewNotification(lastNotic);          
         }
-        handleViewNotification(lastNotic);
       }}
     >
       <span className="flex items-start gap-2">
@@ -362,7 +388,7 @@ export const Multiple = ({
               )}
             </span>
             {!isSelect ?
-              <button onClick={handleDeleteNotic}>
+              <button onClick={handleDeleteAllNotics}>
                 <MdDeleteOutline size={16} color="gray" />
               </button> :
               null

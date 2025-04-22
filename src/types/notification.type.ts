@@ -1,5 +1,4 @@
 
-
 type notificationProps = {
     _id?: string
     type: string

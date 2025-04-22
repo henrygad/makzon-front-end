@@ -1,5 +1,5 @@
 import Displayblogpost from "../components/Displayblogpost";
-import { useAppSelector } from "../redux";
+
 import postProps from "../types/post.type";
 
 type Props = {
@@ -16,8 +16,7 @@ type Props = {
     }) => void
 }
 
-const Profileblogposts = ({ loading, blogposts, updateBlogpost }: Props) => {
-    const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
+const Profileblogposts = ({ loading, blogposts, updateBlogpost }: Props) => {    
 
     return <section>
         <div className="border-b pb-1 mb-4">
@@ -39,8 +38,7 @@ const Profileblogposts = ({ loading, blogposts, updateBlogpost }: Props) => {
                                         <Displayblogpost
                                             key={blogpost._id}
                                             displayType="TEXT"
-                                            blogpost={blogpost}
-                                            authorInfor={User}
+                                            blogpost={blogpost}                                            
                                             updateBlogpost={updateBlogpost}
                                         />
                                     ) :

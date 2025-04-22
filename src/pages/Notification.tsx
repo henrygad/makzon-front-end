@@ -4,6 +4,8 @@ import { useAppDispatch, useAppSelector } from "../redux";
 import notificationProps from "../types/notification.type";
 import { MdDeleteOutline } from "react-icons/md";
 import { deleteNotifications } from "../redux/slices/userNotificationSlices";
+import axios from "axios";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Notification = () => {
     const { data: Notifications, loading } = useAppSelector(
@@ -17,21 +19,25 @@ const Notification = () => {
         setSelections(Notifications.map(notic => notic._id || ""));
     };
 
-    const handleDeleteNotic = (_id: string) => {
-        const Notifications: notificationProps[] = JSON.parse(
-            localStorage.getItem("notifications") || "[]"
-        );
-        localStorage.setItem(
-            "notifications",
-            JSON.stringify(Notifications.filter((notic) => notic._id !== _id))
-        );
-        setSelections(pre => pre.filter(noticId => noticId !== _id));
-        appDispatch(deleteNotifications({ _id }));
+    const deleteNotic = async (_id: string) => {
+        try {
+            const url = apiEndPont + "/notification/" + _id;
+            await axios.delete(url, {
+                baseURL: apiEndPont,
+                withCredentials: true,
+            });
+            appDispatch(deleteNotifications({ _id }));
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     const handleMultipleDelete = () => {
-        selections.forEach(_id => {
-            handleDeleteNotic(_id);
+        selections.forEach(async (_id, index) => {
+            await deleteNotic(_id);
+            if (index === selections.length - 1) {
+                setSelections([]);                
+            }
         });
     };
 
@@ -53,7 +59,7 @@ const Notification = () => {
     };
 
 
-    useEffect(() => { 
+    useEffect(() => {
         if (selections?.length === 0) {
             setIsSelect(false);
         }

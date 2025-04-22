@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import Displayuserinfor from "./Displayuserinfor";
 import userProps from "../types/user.type";
 import { Link } from "react-router-dom";
+import axios from "axios";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
-
-const Displaylike = ({ userName, autoViewLike }: {
+type props = {
     userName: string;
     autoViewLike?: {
         comment?: {
@@ -13,17 +14,22 @@ const Displaylike = ({ userName, autoViewLike }: {
         },
         targetLike: string
     }
-}) => {
-    const [user, setUser] = useState<userProps | null>(null);
+};
 
-    const fetchUserData = (userName: string) => {
-        setUser({ userName } as userProps);
-    };
+const Displaylike = ({ userName, autoViewLike }: props) => {
+    const [user, setUser] = useState<userProps | null>(null);    
 
     useEffect(() => {
-        if (userName) {
-            fetchUserData(userName);
-        }
+        if (!userName) return;
+        const url = apiEndPont + "/user/" + userName;
+        axios(url)
+            .then(async (res) => {
+                const user: userProps = await res.data.data;
+                setUser(user);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
     }, [userName]);
 
     return <>

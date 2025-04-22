@@ -60,7 +60,7 @@ const Dropmenu = ({ horizotal = false, children }: Props) => {
         ref={menuContainerRef}
         className="relative">
         <button
-            className={`flex items-start gap-0.5 font-bold text-base mt-1 ${horizotal ? "rotate-90" : ""} cursor-pointer`}
+            className={`flex items-start gap-0.5 font-bold text-base ${horizotal ? "rotate-90" : ""} cursor-pointer`}
             onClick={handleDropMenu}
         >
             <span className="h-1 w-1 rounded-full bg-gray-500"></span>

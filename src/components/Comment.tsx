@@ -42,7 +42,7 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
     const addComment = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        handleDialog();
+
         let newComment: commentProps | null = null;
         try {
             const data: commentProps = {
@@ -83,28 +83,28 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                 }
             });
             setCommentBody("");
-            handleDialog();
             callBack(newComment);
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
+            handleDialog();
         }
 
         if (!newComment) return;
         /* Send notification call when a friend comment on a user post or comment */
-        if (replyId) {
+        if (replyId && parentComment) {
             sendNotification({
                 type: "commented",
                 from: newComment.author,
-                targetTitle: trim(parentComment?.body.text || "", 20),
+                targetTitle: trim(parentComment.body.text, 20),
                 options: {
                     type: "reply-comment",
                     parentCommentId: replyId,
                     targetCommentId: newComment._id
                 },
-                to: parentComment?.author || "",
-                message: `replyed to your comment, ${trim(parentComment?.body.text || "", 20)}`,
+                to: parentComment.author,
+                message: `replyed to your comment, ${trim(parentComment.body.text, 20)}`,
                 checked: false,
                 url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
             });
@@ -118,7 +118,7 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                     parentCommentId: null,
                     targetCommentId: newComment._id
                 },
-                to: blogpost.author || "",
+                to: blogpost.author!,
                 message: `commented on, ${blogpost.title}`,
                 checked: false,
                 url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",

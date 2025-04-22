@@ -3,8 +3,7 @@ import Displaylike from "../components/Displaylike";
 import { useLocation } from "react-router-dom";
 import useAutoNavigate from "../hooks/useAutoNavigate";
 
-
-const Blogpostlikes = ({ likes, autoViewLike }: {
+type props = {
     likes: string[];
     autoViewLike?: {
         comment?: {
@@ -12,8 +11,10 @@ const Blogpostlikes = ({ likes, autoViewLike }: {
             targetComment: string | null,
         },
         targetLike: string
-    }
-}) => {
+    };
+};
+
+const Blogpostlikes = ({ likes, autoViewLike }: props) => {
     const location = useLocation();
     const autoNavigate = useAutoNavigate();
     const sectionRef = useRef<HTMLElement | null>(null);
@@ -32,7 +33,7 @@ const Blogpostlikes = ({ likes, autoViewLike }: {
         
        }, 1);
     }, [location.hash, sectionRef]);
-
+    
     return <section ref={sectionRef}>
         <div className="space-y-1">
             {

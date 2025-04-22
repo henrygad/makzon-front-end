@@ -31,7 +31,7 @@ const Saveblogpost = ({ User, blogpost }: { User: userProps, blogpost: postProps
     };
 
     return <span
-        className={`${User && User.saves.includes(blogpost._id || "") ? "text-green-600" : ""}`}
+        className={`${User.saves && User.saves.includes(blogpost._id || "") ? "text-green-600" : ""}`}
         onClick={() => handleSave(User, blogpost)}
     >
         save

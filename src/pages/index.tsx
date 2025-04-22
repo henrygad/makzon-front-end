@@ -1,6 +1,6 @@
 import { lazy } from "react";
 
-export const Treading = lazy(() => import("./Treading"));
+export const Trending = lazy(() => import("./Trending"));
 export const Signup = lazy(() => import("./Signup"));
 export const Login = lazy(() => import("./Login"));
 export const Timeline = lazy(() => import("./Timeline"));

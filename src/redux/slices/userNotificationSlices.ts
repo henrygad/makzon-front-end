@@ -6,15 +6,12 @@ type Initialstate = {
     data: notificationProps[]
     loading: boolean,
     error: string
-    popUpNotificationId?: string
-
 };
 
 const initialState: Initialstate = {
     data: [],
     loading: true,
-    error: "",
-    popUpNotificationId: undefined
+    error: "",   
 };
 
 const userNotification = createSlice({
@@ -25,8 +22,7 @@ const userNotification = createSlice({
             return state = action.payload;
         },
         addNotifications: (state, action: { payload: notificationProps }) => {
-            state.data.push(action.payload);
-            state.popUpNotificationId = action.payload._id;           
+            state.data.push(action.payload);                   
         },
         viewedNotifications: (state, action: { payload: { _id: string } }) => {
             state.data = state.data.map((notis =>
@@ -39,13 +35,10 @@ const userNotification = createSlice({
             state.data = state.data.filter(
                 (notis) => notis._id !== action.payload._id
             );
-        },
-        removepopUpNotification: (state) => {
-            state.popUpNotificationId = undefined;     
-        }
+        },       
     }
 });
 
-export const { fetchNotifications, addNotifications, viewedNotifications, deleteNotifications, removepopUpNotification } = userNotification.actions;
+export const { fetchNotifications, addNotifications, viewedNotifications, deleteNotifications } = userNotification.actions;
 export default userNotification.reducer;
 

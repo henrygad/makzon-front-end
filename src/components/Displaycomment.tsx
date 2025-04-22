@@ -65,7 +65,7 @@ const Commentui = ({
         baseURL: apiEndPont,
         withCredentials: true
       });
-      console.log(deleteCommentData);
+      
       setComments((pre) => {
         if (!pre) return pre;
 

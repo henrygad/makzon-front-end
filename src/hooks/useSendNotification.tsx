@@ -1,20 +1,24 @@
-import { useAppDispatch } from "../redux";
+import { useAppSelector } from "../redux";
 import notificationProps from "../types/notification.type";
-import { addNotifications } from "../redux/slices/userNotificationSlices";
+import axios from "axios";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
-const useSendNotification = () => {
-    const appDispatch = useAppDispatch();
+const useSendNotification = () => {    
+    const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);    
 
-    const handleNotifications = (newNotification: notificationProps) => {
-        const createNewNotification = {
-            _id: Date.now().toString(),
-            ...newNotification
-        };
-        const Notifications = JSON.parse(localStorage.getItem("notifications") || "[]");
-        localStorage.setItem("notifications", JSON.stringify([...Notifications, createNewNotification]));
-        appDispatch(addNotifications(createNewNotification));
+    const handleNotifications = async (data: notificationProps) => {
+        if (data.to === User.userName) return;
+        try {
+            const url = apiEndPont + "/notification";
+             await axios.post(url, data, {
+                baseURL: apiEndPont,
+                withCredentials: true
+            });                        
+        } catch (error) {
+            console.error(error);
+        }
     };
-    
+
     return handleNotifications;
 };
 

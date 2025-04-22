@@ -25,7 +25,6 @@ const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 type Props = {
     displayType: string;
     blogpost: postProps;
-    authorInfor: userProps,
     updateBlogpost: ({ type, blogpost }: { type: "EDIT", blogpost: postProps } | { type: "DELETE", blogpost: { _id: string } }) => void;
     autoViewComment?: {
         blogpostParentComment: string | null,
@@ -43,7 +42,6 @@ type Props = {
 const Displayblogpost = ({
     displayType,
     blogpost,
-    authorInfor,
     updateBlogpost,
     autoViewComment,
     autoViewLike
@@ -51,6 +49,7 @@ const Displayblogpost = ({
     const navigate = useNavigate();
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
 
+    const [authorInfor, setAuthorInfor] = useState<userProps | null>(null);
     const [comments, setComments] = useState<commentProps[] | null>(null);
     const blogpostRef = useRef<HTMLDivElement | null>(null);
     const sanitize = useSanitize();
@@ -168,6 +167,22 @@ const Displayblogpost = ({
     };
 
     useEffect(() => {
+        // Fetch author short details
+        const url = apiEndPont + "/user/" + blogpost.author;
+        axios(url, {
+            withCredentials: true,
+            baseURL: apiEndPont
+        })
+            .then(async (res) => {
+                const userInfor: userProps = await res.data.data;
+                setAuthorInfor(userInfor);
+            })
+            .catch((error) =>
+                console.error(error)
+            );
+    }, [blogpost.author]);
+
+    useEffect(() => {
         if (!blogpost._id) return;
         const url = apiEndPont + "/comment?postId=" + blogpost._id + "&replyId=null&skip=0&limit=20";
         axios(url, {
@@ -205,14 +220,14 @@ const Displayblogpost = ({
     return <>
         <div
             ref={blogpostRef}
-            className={`space - y - 4 p-2 ${displayType === "TEXT" ? "border" : ""} rounded-md`}
+            className="space-y-4 p-2 rounded-md"
         >
             {/* author info and side menu */}
             <span className="flex items-start justify-between gap-6">
                 <Displayuserinfor
                     short={true}
                     user={authorInfor}
-                    onClick={() => navigate("/profile/" + authorInfor.userName)}
+                    onClick={() => navigate("/profile/" + authorInfor?.userName)}
                 />
                 <Dropmenu
                     children={
@@ -240,7 +255,7 @@ const Displayblogpost = ({
                     }
                 />
             </span>
-            <article className="font-text text-base">
+            <article className="font-text text-base space-y-2">
                 {/* post date */}
                 <span className="flex gap-4 text-sm text-stone-700 font-sec">
                     <span>Post: 02 01 25; 11:00am</span>
@@ -258,12 +273,10 @@ const Displayblogpost = ({
                         ))
                         : null}
                 </ul>
-                <span className="space flex justify-center mt-2 mb-1">
-                    <span className="border-2 min-w-10 max-w-10 rounded-md"></span>
-                </span>
                 {/* post article */}
                 <>
-                    {displayType === "_HTML" ? <span dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}></span> :
+                    {displayType.toLowerCase() === "_html" ?
+                        <span dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}></span> :
                         <span
                             className="indent-2 break-words hyphens-auto line-clamp-3 cursor-pointer"
                             onClick={() => handleToView(blogpost)}
@@ -307,9 +320,6 @@ const Displayblogpost = ({
                             null
                     }
                 </>
-                <span className="space flex justify-center my-2">
-                    <span className="border-2 min-w-10 max-w-10 rounded-md"></span>
-                </span>
             </article>
             {/* post stat */}
             <span className="flex justify-around gap-4">
@@ -383,7 +393,7 @@ const Displayblogpost = ({
         {/* Only display on single post page */}
         <>
             {
-                displayType.trim().toLowerCase() === "_html" ?
+                displayType.toLowerCase() === "_html" ?
                     <>
                         <menu className="border-t border-b">
                             <ul className="flex items-center gap-6 p-2">

@@ -32,76 +32,48 @@ const Userprofile = ({ User }: { User: userProps }) => {
         },
     ];
 
-    return <div>
-        <div className="flex">
+    return <div className="overflow-hidden">
+        <section className="flex justify-between items-start">
             {/* disply user infor*/}
             <Displayuserinfor
                 short={false}
                 user={User}
                 onClick={handleDialog}
             />
-            <Dialog
-                dialog={dialog}
-                handleDialog={handleDialog}
-                className="flex gap-8 border rounded-lg px-12 py-10 bg-white"
-                children={<>
-                    <button
-                        className="text-sm font-text text-slate-600 cursor-pointer"
-                        onClick={() => {
-                            handleDialog();
-                            const clear = setTimeout(() => {
-                                navigate(`?url=${apiEndPont + "/media/" + User.avatar}&type=image#single-image`);
-                                clearTimeout(clear);
-                            }, 100);
-                        }}
-                    >
-                        View Picture
-                    </button>
-                    <button
-                        className="text-sm font-text text-slate-600 cursor-pointer"
-                        onClick={() => navigate("/profile/update")}
-                    >
-                        Edit Profile
-                    </button>
-                </>}
-
-            />
-            <div className="flex flex-col items-end justify-between gap-8 py-2">
-                <div className="flex items-start">
-                    {/* profile menu */}
-                    <Dropmenu
-                        horizotal={true}
-                        children={
-                            <ul className="min-w-[140px] text-sm font-text p-4 space-y-3 rounded-md border bg-white ">
-                                <li className="flex gap-2 items-center cursor-pointer">
-                                    <Copytoclipboard body={"/profile/" + User.userName} />
-                                    <span>Copy</span>
-                                </li>
-                                {
-                                    userMenuOptions.map(option =>
-                                        <li
-                                            key={option.name}
-                                            className="flex gap-2 items-center cursor-pointer"
-                                            onClick={(e) => {
-                                                option.func();
-                                                e.stopPropagation();
-                                            }}
-                                        >
-                                            {option.icon}
-                                            <span>
-                                                {option.name}
-                                            </span>
-                                        </li>
-                                    )
-                                }
-                            </ul>
-                        }
-                    />
-                </div>
-                <div className="flex justify-between gap-2 sm:gap-4 items-end">
+            <div className="flex flex-col justify-between items-end min-h-[320px] pt-2.5">
+                {/* profile menu */}
+                <Dropmenu
+                    horizotal={true}
+                    children={
+                        <ul className="min-w-[140px] text-sm font-text p-4 space-y-3 rounded-md border bg-white">
+                            <li className="flex gap-2 items-center cursor-pointer">
+                                <Copytoclipboard body={"/profile/" + User.userName} />
+                                <span>Copy</span>
+                            </li>
+                            {
+                                userMenuOptions.map(option =>
+                                    <li
+                                        key={option.name}
+                                        className="flex gap-2 items-center cursor-pointer"
+                                        onClick={(e) => {
+                                            option.func();
+                                            e.stopPropagation();
+                                        }}
+                                    >
+                                        {option.icon}
+                                        <span>
+                                            {option.name}
+                                        </span>
+                                    </li>
+                                )
+                            }
+                        </ul>
+                    }
+                />
                     {/* navigate to user followers and following  */}
+                <div className="flex flex-wrap justify-between gap-3 items-end">
                     <button
-                        className="text-sm sm:text-base font-sec text-slate-800"
+                        className="font-text font-medium text-xs sm:text-sm"
                         onClick={() => navigate("#followes")}
                     >
                         <span className="block">
@@ -112,7 +84,7 @@ const Userprofile = ({ User }: { User: userProps }) => {
                         </span>
                     </button>
                     <button
-                        className="text-sm sm:text-base font-sec text-slate-800"
+                        className="font-text font-medium text-xs sm:text-sm"
                         onClick={() => navigate("#following")}
                     >
                         <span className="block">
@@ -124,7 +96,7 @@ const Userprofile = ({ User }: { User: userProps }) => {
                     </button>
                 </div>
             </div>
-        </div>
+        </section>
         <Tab
             className=""
             arrOfTab={[
@@ -153,6 +125,32 @@ const Userprofile = ({ User }: { User: userProps }) => {
                     tab: <Followings following={(User.followings || [])} />
                 },
             ]}
+        />
+        <Dialog
+            dialog={dialog}
+            handleDialog={handleDialog}
+            className="flex gap-8 border rounded-lg px-12 py-10 bg-white"
+            children={<>
+                <button
+                    className="text-sm font-text text-slate-600 cursor-pointer"
+                    onClick={() => {
+                        handleDialog();
+                        const clear = setTimeout(() => {
+                            navigate(`?url=${apiEndPont + "/media/" + User.avatar}&type=image#single-image`);
+                            clearTimeout(clear);
+                        }, 100);
+                    }}
+                >
+                    View Picture
+                </button>
+                <button
+                    className="text-sm font-text text-slate-600 cursor-pointer"
+                    onClick={() => navigate("/profile/update")}
+                >
+                    Edit Profile
+                </button>
+            </>}
+
         />
     </div>;
 };
