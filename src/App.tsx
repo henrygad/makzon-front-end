@@ -10,10 +10,11 @@ import {
   Security,
   Settings,
   Signup,
-  Timeline,
+  Feed,
   Trending,
   Updateprofile,
   Verifyuser,
+  Forgetpassword,
 } from "./pages";
 import userProps from "./types/user.type";
 import postProps from "./types/post.type";
@@ -282,8 +283,7 @@ const App = () => {
           />
           <Route
             path="/login"
-            element={
-              !User.login ? (
+            element={!User.login ? (
                 <Login />
               ) : (
                 <Navigate to={`/profile/${User.userName}`} />
@@ -291,9 +291,20 @@ const App = () => {
             }
           />
           <Route
-            path="/verify/user"
+            path="/forgetpassword"
             element={
-              User.login && !User.userVerified ? (
+              !User.login ? (
+                <Forgetpassword />
+              ) : (
+                  <Navigate to={`/profile/${User.userName}`} />
+              )
+            }
+          />
+          <Route
+            path="/verify/email"
+            element={
+              User.login &&
+                !User.userVerified ? (
                 <Verifyuser />
               ) : (
                 <Navigate to="/login" />
@@ -301,8 +312,8 @@ const App = () => {
             }
           />
           <Route
-            path="/timeline"
-            element={User.login ? <Timeline /> : <Navigate to="/login" />}
+            path="/feed"
+            element={User.login ? <Feed /> : <Navigate to="/login" />}
           />
           <Route
             path="/createblogpost"

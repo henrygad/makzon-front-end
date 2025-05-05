@@ -3,8 +3,7 @@ import { useAppDispatch, useAppSelector } from "../redux";
 import { deleteBlogpost, editBlogpost } from "../redux/slices/userBlogpostSlices";
 
 const Unpublishs = () => {
-    const { data: Allblogposts, loading } = useAppSelector(state => state.userBlogpostSlices.blogposts);
-    const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
+    const { data: Allblogposts, loading } = useAppSelector(state => state.userBlogpostSlices.blogposts);    
     const appDispatch = useAppDispatch();
 
     const unpublishedPost = Allblogposts.filter(blogpost => blogpost.status.toLowerCase() === "unpublished");
@@ -19,8 +18,7 @@ const Unpublishs = () => {
                             <Displayblogpost
                                 key={blogpost._id}
                                 displayType="TEXT"
-                                blogpost={blogpost}
-                                authorInfor={User}
+                                blogpost={blogpost}                                
                                 updateBlogpost={
                                     ({ blogpost, type }) => {
                                         if (type === "EDIT") {

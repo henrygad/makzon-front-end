@@ -3,7 +3,7 @@ import notificationProps from "../types/notification.type";
 import { SlLike, SlUserFollow, SlUserUnfollow } from "react-icons/sl";
 import { MdDeleteOutline } from "react-icons/md";
 import Displayimage from "./Displayimage";
-import avatarPlaceholder from "../assert/avaterplaceholder.svg";
+import avatarPlaceholder from "../assets/avaterplaceholder.svg";
 import { useEffect, useState } from "react";
 import { useAppDispatch } from "../redux";
 import {

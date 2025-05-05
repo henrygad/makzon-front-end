@@ -11,7 +11,7 @@ const Popupnotification = ({ notificationUpdate, setNotificationUpdate }: props)
     const [animate, setAnimate] = useState(false);    
 
     useEffect(() => {
-        if (notificationUpdate) {
+        if (notificationUpdate) { 
             // display notification popup
             setAnimate(true);
             const clear = setTimeout(() => {

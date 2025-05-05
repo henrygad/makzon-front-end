@@ -5,7 +5,7 @@ import Dropmenu from "./Dropmenu";
 import userProps from "../types/user.type";
 import useSanitize from "../hooks/useSanitize";
 import Displayimage from "./Displayimage";
-import imgplaceholder from "../assert/imageplaceholder.svg";
+import imgplaceholder from "../assets/imageplaceholder.svg";
 import { useNavigate } from "react-router-dom";
 import Comment from "./Comment";
 import commentProps from "../types/comment.type";

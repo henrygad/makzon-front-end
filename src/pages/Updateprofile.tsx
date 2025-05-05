@@ -9,9 +9,9 @@ import avatarPlaceholder from "../assert/avaterplaceholder.svg";
 import Fileinput from "../components/Fileinput";
 import useGetLocalFiles from "../hooks/useGetLocalFiles";
 import { IoMdArrowRoundBack, IoMdImages } from "react-icons/io";
-import Texteditor from "../editor/App";
+import Makzontexteditor from "makzontexteditor";
 import Customselection from "../components/Customselection";
-import { Countries, Professions } from "../assert/date";
+import { Countries, Professions } from "../assets/date";
 import { Button } from "../components/Button";
 import { addMedia } from "../redux/slices/userMediaSlices";
 import axios from "axios";
@@ -306,8 +306,8 @@ const Updateprofile = () => {
                     <div id="bio">
                         <span className="block font-semibold">Bio</span>
                         <div className="flex justify-between items-center gap-6">
-                            <Texteditor
-                                editorRef={bioInputRef}
+                            <Makzontexteditor
+                                inputRef={bioInputRef}
                                 wrapperClassName="flex-1"
                                 inputClassName={`w-full min-h-[100px] max-h-[10px] py-2 
                                         ${focusInput === "bio"
@@ -315,13 +315,12 @@ const Updateprofile = () => {
                                         : ""
                                     } 
                                         rounded-md overflow-y-auto`}
-                                placeholderValue={User.bio?.trim() ? "" : "Your bio"}
+                                placeholder={User.bio?.trim() ? "" : "Your bio"}
                                 useToolBar={false}
-                                autoFocus={false}
-                                onFocus={() => setFocusInput("bio")}
-                                addValue={{
-                                    createNew: User.bio?.trim() ? false : true,
-                                    data: sanitize(User.bio).__html || "",
+                                autoFocus={false}                                
+                                setContext={{
+                                    new: User.bio?.trim() ? false : true,
+                                    context: sanitize(User.bio).__html || "",
                                 }}
                                 setGetValue={(value) => {
                                     setUserData((pre) => pre ? ({ ...pre, bio: value._html }) : pre);

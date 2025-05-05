@@ -19,7 +19,7 @@ const Header = ({ notificationUpdate , setNotificationUpdate}: props) => {
  
   const { data: Notifications } = useAppSelector(state => state.userNotificationSlices);
 
-  const dontShowOnRoutes = ["/verify/user", "/login", "/signup"];
+  const dontShowOnRoutes = ["/verify/email", "/login", "/signup", "/forgetpassword", "/forgetpassword/"];
   
   return (
     <>
@@ -53,7 +53,7 @@ const Header = ({ notificationUpdate , setNotificationUpdate}: props) => {
                   </ul>
                 </nav>
               </header>
-            ) : <header className="container flex justify-between items-center gap-8 py-3 border-b">
+            ) : <header className="container flex justify-between items-center gap-8 py-3">
               <span>
                 <Logo
                   withText={true}

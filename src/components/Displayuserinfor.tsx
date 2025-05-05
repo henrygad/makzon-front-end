@@ -2,7 +2,7 @@ import { GoLink } from "react-icons/go";
 import userProps from "../types/user.type";
 import Displayimage from "./Displayimage";
 import useSanitize from "../hooks/useSanitize";
-import avatarPlaceholder from "../assert/avaterplaceholder.svg";
+import avatarPlaceholder from "../assets/avaterplaceholder.svg";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {

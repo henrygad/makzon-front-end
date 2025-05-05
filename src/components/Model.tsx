@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from "react";
+import { ReactElement, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 type Props = {
@@ -8,8 +8,8 @@ type Props = {
 
 const Model = ({ id, children }: Props) => {
   const location = useLocation();
-  const [currentModelId, setCurrentModelId] = useState("");
-  const [lastHashId, setLastHashId] = useState("");
+  const currentModelIdRef = useRef("");
+  const lastHashIdRef = useRef("");
   const [displayModel, setDisplayModel] = useState(false);
 
   const handleDisplayModel = () => {
@@ -17,12 +17,12 @@ const Model = ({ id, children }: Props) => {
     if (hashId &&
       hashId.trim() === id.trim()
     ) {
-      setCurrentModelId(id);
-      setLastHashId(hashId);
+      currentModelIdRef.current = id;
+      lastHashIdRef.current = hashId;
       setDisplayModel(true); 
       document.body.classList.add("overflow-hidden");     
     }else {
-      if (lastHashId && lastHashId.trim() === currentModelId.trim()) {
+      if (lastHashIdRef.current === currentModelIdRef.current) {
         setDisplayModel(false);
         if(displayModel)document.body.classList.remove("overflow-hidden");
       }

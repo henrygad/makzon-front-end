@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import Texteditor from "../editor/App";
 import useGetLocalFiles from "../hooks/useGetLocalFiles";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import Displayimage from "../components/Displayimage";
@@ -8,7 +7,6 @@ import Fileinput from "../components/Fileinput";
 import { IoMdImages } from "react-icons/io";
 import { Button } from "../components/Button";
 import postProps from "../types/post.type";
-import { deleteAll } from "../editor/toolbar/toolbar.utils";
 import Popupmessage from "../components/Popupmessag";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../redux";
@@ -23,6 +21,7 @@ import mediaProps from "../types/media.type";
 import { addMedia } from "../redux/slices/userMediaSlices";
 import axios from "axios";
 import Displayscreenloading from "../components/Displayscreenloading";
+import Makzontexteditor, { deleteAll } from "makzontexteditor";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
@@ -98,35 +97,30 @@ const Addpost = ({ existingPost }: Props) => {
         });
     };
 
-    const uploadFile = async (value: Blob | string) => {
-        if (typeof value === "object") {
-            setLoadingUploadedFileBlob(true);
-            try {
-                const formData = new FormData();
-                formData.append("media", value);
+    const uploadFile = async (value: Blob) => {
+        setLoadingUploadedFileBlob(true);
+        try {
+            const formData = new FormData();
+            formData.append("media", value);
 
-                const url = apiEndPont + "/media";
-                const res = await axios.post(url, formData, {
-                    baseURL: apiEndPont,
-                    withCredentials: true,
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
-                });
-                const file: mediaProps = await res.data.data;
-                appDispatch(addMedia(file));
+            const url = apiEndPont + "/media";
+            const res = await axios.post(url, formData, {
+                baseURL: apiEndPont,
+                withCredentials: true,
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            const file: mediaProps = await res.data.data;
+            appDispatch(addMedia(file));
 
-                return apiEndPont + "/media/" + file.filename;
-            } catch (error) {
-                console.error(error);
-                return "";
-            } finally {
-                setLoadingUploadedFileBlob(false);
-            }
-        } else if (typeof value === "string") {
-            return value;
+            return apiEndPont + "/media/" + file.filename;
+        } catch (error) {
+            console.error(error);
+            return "";
+        } finally {
+            setLoadingUploadedFileBlob(false);
         }
-        return "";
     };
 
     const publish = async (blogpost: postProps, imageBlob: Blob | undefined, isUpdate: boolean) => {
@@ -421,7 +415,7 @@ const Addpost = ({ existingPost }: Props) => {
         if (existingPost) {
             setTitle(existingPost.title || "");
             setImage(existingPost.image);
-            if (existingPost.image)setDisplayImage(apiEndPont + "/media/" + existingPost.image);
+            if (existingPost.image) setDisplayImage(apiEndPont + "/media/" + existingPost.image);
             setArticle({
                 _html: existingPost._html.body,
                 text: existingPost.body,
@@ -442,12 +436,12 @@ const Addpost = ({ existingPost }: Props) => {
         <section>
             <div className="space-y-10">
                 {/* blogpost rich text editor */}
-                <Texteditor
-                    editorRef={editorRef}
+                <Makzontexteditor
+                    inputRef={editorRef}
                     wrapperClassName="h-full w-full"
-                    toolBarClassName="w-full border p-4 sticky top-0 z-10 bg-white "
+                    toolBarClassName="w-full border p-4 sticky top-0 z-10 bg-white"
                     inputClassName="w-full min-h-[480px] max-h-[480px] p-4 border overflow-y-auto"
-                    placeholderValue="Start writing..."
+                    placeholder="Start writing..."
                     useToolBar={{
                         useInline: {
                             heading: true,
@@ -469,9 +463,9 @@ const Addpost = ({ existingPost }: Props) => {
                         useHistor: true,
                     }}
                     autoFocus={true}
-                    addValue={{
-                        createNew: existingPost ? false : true,
-                        data: (existingPost && existingPost._html.body) || "",
+                    setContext={{
+                        new: existingPost ? false : true,
+                        context: (existingPost && existingPost._html.body) || "",
                     }}
                     setGetValue={(value) => {
                         if (isEmpty) {
@@ -485,8 +479,11 @@ const Addpost = ({ existingPost }: Props) => {
                         setTitle(title.join(" "));
                     }}
                     handleLocalFile={handleLocalFile}
-                    handleGalaryFile={handleGalaryFile}
-                    onFileAdd={uploadFile}
+                    handleGalary={handleGalaryFile}
+                    onAddFile={async (blob, string) => {
+                        if (blob) return await uploadFile(blob);
+                        else return string;
+                    }}
                 />
                 {/* blogpost catigories */}
                 <span className="block space-y-1 font-text">

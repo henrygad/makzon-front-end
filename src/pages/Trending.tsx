@@ -15,56 +15,69 @@ const Trending = ({ newUsers, trendingBlogposts, setTrendingBlogposts }: props) 
 
     return <>
         <main className="container">
+            {/* slidder show */}
+            <section className="my-2">
+                <div className="min-h-40 bg-gray-100 rounded my-2">
+                    <div>slide one</div>
+                    <div>slide two</div>
+                    <div>slide three</div>
+                </div>
+            </section>
             {/* new user section */}
-            <>
+            <section className="space-y-8 my-4">
+                <span className="block font-prim text-xl font-semibold">
+                    Popular Authors
+                </span>
                 {newUsers ?
                     newUsers.length ?
-                        <section className="mb-10 space-y-4">
-                            <span className="block pl-1 font-text text-base font-medium">Follow new users</span>
-                            <div className="flex justify-between items-start gap-4 overflow-x-auto snap-x snap-center snap-always px-2">
-                                {
-                                    newUsers.map(user =>
-                                        <Displayuserinfor
-                                            key={user.userName}
-                                            short={true}
-                                            user={user}
-                                            onClick={() => navigate("/profile/" + user.userName)}
-                                        />
-                                    )
-                                }
-                            </div>
-                        </section> :
-                        null :
-                    <span>loading...</span>
-                }
-            </>
-            {/* new user section */}
-            <section className="space-y-6">
-                {
-                    trendingBlogposts ?
-                        trendingBlogposts.length ? <>
-                            <span className="block pl-3 font-text text-base font-medium">Read popular posts</span>
+                        <div className="flex justify-between items-start gap-4 overflow-x-auto snap-x snap-center snap-always px-2">
                             {
-                                trendingBlogposts.map(post =>
-                                    <Displayblogpost
-                                        key={post._id}
-                                        displayType="TEXT"
-                                        blogpost={post}
-                                        updateBlogpost={({ blogpost, type }) => {
-                                            if (type === "EDIT") {
-                                                setTrendingBlogposts((pre) =>
-                                                    pre ? ({ ...pre, ...blogpost }) : pre
-                                                );
-                                            } else if (type === "DELETE") {
-                                                setTrendingBlogposts(null);
-                                            }
-                                        }}
+                                newUsers.map(user =>
+                                    <Displayuserinfor
+                                        key={user.userName}
+                                        short={true}
+                                        user={user}
+                                        onClick={() => navigate("/profile/" + user.userName)}
                                     />
                                 )
                             }
-                        </> :
+                        </div> :
+                        null
+                    :
+                    <span>loading...</span>
+                }
+            </section>
+            {/* trending blogpost section */}
+            <section className="space-y-8 mb-4">
+                <span className="block font-prim text-xl font-semibold">
+                    Popular posts
+                </span>
+                {
+                    trendingBlogposts ?
+                        trendingBlogposts.length ?
+                            <div className="space-y-6">
+                                {
+                                    trendingBlogposts
+                                        .map(post =>
+                                        <Displayblogpost
+                                            key={post._id}
+                                            displayType="TEXT"
+                                            blogpost={post}
+                                            updateBlogpost={({ blogpost, type }) => {
+                                                if (type === "EDIT") {
+                                                    setTrendingBlogposts((pre) =>
+                                                        pre ? ({ ...pre, ...blogpost }) : pre
+                                                    );
+                                                } else if (type === "DELETE") {
+                                                    setTrendingBlogposts(null);
+                                                }
+                                            }}
+                                        />
+                                    )
+                                }
+                            </div> :
                             null :
-                        <span>laoding trending post</span>
+                        <span>laoding...</span>
                 }
             </section>
         </main>

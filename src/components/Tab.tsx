@@ -2,11 +2,12 @@ import { ReactElement, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
 type Props = {
+    allowToOtherTabs?: boolean
+    className: string
     arrOfTab: {
         id: string,
         tab: ReactElement,
-    }[]
-    className: string
+    }[]   
 }
 
 
@@ -14,11 +15,16 @@ const Eachtab = ({ tab }: { tab: ReactElement }) => {
     return tab;
 };
 
-const Tab = ({ className, arrOfTab }: Props) => {
+const Tab = ({ className, arrOfTab, allowToOtherTabs = true }: Props) => {
     const [currentTab, setCurrentTab] = useState(arrOfTab[0].id);
     const location = useLocation();
 
     const handleDisplayTab = (hashId: string) => {
+        if (!allowToOtherTabs) {
+            setCurrentTab(arrOfTab[0].id);
+            return;
+        }
+
         if (arrOfTab.map(tab => tab.id.trim().toLowerCase())
             .includes(hashId.trim().toLowerCase())) {
             setCurrentTab(hashId);

@@ -8,7 +8,7 @@ const Footer = () => {
         (state) => state.userProfileSlices.userProfile
     );
 
-    const dontShowOnRoutes = ["/verify/user", "/login", "/signup"];
+    const dontShowOnRoutes = ["/verify/user"];
 
     return <>
         {
@@ -20,8 +20,8 @@ const Footer = () => {
                                 {/* login bottom navigation */}
                                 <ul className="flex items-center justify-between gap-6">
                                     <li>
-                                        <button onClick={() => navigate("/timeline")}>
-                                            Timeline
+                                        <button onClick={() => navigate("/feed")}>
+                                            Feed
                                         </button>
                                     </li>
                                     <li>

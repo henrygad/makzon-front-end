@@ -1,10 +1,12 @@
 
 /** @type {import("tailwindcss").Config} */
+
 export default {
   darkMode: "class",
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/makzontexteditor/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     container: {
@@ -25,18 +27,18 @@ export default {
     },
     extend: {
       fontFamily: {
-        "prim": "Markazi Text",
-        "sec": "Karla",
-        "text": "'Poppins', sans-serif"
+        prim: "Markazi Text",
+        sec: "Karla",
+        text: "'Poppins', sans-serif",
       },
       animation: {
-        testing: "testing 2s ease-in-out infinite"
+        testing: "testing 2s ease-in-out infinite",
       },
       keyframes: {
         testing: {
           "0%, 100%": { transform: "translate(0%)" },
           "20%": { transform: "translate(20%)" },
-        }
+        },
       },
     },
   },
