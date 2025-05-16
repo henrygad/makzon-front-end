@@ -1,12 +1,12 @@
 import postProps from "../types/post.type";
 import Displayimage from "./Displayimage";
-import imgplaceholder from "../assert/imageplaceholder.svg";
+import imgplaceholder from "../assets/imageplaceholder.svg";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../redux";
 import { deleteDraft } from "../redux/slices/userBlogpostSlices";
 import axios from "axios";
 import { useState } from "react";
-import Displayscreenloading from "./Displayscreenloading";
+import Displayscreenloading from "./loaders/Displayscreenloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Displaydraft = ({ blogpost }: { blogpost: postProps }) => {

@@ -5,7 +5,7 @@ const Logo = ({ withText = true, className }: { withText: boolean, className: st
   const navigete = useNavigate();
 
   return <span
-    className="flex gap-1 items-end"
+    className="flex gap-1 items-end cursor-pointer"
     onClick={() => navigete("/")}
   >
     <span className={`flex -rotate-45 ${className}`}>

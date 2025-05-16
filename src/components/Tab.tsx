@@ -3,11 +3,12 @@ import { useLocation } from "react-router-dom";
 
 type Props = {
     allowToOtherTabs?: boolean
-    className: string
+    className?: string
     arrOfTab: {
         id: string,
         tab: ReactElement,
-    }[]   
+    }[]
+    ref?: React.MutableRefObject<HTMLDivElement | null>
 }
 
 
@@ -15,8 +16,8 @@ const Eachtab = ({ tab }: { tab: ReactElement }) => {
     return tab;
 };
 
-const Tab = ({ className, arrOfTab, allowToOtherTabs = true }: Props) => {
-    const [currentTab, setCurrentTab] = useState(arrOfTab[0].id);
+const Tab = ({ className, arrOfTab, allowToOtherTabs = true, ref }: Props) => {
+    const [currentTab, setCurrentTab] = useState(arrOfTab[0]?.id || "");
     const location = useLocation();
 
     const handleDisplayTab = (hashId: string) => {
@@ -29,7 +30,7 @@ const Tab = ({ className, arrOfTab, allowToOtherTabs = true }: Props) => {
             .includes(hashId.trim().toLowerCase())) {
             setCurrentTab(hashId);
         } else {
-            setCurrentTab(pre => pre ? pre : arrOfTab[0].id);
+            setCurrentTab(pre => pre ? pre : arrOfTab[0]?.id || "");
         }
     };
 
@@ -50,7 +51,10 @@ const Tab = ({ className, arrOfTab, allowToOtherTabs = true }: Props) => {
         };
     }, []);
 
-    return <div className={className}>
+    return <div
+        className={className}
+        ref={ref}
+    >
         {
             arrOfTab &&
                 arrOfTab.length ?

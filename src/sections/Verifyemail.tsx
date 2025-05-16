@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../redux";
 import errorProps from "../types/error.type";
 import useFilterQuery from "../hooks/useFilterQuery";
-import Displayscreenloading from "../components/Displayscreenloading";
+import Displayscreenloading from "../components/loaders/Displayscreenloading";
 import useHideEmail from "../hooks/useHideEmail";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 

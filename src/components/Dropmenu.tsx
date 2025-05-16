@@ -60,20 +60,23 @@ const Dropmenu = ({ horizotal = false, children }: Props) => {
         ref={menuContainerRef}
         className="relative">
         <button
-            className={`flex items-start gap-0.5 font-bold text-base ${horizotal ? "rotate-90" : ""} cursor-pointer`}
+            className={`flex items-start gap-0.5 font-bold text-base transition-colors delay-200 bg-inherit active:bg-slate-200 rounded-full                                  
+                 ${horizotal ? "rotate-90" : ""}
+                  p-2.5 cursor-pointer
+                  `}
             onClick={handleDropMenu}
         >
-            <span className="h-1 w-1 rounded-full bg-gray-500"></span>
-            <span className="h-1 w-1 rounded-full bg-gray-500"></span>
-            <span className="h-1 w-1 rounded-full bg-gray-500"></span>
+            <span className="h-1 w-1 rounded-full bg-slate-500"></span>
+            <span className="h-1 w-1 rounded-full bg-slate-500"></span>
+            <span className="h-1 w-1 rounded-full bg-slate-500"></span>
         </button>
         <div
             ref={dropMenuRef}
-            className={` transition-all duration-200 absolute right-6
+            className={`transition-all duration-200 absolute right-10
                 ${dropDown ?
                     dropMenu ? "top-0 opacity-100 z-10" : " -top-10 opacity-0 -z-10" :
                     dropMenu ? "bottom-0  opacity-100 z-10" : "-bottom-10 opacity-0 -z-10"
-                } shadow shadow-gray-100`}
+                } rounded-md shadow-md`}
         >
             {children}
         </div>

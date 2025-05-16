@@ -3,6 +3,7 @@ import postProps from "../types/post.type";
 import Displayblogpost from "../components/Displayblogpost";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import Displayblogpostloading from "../components/loaders/Displayblogpostloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type viewTargetNotificationProps = {
@@ -44,7 +45,7 @@ const Blogpost = () => {
 
     useEffect(() => {
         if (location.state) {
-            setViewTargetNotification(location.state as viewTargetNotificationProps);
+            setViewTargetNotification(location.state as viewTargetNotificationProps);            
         }
     }, [location.state]);
 
@@ -71,7 +72,9 @@ const Blogpost = () => {
                         <span>This blogpost has been unpublish</span>
                     )
                 ) : (
-                    <div>loading...</div>
+                        <Displayblogpostloading
+                            displayType="_html"
+                        />
                 )}
             </div>
         </main>

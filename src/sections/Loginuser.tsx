@@ -10,7 +10,7 @@ import { fetchProfile } from "../redux/slices/userProfileSlices";
 import { useAppDispatch, useAppSelector } from "../redux";
 import Cookies from "js-cookie";
 import loginProps from "../types/login.type";
-import Displayscreenloading from "../components/Displayscreenloading";
+import Displayscreenloading from "../components/loaders/Displayscreenloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 
@@ -113,7 +113,7 @@ const Loginuser = () => {
             {/* client login identity*/}
             <label htmlFor="username" className="flex flex-col gap-1">
                 <h3 className="font-text text-base font-medium">
-                    User name / Email
+                    Username / Email
                 </h3>
                 <input
                     id="username"

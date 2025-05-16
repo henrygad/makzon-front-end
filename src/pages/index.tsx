@@ -13,4 +13,6 @@ export const Security = lazy(() => import("./Security"));
 export const Verifyuser = lazy(() => import("./Verification"));
 export const Notification = lazy(() => import("./Notification"));
 export const Forgetpassword = lazy(() => import("./Forgetpassword"));
+export const Searchresult = lazy(() => import("./Searchresult"));
+export const Saves = lazy(() => import("./Saves"));
 export const Page404 = lazy(() => import("./Page404"));

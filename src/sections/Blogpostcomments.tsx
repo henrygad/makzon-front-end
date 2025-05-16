@@ -4,6 +4,7 @@ import commentProps from "../types/comment.type";
 import postProps from "../types/post.type";
 import { useLocation } from "react-router-dom";
 import useAutoNavigate from "../hooks/useAutoNavigate";
+import Displaycommentloading from "../components/loaders/DIsplaycommentloading";
 
 type Props = {
   blogpost: postProps;
@@ -56,11 +57,20 @@ const Blogpostcomments = ({ blogpost, comments, setComments, autoViewComment, au
                     autoViewLike={autoViewLike}
                   />
                 ) :
-                <span>Be the first to comment</span>
+                <span className="font-text text-sm">Be the first to comment</span>
             }
           </>
           :
-          <span>loading...</span>
+          <>
+            {
+              Array(4).fill("")
+                .map((_, index) =>
+                  <Displaycommentloading
+                    key={index}
+                  />
+                )
+            }
+          </>
         }        
       </div>
     </section>

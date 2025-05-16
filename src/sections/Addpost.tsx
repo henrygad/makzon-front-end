@@ -20,8 +20,9 @@ import {
 import mediaProps from "../types/media.type";
 import { addMedia } from "../redux/slices/userMediaSlices";
 import axios from "axios";
-import Displayscreenloading from "../components/Displayscreenloading";
+import Displayscreenloading from "../components/loaders/Displayscreenloading";
 import Makzontexteditor, { deleteAll } from "makzontexteditor";
+import { GrView } from "react-icons/gr";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
@@ -465,7 +466,7 @@ const Addpost = ({ existingPost }: Props) => {
                     autoFocus={true}
                     setContext={{
                         new: existingPost ? false : true,
-                        context: (existingPost && existingPost._html.body) || "",
+                        context: existingPost?._html.body || "",
                     }}
                     setGetValue={(value) => {
                         if (isEmpty) {
@@ -675,7 +676,7 @@ const Addpost = ({ existingPost }: Props) => {
                         <main className="flex flex-wrap items-center justify-between gap-6 m">
                             <span>
                                 <button
-                                    className="cursor-pointer"
+                                    className="block text-white bg-gray-500 p-3 rounded-full shadow-sm cursor-pointer"
                                     onClick={() =>
                                         navigate(
                                             `?url=${image ? apiEndPont + "/media/" + image : ""
@@ -683,7 +684,7 @@ const Addpost = ({ existingPost }: Props) => {
                                         )
                                     }
                                 >
-                                    Icon
+                                    <GrView size={20} />
                                 </button>
                                 View
                             </span>

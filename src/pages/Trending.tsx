@@ -1,87 +1,83 @@
-import { useNavigate } from "react-router-dom";
-import Displayuserinfor from "../components/Displayuserinfor";
 import postProps from "../types/post.type";
 import userProps from "../types/user.type";
-import Displayblogpost from "../components/Displayblogpost";
+import Slider from "../slider";
+import Searchform from "../sections/Searchform";
+import Displaymultipleusers from "../sections/Displaymultipleusers";
+import Displaymultipleposts from "../sections/Displaymultipleposts";
+const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type props = {
     newUsers: userProps[] | null,
-    trendingBlogposts: postProps[] | null,
-    setTrendingBlogposts: React.Dispatch<React.SetStateAction<postProps[] | null>>
+    trendingPosts: postProps[] | null,
+    setTrendingPosts: React.Dispatch<React.SetStateAction<postProps[] | null>>
+    searchHistories: { _id: string, search: string }[] | null
+    setSearchHistories: React.Dispatch<React.SetStateAction<{ _id: string, search: string }[] | null>>
+    postSearchResults: postProps[] | null
+    setpostSearchResults: React.Dispatch<React.SetStateAction<postProps[] | null>>
+    userSearchResults: userProps[] | null
+    setuUserSearchResults: React.Dispatch<React.SetStateAction<userProps[] | null>>
+    searchError: string
+    setSearchError: React.Dispatch<React.SetStateAction<string>>
 };
 
-const Trending = ({ newUsers, trendingBlogposts, setTrendingBlogposts }: props) => {
-    const navigate = useNavigate();
+
+const Trending = ({
+    newUsers,
+    trendingPosts,
+    setTrendingPosts,
+    searchHistories,
+    setSearchHistories,
+    postSearchResults,
+    setpostSearchResults,
+    userSearchResults,
+    setuUserSearchResults,
+    searchError,
+    setSearchError
+}: props) => {    
 
     return <>
         <main className="container">
             {/* slidder show */}
+            <Searchform
+                searchHistories={searchHistories}                
+                setSearchHistories={setSearchHistories}
+                setpostSearchResults={setpostSearchResults}
+                setuUserSearchResults={setuUserSearchResults}
+                postSearchResults={postSearchResults}
+                userSearchResults={userSearchResults}
+                searchError={searchError}
+                setSearchError={setSearchError}
+            />
             <section className="my-2">
-                <div className="min-h-40 bg-gray-100 rounded my-2">
-                    <div>slide one</div>
-                    <div>slide two</div>
-                    <div>slide three</div>
-                </div>
+                <Slider
+                    media={trendingPosts?.map((blogpost) =>
+                        blogpost.image ? (apiEndPont + "/media/" + blogpost.image) : " ") || []}
+                    className="w-full h-[200px] md:h-[300px] rounded-lg border"
+                />
             </section>
             {/* new user section */}
-            <section className="space-y-8 my-4">
-                <span className="block font-prim text-xl font-semibold">
-                    Popular Authors
-                </span>
-                {newUsers ?
-                    newUsers.length ?
-                        <div className="flex justify-between items-start gap-4 overflow-x-auto snap-x snap-center snap-always px-2">
-                            {
-                                newUsers.map(user =>
-                                    <Displayuserinfor
-                                        key={user.userName}
-                                        short={true}
-                                        user={user}
-                                        onClick={() => navigate("/profile/" + user.userName)}
-                                    />
-                                )
-                            }
-                        </div> :
-                        null
-                    :
-                    <span>loading...</span>
-                }
-            </section>
+            <Displaymultipleusers
+                title="Popular Authors"
+                horizontal={true}
+                users={newUsers}
+            />           
             {/* trending blogpost section */}
-            <section className="space-y-8 mb-4">
-                <span className="block font-prim text-xl font-semibold">
-                    Popular posts
-                </span>
-                {
-                    trendingBlogposts ?
-                        trendingBlogposts.length ?
-                            <div className="space-y-6">
-                                {
-                                    trendingBlogposts
-                                        .map(post =>
-                                        <Displayblogpost
-                                            key={post._id}
-                                            displayType="TEXT"
-                                            blogpost={post}
-                                            updateBlogpost={({ blogpost, type }) => {
-                                                if (type === "EDIT") {
-                                                    setTrendingBlogposts((pre) =>
-                                                        pre ? ({ ...pre, ...blogpost }) : pre
-                                                    );
-                                                } else if (type === "DELETE") {
-                                                    setTrendingBlogposts(null);
-                                                }
-                                            }}
-                                        />
-                                    )
-                                }
-                            </div> :
-                            null :
-                        <span>laoding...</span>
-                }
-            </section>
+            <Displaymultipleposts
+                title="Popular posts"
+                posts={trendingPosts}
+                updatepost={({ blogpost, type }) => {
+                    if (type === "EDIT") {
+                        setTrendingPosts((pre) =>
+                            pre ? ({ ...pre, ...blogpost }) : pre
+                        );
+                    } else if (type === "DELETE") {
+                        setTrendingPosts(null);
+                    }
+                }}
+            />          
         </main>
     </>;
 };
 
 export default Trending;
+

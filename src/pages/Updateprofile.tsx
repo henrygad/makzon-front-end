@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import Model from "../components/Model";
 import userProps from "../types/user.type";
 import { editProfile } from "../redux/slices/userProfileSlices";
-import avatarPlaceholder from "../assert/avaterplaceholder.svg";
+import avatarPlaceholder from "./../assets/avaterplaceholder.svg";
 import Fileinput from "../components/Fileinput";
 import useGetLocalFiles from "../hooks/useGetLocalFiles";
 import { IoMdArrowRoundBack, IoMdImages } from "react-icons/io";
@@ -16,7 +16,8 @@ import { Button } from "../components/Button";
 import { addMedia } from "../redux/slices/userMediaSlices";
 import axios from "axios";
 import useSanitize from "../hooks/useSanitize";
-import Displayscreenloading from "../components/Displayscreenloading";
+import Displayscreenloading from "../components/loaders/Displayscreenloading";
+import { GrView } from "react-icons/gr";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Updateprofile = () => {
@@ -939,130 +940,130 @@ const Updateprofile = () => {
                     <Displayscreenloading
                         loading={loadingUpdatedData}
                     />
-
-                    {/* model for profile picture */}
-                    <Model
-                        id="insert-profile-picture"
-                        children={
-                            <div className="font-text bg-white px-8 pb-6 rounded-md -mt-[15%]">
-                                {/* header */}
-                                <header className="flex justify-start items-center gap-4 mt-2 mb-4">
-                                    <button
-                                        className="cursor-pointer"
-                                        onClick={() => navigate(-1)}
-                                    >
-                                        <IoMdArrowRoundBack size={20} />
-                                    </button>
-                                    <div className="flex-1 flex justify-center">
-                                        <span className="block font-prim text-2xl font-bold">
-                                            Profile picture
-                                        </span>
-                                    </div>
-                                </header>
-                                {/* body change profile picture */}
-                                <main>
-                                    {/* display avatar */}
-                                    <div className="flex justify-center items-center">
-                                        <Displayimage
-                                            url={displayAvatar}
-                                            useCancle={true}
-                                            onCancle={() => {
-                                                setDisplayAvatar("");
-                                                setUserData((pre) => pre ? ({
-                                                    ...pre,
-                                                    avatar: ""
-                                                }) : pre);
-                                                setBlob(undefined);
-                                                setOnChangeInInputs((pre) => pre.includes("avatar") ? pre : [...pre, "avatar"]);
-                                            }}
-                                            parentClassName=""
-                                            className="h-[100px] w-[100px] object-contain rounded-full border cursor-pointer"
-                                            placeHolder={
-                                                <img
-                                                    src={avatarPlaceholder}
-                                                    className="absolute top-0 bottom-0 right-0 h-[100px] w-[100px] rounded-full object-contain border cursor-pointer"
-                                                    onClick={() => navigate(`?url=${displayAvatar}&type=image#single-image`)}
-                                                />
-                                            }
-                                            loadingPlaceHolder={<span className="absolute top-0 bottom-0 right-0 left-0 h-[100px] w-[100px] rounded-full border border-slate-200 bg-slate-200 animate-pulse"></span>}
-                                            onClick={() => navigate(`?url=${displayAvatar}&type=image#single-image`)}
-                                        />
-                                    </div>
-                                    {/* profile picture btn */}
-                                    <div className="flex justify-between items-center gap-8 mt-8 mb-4">
-                                        {/* view btn */}
-                                        <span>
-                                            <button
-                                                className="cursor-pointer"
-                                                onClick={() => navigate(`?url=${displayAvatar}&type=image#single-image`)}
-                                            >
-                                                Icon
-                                            </button>
-                                            View
-                                        </span>
-                                        {/* get image from device btn  */}
-                                        <Fileinput
-                                            id="choose-profile-picture"
-                                            accept="image/png, image/gif, image/jpeg"
-                                            type="image"
-                                            fieldName="Device"
-                                            className="cursor-pointer"
-                                            handleGetFile={async (fileList) => {
-                                                if (fileList) {
-                                                    setBlob(fileList[0]);
-                                                    const data = await getLocalFiles(fileList);
-                                                    setDisplayAvatar(data[0].url);
-                                                    setOnChangeInInputs((pre) => pre.includes("avatar") ? pre : [...pre, "avatar"]);
-                                                }
-                                            }}
-                                        />
-                                        {/* display galary btn  */}
-                                        <span className="text-sm text-center">
-                                            <button
-                                                className="block text-white bg-orange-500 p-3 rounded-full shadow-sm cursor-pointer"
-                                                onClick={() => {
-                                                    navigate("#display-image-galary");
-                                                }}
-                                            >
-                                                <IoMdImages size={25} className="text-white" />
-                                            </button>
-                                            Galary
-                                        </span>
-                                    </div>
-                                </main>
-                                {/* change avatar btn */}
-                                <footer>
-                                    {onChangeInInputs.includes("avatar") ?
-                                        (<button
-                                            className="text-white text-base font-text font-semibold w-full py-1.5 bg-blue-600 border rounded-lg shadow "
-                                            onClick={() => {
-                                                if (blob) {
-                                                    updatedAvatar(blob);
-                                                } else {
-                                                    const updatedUserData = {
-                                                        avatar: userData?.avatar
-                                                    };
-                                                    handleUpadteUserData(updatedUserData);
-                                                }
-                                                setOnChangeInInputs((pre) => pre.filter(item => item !== "avatar"));
-                                                navigate(-1);
-                                            }}
-                                        >
-                                            Save
-                                        </button>
-                                        ) :
-                                        null
-                                    }
-                                </footer>
-                            </div>
-                        }
-                    />
                 </div>
             ) : (
                 <div className="space-y-4">
                     loading update profile page...
                 </div>
             )}
+
+            {/* model for profile picture */}
+            <Model
+                id="insert-profile-picture"
+                children={
+                    <div className="font-text bg-white px-8 pb-6 rounded-md">
+                        {/* header */}
+                        <header className="flex justify-start items-center gap-4 mt-2 mb-4">
+                            <button
+                                className="cursor-pointer"
+                                onClick={() => navigate(-1)}
+                            >
+                                <IoMdArrowRoundBack size={20} />
+                            </button>
+                            <div className="flex-1 flex justify-center">
+                                <span className="block font-prim text-2xl font-bold">
+                                    Profile picture
+                                </span>
+                            </div>
+                        </header>
+                        {/* body change profile picture */}
+                        <main>
+                            {/* display avatar */}
+                            <div className="flex justify-center items-center">
+                                <Displayimage
+                                    url={displayAvatar}
+                                    useCancle={true}
+                                    onCancle={() => {
+                                        setDisplayAvatar("");
+                                        setUserData((pre) => pre ? ({
+                                            ...pre,
+                                            avatar: ""
+                                        }) : pre);
+                                        setBlob(undefined);
+                                        setOnChangeInInputs((pre) => pre.includes("avatar") ? pre : [...pre, "avatar"]);
+                                    }}
+                                    parentClassName=""
+                                    className="h-[100px] w-[100px] object-contain rounded-full border cursor-pointer"
+                                    placeHolder={
+                                        <img
+                                            src={avatarPlaceholder}
+                                            className="absolute top-0 bottom-0 right-0 h-[100px] w-[100px] rounded-full object-contain border cursor-pointer"
+                                            onClick={() => navigate(`?url=${displayAvatar}&type=image#single-image`)}
+                                        />
+                                    }
+                                    loadingPlaceHolder={<span className="absolute top-0 bottom-0 right-0 left-0 h-[100px] w-[100px] rounded-full border border-slate-200 bg-slate-200 animate-pulse"></span>}
+                                    onClick={() => navigate(`?url=${displayAvatar}&type=image#single-image`)}
+                                />
+                            </div>
+                            {/* profile picture btn */}
+                            <div className="flex justify-between items-center gap-8 mt-8 mb-4">
+                                {/* view btn */}
+                                <span>
+                                    <button
+                                        className="block text-white bg-gray-500 p-3 rounded-full shadow-sm cursor-pointer"
+                                        onClick={() => navigate(`?url=${displayAvatar}&type=image#single-image`)}
+                                    >
+                                        <GrView size={20} />
+                                    </button>
+                                    View
+                                </span>
+                                {/* get image from device btn  */}
+                                <Fileinput
+                                    id="choose-profile-picture"
+                                    accept="image/png, image/gif, image/jpeg"
+                                    type="image"
+                                    fieldName="Device"
+                                    className="cursor-pointer"
+                                    handleGetFile={async (fileList) => {
+                                        if (fileList) {
+                                            setBlob(fileList[0]);
+                                            const data = await getLocalFiles(fileList);
+                                            setDisplayAvatar(data[0].url);
+                                            setOnChangeInInputs((pre) => pre.includes("avatar") ? pre : [...pre, "avatar"]);
+                                        }
+                                    }}
+                                />
+                                {/* display galary btn  */}
+                                <span className="text-sm text-center">
+                                    <button
+                                        className="block text-white bg-orange-500 p-3 rounded-full shadow-sm cursor-pointer"
+                                        onClick={() => {
+                                            navigate("#display-image-galary");
+                                        }}
+                                    >
+                                        <IoMdImages size={25} />
+                                    </button>
+                                    Galary
+                                </span>
+                            </div>
+                        </main>
+                        {/* change avatar btn */}
+                        <footer>
+                            {onChangeInInputs.includes("avatar") ?
+                                (<button
+                                    className="text-white text-base font-text font-semibold w-full py-1.5 bg-blue-600 border rounded-lg shadow "
+                                    onClick={() => {
+                                        if (blob) {
+                                            updatedAvatar(blob);
+                                        } else {
+                                            const updatedUserData = {
+                                                avatar: userData?.avatar
+                                            };
+                                            handleUpadteUserData(updatedUserData);
+                                        }
+                                        setOnChangeInInputs((pre) => pre.filter(item => item !== "avatar"));
+                                        navigate(-1);
+                                    }}
+                                >
+                                    Save
+                                </button>
+                                ) :
+                                null
+                            }
+                        </footer>
+                    </div>
+                }
+            />
         </main>
     );
 };

@@ -6,7 +6,7 @@ import useDialog from "../hooks/useDialog";
 import useSendNotification from "../hooks/useSendNotification";
 import useTrimWords from "../hooks/useTrimWords";
 import axios from "axios";
-import Displayscreenloading from "./Displayscreenloading";
+import Displayscreenloading from "./loaders/Displayscreenloading";
 import { useAppSelector } from "../redux";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 

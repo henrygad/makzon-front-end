@@ -1,5 +1,4 @@
 
-
 const useAutoNavigate = () => {
     const autoNavigate = (target: HTMLElement) => {
         const targetPositionY = target.getBoundingClientRect().top;
@@ -7,6 +6,9 @@ const useAutoNavigate = () => {
         const distance: number = currentPostionY + targetPositionY;
 
         window.scroll({ top: distance, behavior: "smooth" });
+        return () => {
+            window.scrollTo({ top: distance, behavior: "smooth" });
+        };
     };
 
     return autoNavigate;

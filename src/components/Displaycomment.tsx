@@ -9,7 +9,7 @@ import { MdDeleteOutline } from "react-icons/md";
 import { useAppSelector } from "../redux";
 import Displaylike from "./Displaylike";
 import axios from "axios";
-import Displayscreenloading from "./Displayscreenloading";
+import Displayscreenloading from "./loaders/Displayscreenloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {

@@ -18,8 +18,14 @@ import Shareblogpost from "./Shareblogpost";
 import Viewblogpost from "./Viewblogpost";
 import { useAppSelector } from "../redux";
 import axios from "axios";
-import Displayscreenloading from "./Displayscreenloading";
+import Displayscreenloading from "./loaders/Displayscreenloading";
 import Saveblogpost from "./Saveblogpost";
+import useDateFormat from "../hooks/useDateFormat";
+import useAutoNavigate from "../hooks/useAutoNavigate";
+import { GrView } from "react-icons/gr";
+import { TbMessageReport } from "react-icons/tb";
+import { MdBlockFlipped, MdOutlineDelete, MdOutlineUnpublished, MdPublishedWithChanges } from "react-icons/md";
+import { FiEdit } from "react-icons/fi";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
@@ -52,26 +58,30 @@ const Displayblogpost = ({
     const [authorInfor, setAuthorInfor] = useState<userProps | null>(null);
     const [comments, setComments] = useState<commentProps[] | null>(null);
     const blogpostRef = useRef<HTMLDivElement | null>(null);
+    const tabRef = useRef<HTMLDivElement | null>(null);
+
     const sanitize = useSanitize();
+    const dateFormat = useDateFormat();
+    const autoNavigate = useAutoNavigate();
 
     const [loading, setLoading] = useState(false);
 
     const publicBlogpostMenus = [
         {
             name: "View post",
-            icon: <span>V</span>,
+            icon: <GrView size={14} />,
             func: () => {
                 handleToView(blogpost);
             },
         },
         {
             name: "Report",
-            icon: <span>R</span>,
+            icon: <TbMessageReport size={14} />,
             func: () => console.log("Report"),
         },
         {
             name: "Block",
-            icon: <span>B</span>,
+            icon: <MdBlockFlipped size={14} />,
             func: () => console.log("Block"),
         },
     ];
@@ -79,14 +89,14 @@ const Displayblogpost = ({
     const privateBlogpostMenu = [
         {
             name: "Edit",
-            icon: <span>E</span>,
+            icon: <FiEdit size={14} />,
             func: () => {
                 handleToEdit(blogpost);
             },
         },
         {
             name: blogpost.status === "published" ? "Unpublish" : "publish",
-            icon: blogpost.status === "published" ? <span>U</span> : <span>P</span>,
+            icon: blogpost.status === "published" ? <MdPublishedWithChanges size={14} /> : <MdOutlineUnpublished size={14} />,
             func: () => {
                 if (blogpost.status === "published") {
                     handleUnpublish(blogpost);
@@ -97,7 +107,7 @@ const Displayblogpost = ({
         },
         {
             name: "Delete",
-            icon: <span>D</span>,
+            icon: <MdOutlineDelete size={15} />,
             func: () => handleDelete(blogpost._id || ""),
         },
     ];
@@ -217,6 +227,22 @@ const Displayblogpost = ({
             });
     }, [blogpost._id]);
 
+    useEffect(() => {
+        // Auto navigate to comment or like tab if hashId is present in the URL
+        const hashId = location.hash.trim().slice(1);
+        const tabId = ["blogpost-comments", "blogpost-likes"];
+        if (hashId &&
+            tabId.includes(hashId) &&
+            blogpost &&
+            tabRef.current) {
+            const clear = setTimeout(() => {
+                autoNavigate(tabRef.current!);
+                clearTimeout(clear);
+            }, 100);
+        }
+    }, [location.hash, blogpost, tabRef.current]);
+
+
     return <>
         <div
             ref={blogpostRef}
@@ -231,11 +257,11 @@ const Displayblogpost = ({
                 />
                 <Dropmenu
                     children={
-                        <ul className="min-w-[140px] text-sm font-text p-4 space-y-3 rounded-md border bg-white ">
+                        <ul className="min-w-[140px] text-sm font-text p-5 space-y-4 rounded-md border bg-white ">
                             {
                                 (blogpost.author &&
                                     blogpost.author.trim() === User.userName ?
-                                    [...publicBlogpostMenus, ...privateBlogpostMenu]
+                                    [...privateBlogpostMenu, ...publicBlogpostMenus]
                                     : publicBlogpostMenus)
                                     .map((menu) =>
                                         displayType === "_HTML" &&
@@ -243,7 +269,7 @@ const Displayblogpost = ({
                                             null :
                                             <li
                                                 key={menu.name}
-                                                className="flex gap-1 cursor-pointer"
+                                                className="font-text text-xs font-medium flex gap-2 cursor-pointer"
                                                 onClick={(e) => {
                                                     menu.func();
                                                     e.stopPropagation();
@@ -257,28 +283,35 @@ const Displayblogpost = ({
             </span>
             <article className="font-text text-base space-y-2">
                 {/* post date */}
-                <span className="flex gap-4 text-sm text-stone-700 font-sec">
-                    <span>Post: 02 01 25; 11:00am</span>
-                    <span>Updated: 03 01 25; 1:00pm</span>
+                <span className="block text-xs text-slate-500 font-text font-medium">
+                    <span className="block">Post {dateFormat(blogpost.createdAt!)}</span>
+                    <span>Last updated {dateFormat(blogpost.updatedAt!)}</span>
                 </span>
-                {/* list catigoris */}
-                <ul className="flex gap-1 text-sm text-slate-800">
-                    {blogpost.catigories && blogpost.catigories.length
-                        ? blogpost.catigories.map((catigory, index) => (
-                            catigory.trim() ? <li key={index}>
-                                <span className="font-semibold">.</span>
-                                {catigory}
-                            </li> :
-                                null
-                        ))
-                        : null}
-                </ul>
+                {/* list catigories */}
+                <span className="flex items-center gap-2 text-sm font-text font-medium text-slate-500">
+                    <span className="whitespace-nowrap">Catigories</span>
+                    <ul className="flex flex-wrap items-center gap-x-1 ">
+                        {blogpost.catigories && blogpost.catigories.length
+                            ? blogpost.catigories.map((catigory, index) => (
+                                catigory.trim() ?
+                                    <li
+                                        key={index}
+                                        className="flex items-center "
+                                    >
+                                        <span className="font-semibold text-xl">.</span> {catigory}
+                                    </li> :
+                                    null
+                            ))
+                            : null}
+                    </ul>
+
+                </span>
                 {/* post article */}
                 <>
                     {displayType.toLowerCase() === "_html" ?
                         <span dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}></span> :
                         <span
-                            className="indent-2 break-words hyphens-auto line-clamp-3 cursor-pointer"
+                            className="break-words hyphens-auto line-clamp-3 cursor-pointer"
                             onClick={() => handleToView(blogpost)}
                         >
                             {blogpost.body}
@@ -294,11 +327,11 @@ const Displayblogpost = ({
                                 alt={blogpost.title}
                                 useCancle={false}
                                 parentClassName="w-full h-full"
-                                className="w-full h-20 object-cover  cursor-pointer"
+                                className="w-full h-36 object-cover rounded cursor-pointer"
                                 placeHolder={
                                     <img
                                         src={imgplaceholder}
-                                        className="absolute top-0 bottom-0 right-0 left-0 object-cover w-full h-20"
+                                        className="absolute top-0 bottom-0 right-0 left-0 object-cover w-full h-36"
                                         onClick={() => {
                                             if (displayType === "TEXT") {
                                                 handleToView(blogpost);
@@ -356,10 +389,6 @@ const Displayblogpost = ({
                         {blogpost?.likes && blogpost.likes.length || 0}
                     </span>
                 </button>
-                {/* Save */}
-                <button>
-                    <Saveblogpost User={User} blogpost={blogpost} />
-                </button>
                 {/* share btn */}
                 <button
                     id="blogpost-share-btn"
@@ -372,6 +401,13 @@ const Displayblogpost = ({
                     <span>
                         {blogpost?.shares && blogpost.shares.length || 0}
                     </span>
+                </button>
+                {/* Save */}
+                <button
+                    id="blogpost-save-btn"
+                    className="flex items-center gap-2 cursor-pointer"
+                >
+                    <Saveblogpost User={User} blogpost={blogpost} />
                 </button>
                 {/* view btn */}
                 <span
@@ -414,7 +450,8 @@ const Displayblogpost = ({
                             </ul>
                         </menu>
                         <Tab
-                            className="px-2"
+                            ref={tabRef}
+                            className="w-full px-2"
                             arrOfTab={[
                                 {
                                     id: "blogpost-comments",

@@ -6,19 +6,20 @@ import avatarPlaceholder from "../assets/avaterplaceholder.svg";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
+  className?: string;
   short: boolean;
   user: userProps | null;
   onClick?: () => void;
 };
 
 
-const Shortdetail = ({ user, short, onClick }: Props) => {
+const Shortdetail = ({ user, short, className, onClick }: Props) => {
   if (!user) {
     return <span>loading short user details</span>;
   }
   return (
     <span
-      className={`${short ? "block space-y-.5" : "flex justify-start items-start gap-0.5"} cursor-pointer`}
+      className={` ${className ? className :  "flex justify-start items-start gap-0.5"} cursor-pointer`}
       onClick={onClick}
     >
       <Displayimage
@@ -41,11 +42,11 @@ const Shortdetail = ({ user, short, onClick }: Props) => {
 
       <span className="flex flex-col">
         {user.name && user.name.givenName ? (
-          <span className="block text-nowrap text-[.9rem] font-sec -mb-1">
+          <span className="block max-w-24 truncate overflow-hidden whitespace-nowrap text-[.9rem] font-sec font-medium -mb-1 ">
             {`${user.name.givenName || ""} ${user.name.familyName || ""}`}
           </span>
         ) : null}
-        <span className="block text-nowrap text-[.8rem] font-sec text-slate-400 font-semibold">
+        <span className="block max-w-24 truncate overflow-hidden whitespace-nowrap text-[.8rem] font-sec font-semibold text-slate-400">
           {user.userName}
         </span>
       </span>
@@ -56,6 +57,7 @@ const Shortdetail = ({ user, short, onClick }: Props) => {
 const Displayuserinfor = ({
   user,
   short = true,
+  className,
   onClick = () => null,
 }: Props) => {
   const sanitize = useSanitize();
@@ -64,7 +66,7 @@ const Displayuserinfor = ({
     <>
       {/* short user details */}
       {short ? (
-        <Shortdetail user={user} short={short} onClick={onClick} />
+        <Shortdetail user={user} short={short} onClick={onClick} className={className} />
       ) : (
         <>
           {/* full user details */}
