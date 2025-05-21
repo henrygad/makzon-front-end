@@ -17,7 +17,7 @@ const Button = ({ id, fieldName, className, onClick = ()=> null, disabled }: Pro
 
     return <button
         id={id || ""}
-        className={`font-sec px-3 ${className}`}
+        className={`font-text text-sm px-3 ${className}`}
         onClick={handleClick}
         disabled={disabled}
     >

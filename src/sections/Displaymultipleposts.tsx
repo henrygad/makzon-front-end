@@ -2,10 +2,10 @@ import Displayblogpost from "../components/Displayblogpost";
 import Displayblogpostloading from "../components/loaders/Displayblogpostloading";
 import postProps from "../types/post.type";
 
-
 type Props = {
     title?: string,
     posts: postProps[] | null
+    loading?: boolean
     updatepost: ({ type, blogpost }: {
         type: "EDIT";
         blogpost: postProps;
@@ -19,18 +19,19 @@ type Props = {
 };
 
 
-const Displaymultipleposts = ({ title, posts, updatepost }: Props) => {
+const Displaymultipleposts = ({ title, posts, loading = false, updatepost }: Props) => {
+
 
     return <section className="space-y-8 mb-4">
         {title ?
-            <span className="block font-sec text-xl font-semibold">
+            <span className="block font-text text-base font-semibold">
                 {title}
             </span> :
             null
         }
-        <div className="space-y-6">
+        <div className="space-y-4">
             {
-                posts ?
+                !loading && posts ?
                     posts.length ?
                         <>
                             {

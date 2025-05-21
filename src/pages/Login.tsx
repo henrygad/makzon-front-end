@@ -27,7 +27,7 @@ const Login = () => {
             <span className="flex-1 border rounded-lg"></span>
           </span>
           {/* google and apple sign up login btn */}
-          <span className="flex justify-center items-center gap-6 mb-7">
+          <span className="flex justify-center items-center gap-4 mb-7">
             <button>
               <a
                 href={apiEndPont + "/auth/google"}

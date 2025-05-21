@@ -54,9 +54,12 @@ const App = () => {
   const [postSearchResults, setpostSearchResults] = useState<postProps[] | null>(null);
   const [userSearchResults, setuUserSearchResults] = useState<userProps[] | null>(null);
   const [searchError, setSearchError] = useState("");
-  
+
   const [newUsers, setNewUsers] = useState<userProps[] | null>(null);
-  const [trendingBlogposts, setTrendingBlogposts] = useState<postProps[] | null>(null);
+  const [trendingPosts, setTrendingPosts] = useState<postProps[] | null>(null);
+
+  const [postFeeds, setPostFeeds] = useState<postProps[] | null>(null);
+  const [newPostFeeds, setNewPostFeeds] = useState<postProps[] | null>(null);
 
   const [notificationUpdate, setNotificationUpdate] =
     useState<notificationProps | null>(null);
@@ -113,7 +116,7 @@ const App = () => {
     })
       .then(async (res) => {
         const trendingBlogpost: postProps[] = await res.data.data;
-        setTrendingBlogposts(trendingBlogpost);
+        setTrendingPosts(trendingBlogpost);
       })
       .catch((err) => {
         console.error(err);
@@ -129,10 +132,9 @@ const App = () => {
       baseURL: apiEndPont,
       withCredentials: true,
     })
-      .then(async (res) => {
-        const data = (await res.data.data) as userProps;
-        const user = { ...User, ...data, login: true };
-
+      .then(res => res.data)
+      .then(data => {
+        const user = { ...User, ...(data.data as userProps), login: true };
         appDispatch(
           fetchProfile({
             data: user,
@@ -141,9 +143,10 @@ const App = () => {
           })
         );
 
-        // Set local cookies if User.login if still false
-        if (user.login === false) {
-          // set a new cookie
+        // check if local cookies exist        
+        // if not exist then create new local cookies if User.login if still false
+        const localCookiesExist = Cookies.get("makzonFrtendSession");
+        if (!localCookiesExist) {
           Cookies.set(
             "makzonFrtendSession",
             JSON.stringify({
@@ -165,8 +168,9 @@ const App = () => {
           baseURL: apiEndPont,
           withCredentials: true,
         })
-          .then(async (res) => {
-            const userNotifications: notificationProps[] = await res.data.data;
+          .then(res => res.data)
+          .then(data => {
+            const userNotifications = data.data as notificationProps[];
             appDispatch(
               fetchNotifications({
                 data: userNotifications,
@@ -182,8 +186,9 @@ const App = () => {
           baseURL: apiEndPont,
           withCredentials: true,
         })
-          .then(async (res) => {
-            const userBlogposts: postProps[] = await res.data.data;
+          .then((res) => res.data)
+          .then(data => {
+            const userBlogposts = data.data as postProps[];
             appDispatch(
               fetchBlogposts({
                 data: userBlogposts,
@@ -194,13 +199,26 @@ const App = () => {
           })
           .catch((error) => console.error(error));
 
+        // fetch user timeline posts or feeds        
+        axios(apiEndPont + "/post/user/get/timeline", {
+          baseURL: apiEndPont,
+          withCredentials: true,
+        })
+          .then((res) => res.data)
+          .then(data => {
+            const feeds = data.data as postProps[];
+            setPostFeeds([...feeds]);
+          })
+          .catch((error) => console.error(error));
+
         // fetch user draft posts
         axios(apiEndPont + "/draft", {
           baseURL: apiEndPont,
           withCredentials: true,
         })
-          .then(async (res) => {
-            const userDrafts: postProps[] = await res.data.data;
+          .then(res => res.data)
+          .then(data => {
+            const userDrafts = data.data as postProps[];
             appDispatch(
               fetchDrafts({
                 data: userDrafts,
@@ -217,8 +235,9 @@ const App = () => {
             baseURL: apiEndPont,
             withCredentials: true,
           })
-            .then(async (res) => {
-              const userSavedBlogposts: postProps[] = await res.data.data;
+            .then((res) => res.data)
+            .then(data => {
+              const userSavedBlogposts = data.data as postProps[];
               appDispatch(
                 fetchSavedBlogposts({
                   data: userSavedBlogposts,
@@ -235,8 +254,9 @@ const App = () => {
           baseURL: apiEndPont,
           withCredentials: true,
         })
-          .then(async (res) => {
-            const userMedia: mediaProps[] = await res.data.data;
+          .then((res) => res.data)
+          .then(data => {
+            const userMedia = data.data as mediaProps[];
             appDispatch(
               fetchMedia({
                 data: userMedia,
@@ -268,29 +288,57 @@ const App = () => {
       });
 
 
-    // fetch live update for trending posts page
-    if (!User.login) return;
+    // fetch live update
+    if (User.login) {
 
-    // Stream live notification;
-    const notificationEventSource = new EventSource(
-      apiEndPont + "/notification/stream",
-      {
-        withCredentials: true,
-      }
-    );
-    notificationEventSource.onmessage = (event) => {
-      const notificationUpdate: notificationProps = JSON.parse(
-        event.data.notification
+      // Notification live update 
+      const notificationEventSource = new EventSource(
+        apiEndPont + "/notification/stream",
+        {
+          withCredentials: true,
+        }
       );
-      setNotificationUpdate(notificationUpdate);
-      appDispatch(addNotifications(notificationUpdate));
-    };
-    notificationEventSource.onerror = (error) => {
-      console.error(error);
-      notificationEventSource.close();
-    };
+      notificationEventSource.onmessage = (event) => {
+        const newNotification: notificationProps = JSON.parse(
+          event.data.notification
+        );
+        setNotificationUpdate(newNotification);
+        appDispatch(addNotifications(newNotification));
+      };
+      notificationEventSource.onerror = (error) => {
+        console.error(error);
+        notificationEventSource.close();
+      };
+
+
+      // Post feeds live update
+      const postFeedsEventSource = new EventSource(
+        apiEndPont + "/post/user/get/timeline/stream",
+        {
+          withCredentials: true,
+        }
+      );
+      postFeedsEventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data) as { eventType: string, post: postProps };
+        const { eventType, post: newPostFeeds } = data;
+        console.log(newPostFeeds);
+        if (newPostFeeds) {
+          if (eventType.toLowerCase() === "delete") {
+            setPostFeeds(pre => pre ? pre.filter(post => post._id !== newPostFeeds._id) : pre);
+          } else {
+            setNewPostFeeds(pre => pre ? [newPostFeeds, ...pre] : [newPostFeeds]);
+          }
+        }
+      };
+      postFeedsEventSource.onerror = (error) => {
+        console.error(error);
+        postFeedsEventSource.close();
+      };
+    }
 
   }, [User.login]);
+
+  console.log(postFeeds);
 
   return (
     <>
@@ -306,8 +354,8 @@ const App = () => {
             element={
               <Trending
                 newUsers={newUsers}
-                trendingPosts={trendingBlogposts}
-                setTrendingPosts={setTrendingBlogposts}
+                trendingPosts={trendingPosts}
+                setTrendingPosts={setTrendingPosts}
                 searchHistories={searchHistories}
                 setSearchHistories={setSearchHistories}
                 setpostSearchResults={setpostSearchResults}
@@ -369,7 +417,15 @@ const App = () => {
           />
           <Route
             path="/feeds"
-            element={User.login ? <Feed /> : <Navigate to="/login" />}
+            element={User.login ?
+              <Feed
+                postFeeds={postFeeds}
+                setPostFeeds={setPostFeeds}
+                newPostFeeds={newPostFeeds}
+                setNewPostFeeds={setNewPostFeeds}
+              /> :
+              <Navigate to="/login" />
+            }
           />
           <Route
             path="/saves"

@@ -48,7 +48,7 @@ const Follow = ({ friend }: { friend: string }) => {
     return <Button
         id='follow-btn'
         fieldName={User.followings && User.followings.includes(friend) ? "Following" : "Follow"}
-        className="rounded-full text-sm font-semibold transition-colors hover:bg-blue-600 hover:text-white active:bg-blue-800 active:text-white -mt-2"
+        className="rounded-full text-sm font-semibold transition-colors hover:bg-blue-600 hover:text-white active:bg-blue-800 active:text-white py-[1.5px] border border-slate-800"
         onClick={() => handleFollow(friend)}
     />;
 };

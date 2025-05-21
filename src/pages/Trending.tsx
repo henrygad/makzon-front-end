@@ -50,8 +50,11 @@ const Trending = ({
             />
             <section className="my-2">
                 <Slider
-                    media={trendingPosts?.map((blogpost) =>
-                        blogpost.image ? (apiEndPont + "/media/" + blogpost.image) : " ") || []}
+                    media={trendingPosts&&
+                        trendingPosts?.length ?
+                        trendingPosts.map((blogpost) => blogpost?.image ? (apiEndPont + "/media/" + blogpost.image) : " ") :
+                        []
+                    }
                     className="w-full h-[200px] md:h-[300px] rounded-lg border"
                 />
             </section>
@@ -63,7 +66,7 @@ const Trending = ({
             />           
             {/* trending blogpost section */}
             <Displaymultipleposts
-                title="Popular posts"
+                title="Popular Articles"
                 posts={trendingPosts}
                 updatepost={({ blogpost, type }) => {
                     if (type === "EDIT") {

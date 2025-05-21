@@ -1,12 +1,11 @@
+import Displayuserloading from "./Displayuserloading";
+
 const Displayblogpostloading = ({ displayType }: { displayType: string }) => {
   return (
     <>
       <div className="w-full space-y-4 p-2 rounded-md animate-pulse">
         <div className="flex items-start justify-between gap-6">
-          <div className="flex justify-start items-start gap-2">
-            <div className="w-12 h-12 bg-slate-300 rounded-full"></div>
-            <div className="w-[80px] h-3 bg-slate-300 rounded mt-2"></div>
-          </div>
+          <Displayuserloading className="flex items-start gap-1" />
           <div className="px-3 py-1.5 rounded-full bg-slate-300 "></div>
         </div>
         <div className="space-y-4">

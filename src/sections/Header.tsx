@@ -21,7 +21,15 @@ const Header = ({ notificationUpdate, setNotificationUpdate }: props) => {
 
   const { data: Notifications } = useAppSelector(state => state.userNotificationSlices);
 
-  const dontShowOnRoutes = ["/verify/email", "/login", "/signup", "/forgetpassword", "/forgetpassword/"];
+  const dontShowOnRoutes = [
+    "/verify/email",
+    "/login",
+    "/signup",
+    "/forgetpassword",
+    "/forgetpassword/",
+    "/createblogpost",
+    "/profile/update"
+  ];
 
   return (
     <>

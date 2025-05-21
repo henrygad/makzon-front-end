@@ -93,9 +93,9 @@ const Slider = ({ media, className }: { media: string[], className: string }) =>
             handleAutoSlide("right", 4000);
           }}
         >
-          {media.map((link) => (
+          {media.map((link,index) => (
             <div
-              key={link}
+              key={link+"_"+index}
               className="w-full h-full"
             >
               <Displayimage

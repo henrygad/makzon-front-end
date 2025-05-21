@@ -416,7 +416,9 @@ const Addpost = ({ existingPost }: Props) => {
         if (existingPost) {
             setTitle(existingPost.title || "");
             setImage(existingPost.image);
-            if (existingPost.image) setDisplayImage(apiEndPont + "/media/" + existingPost.image);
+            if (existingPost.image) {
+                setDisplayImage(apiEndPont + "/media/" + existingPost.image);
+            }
             setArticle({
                 _html: existingPost._html.body,
                 text: existingPost.body,
@@ -435,8 +437,18 @@ const Addpost = ({ existingPost }: Props) => {
 
     return (
         <section>
-            <div className="space-y-10">
-                {/* blogpost rich text editor */}
+            <div className="space-y-8">
+                {/* draft button */}
+                <div className="flex justify-end items-center pr-2">
+                    <Button
+                        fieldName={"Draft"}
+                        className={`py-1 px-4 font-text text-sm font-semibold text-slate-800 rounded-full transition-colors border-2 shadow shadow-slate-100 
+                        ${isEmpty ? "opacity-25" : ""}`}
+                        disabled={isEmpty}
+                        onClick={handleDraftBtn}
+                    />
+                </div>
+                {/* rich text editor */}
                 <Makzontexteditor
                     inputRef={editorRef}
                     wrapperClassName="h-full w-full"
@@ -469,10 +481,13 @@ const Addpost = ({ existingPost }: Props) => {
                         context: existingPost?._html.body || "",
                     }}
                     setGetValue={(value) => {
-                        if (isEmpty) {
+                        if (value.text.trim()) {
                             setIsEmpty(false);
-                        }
-                        setArticle(value);
+                            setArticle(value);
+                        }/* else{
+                            setIsEmpty(true);
+                        } */
+
                         const title = value.text.split(" ", 10);
                         if (title.length > 10) {
                             return;
@@ -486,8 +501,8 @@ const Addpost = ({ existingPost }: Props) => {
                         else return string;
                     }}
                 />
-                {/* blogpost catigories */}
-                <span className="block space-y-1 font-text">
+                {/* catigories */}
+                <div className="space-y-1 font-text">
                     <span>Catigories</span>
                     {catigories.map((catigory, index) => (
                         <label
@@ -500,7 +515,7 @@ const Addpost = ({ existingPost }: Props) => {
                                 id={catigory._id}
                                 type="text"
                                 className="text-sm w-full border-2 p-1 rounded-md outline-blue-700 mt-2"
-                                placeholder="Add catigory..."
+                                placeholder="Add"
                                 value={catigories[index].cat}
                                 onChange={(e) => {
                                     if (isEmpty) {
@@ -552,8 +567,8 @@ const Addpost = ({ existingPost }: Props) => {
                             ) : null}
                         </label>
                     ))}
-                </span>
-                {/* blogpost slug */}
+                </div>
+                {/* slug */}
                 <label
                     htmlFor="blog-post-slug"
                     className="block w-full space-y-1 font-text"
@@ -563,7 +578,7 @@ const Addpost = ({ existingPost }: Props) => {
                         id="blog-post-slug"
                         type="text"
                         className="block text-sm w-full p-1 border-2 rounded-md outline-blue-700"
-                        placeholder="Add slug..."
+                        placeholder="Your post slug"
                         value={handleFilterSlug(slug || title, slugPatter)}
                         onChange={(e) => {
                             if (existingPost &&
@@ -578,8 +593,8 @@ const Addpost = ({ existingPost }: Props) => {
                         }}
                     />
                 </label>
-                {/* blogpost permalink */}
-                <span className="flex items-center justify-start gap-1  text-sm font-text">
+                {/* permalink */}
+                <div className="flex items-center justify-start gap-1  text-sm font-text">
                     <span className="font-semibold">Permalink patter:</span>
                     <select
                         name="permal-link-patter"
@@ -591,10 +606,10 @@ const Addpost = ({ existingPost }: Props) => {
                         <option value="&">Morning&blogposting&is&great</option>
                         <option value="%">Morning%blogposting%is%great</option>
                     </select>
-                </span>
-                {/*blogpost display image  */}
+                </div>
+                {/*display image  */}
                 <div className="space-y-1 w-full font-text">
-                    <span className="block">Post image</span>
+                    <span className="block">Display Image</span>
                     <Displayimage
                         url={displayImage}
                         alt={imageCaption}
@@ -616,34 +631,29 @@ const Addpost = ({ existingPost }: Props) => {
                         <input
                             type="text"
                             placeholder="Image caption..."
-                            className="blcok text-sm w-[145px] px-2 py-1 border rounded-md"
+                            className="blcok text-xs w-[145px] px-2 py-1 border rounded-md"
                             value={imageCaption}
                             onChange={(e) => setImageCaption(e.target.value)}
                         />
                     </span>
                 </div>
-                {/* blogpost btn */}
-                <div className="relative flex flex-col justify-center items-center gap-1">
-                    {/* publish btn */}
-                    <Button
-                        fieldName={"Publish"}
-                        className={`min-w-[200px] py-2 font-bold text-white font-text rounded-full transition-colors bg-green-600 shadow-green-400 
-                        ${(!slug.trim() && !title.trim()) || isEmpty
-                                ? "bg-opacity-25"
-                                : "active:bg-green-500"
-                            }`}
-                        disabled={(!slug.trim() && !title.trim()) || isEmpty}
-                        onClick={handlePublishBtn}
-                    />
-                    <span className="text-sm">Or:</span>
-                    {/* draf bnt */}
-                    <Button
-                        fieldName={"Draft"}
-                        className={`min-w-[200px] py-2 font-bold text-white font-text rounded-full transition-colors bg-yellow-600 shadow-yellow-400 
-                        ${isEmpty ? "bg-opacity-25" : "active:bg-yellow-500"}`}
-                        disabled={isEmpty}
-                        onClick={handleDraftBtn}
-                    />
+                {/* publish button */}
+                <div className="container fixed bottom-0 left-0 right-0 py-2 bg-white z-10">
+                    <div className="flex justify-center items-center">
+                        {
+                            (slug.trim() && title.trim()) || !isEmpty ?
+                                <Button
+                                    fieldName={"Publish"}
+                                    className="font-text text-sm text-white font-semibold py-1.5 min-w-[180px] rounded-full transition-colors border-2 bg-green-600 shadow"
+                                    onClick={handlePublishBtn}
+                                /> :
+                                null
+                        }
+
+                    </div>
+                </div>
+                {/* pop up message */}
+                <div className="relative">
                     <Popupmessage
                         className="max-w-40 text-start"
                         popUp={popUp}

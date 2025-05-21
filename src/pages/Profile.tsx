@@ -10,19 +10,15 @@ const Profile = () => {
     const { data: User, loading } = useAppSelector(state => state.userProfileSlices.userProfile);
 
     return <main className="container">
-        {!loading ?
-            <>
-                {userName &&
-                    User && userName.trim() === User.userName.trim() ?
-                    <Userprofile
-                        User={{ ...User }}
-                    /> :
-                    <Othersprofile
-                        userName={userName}
-                    />
-                }
-            </> :
-            <div>loading profile page...</div>
+        {userName &&
+            User && userName.trim() === User.userName.trim() ?
+            <Userprofile
+                User={{ ...User }}
+                loading={loading}
+            /> :
+            <Othersprofile
+                userName={userName}
+            />
         }
     </main>;
 };

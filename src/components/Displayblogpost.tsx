@@ -246,7 +246,7 @@ const Displayblogpost = ({
     return <>
         <div
             ref={blogpostRef}
-            className="space-y-4 p-2 rounded-md"
+            className="space-y-1 p-2 rounded-md"
         >
             {/* author info and side menu */}
             <span className="flex items-start justify-between gap-6">
@@ -257,7 +257,7 @@ const Displayblogpost = ({
                 />
                 <Dropmenu
                     children={
-                        <ul className="min-w-[140px] text-sm font-text p-5 space-y-4 rounded-md border bg-white ">
+                        <ul className="min-w-[140px] text-sm font-text p-5 space-y-6 rounded-md border bg-white ">
                             {
                                 (blogpost.author &&
                                     blogpost.author.trim() === User.userName ?
@@ -281,15 +281,13 @@ const Displayblogpost = ({
                     }
                 />
             </span>
-            <article className="font-text text-base space-y-2">
+            <article className="font-text text-base">
                 {/* post date */}
-                <span className="block text-xs text-slate-500 font-text font-medium">
+                <span className="block font-text text-xs text-slate-900 font-medium pl-2 py-1">
                     <span className="block">Post {dateFormat(blogpost.createdAt!)}</span>
-                    <span>Last updated {dateFormat(blogpost.updatedAt!)}</span>
                 </span>
                 {/* list catigories */}
-                <span className="flex items-center gap-2 text-sm font-text font-medium text-slate-500">
-                    <span className="whitespace-nowrap">Catigories</span>
+                <span className="block text-sm font-text font-medium text-slate-500 pb-4">
                     <ul className="flex flex-wrap items-center gap-x-1 ">
                         {blogpost.catigories && blogpost.catigories.length
                             ? blogpost.catigories.map((catigory, index) => (
@@ -298,13 +296,12 @@ const Displayblogpost = ({
                                         key={index}
                                         className="flex items-center "
                                     >
-                                        <span className="font-semibold text-xl">.</span> {catigory}
+                                        {index > 0 ? <span className="font-extralight text-slate-900">/</span> : null} {catigory}
                                     </li> :
                                     null
                             ))
                             : null}
                     </ul>
-
                 </span>
                 {/* post article */}
                 <>
@@ -326,7 +323,7 @@ const Displayblogpost = ({
                                 url={apiEndPont + "/media/" + blogpost.image}
                                 alt={blogpost.title}
                                 useCancle={false}
-                                parentClassName="w-full h-full"
+                                parentClassName="w-full h-full mt-2"
                                 className="w-full h-36 object-cover rounded cursor-pointer"
                                 placeHolder={
                                     <img

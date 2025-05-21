@@ -3,7 +3,7 @@ import { useAppSelector } from "../redux";
 import { GrHomeOption } from "react-icons/gr";
 import { LuSearch } from "react-icons/lu";
 import { IoMdAdd } from "react-icons/io";
-import { MdSettingsBackupRestore } from "react-icons/md";
+import { MdLabelImportantOutline} from "react-icons/md";
 import Displayimage from "../components/Displayimage";
 import avatarPlaceholder from "../assets/avaterplaceholder.svg";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
@@ -15,17 +15,17 @@ const Footer = () => {
         (state) => state.userProfileSlices.userProfile
     );
 
-    const dontShowOnRoutes = ["/verify/user", "/createblogpost"];
+    const dontShowOnRoutes = ["/verify/user", "/createblogpost", "/profile/update"];
 
     return (
         <>
-            {!dontShowOnRoutes.includes(location.pathname.trim()) ? (
+            {!dontShowOnRoutes.includes(location.pathname) ? (
                 <>
                     {User.login ? (
                         <footer className="mt-20">
-                            <nav className="container fixed bottom-0 right-0 left-0 border-t z-10">
+                            <nav className="container fixed bottom-0 right-0 left-0 bg-white z-10">
                                 {/* login bottom navigation */}
-                                <ul className="flex justify-between items-center py-1 bg-white">
+                                <ul className="flex justify-between items-center py-1">
                                     <li>
                                         <button
                                             className="flex flex-col justify-center items-center gap-1"
@@ -83,14 +83,9 @@ const Footer = () => {
                                     </li>
                                     <li>
                                         <button
-                                            className="flex flex-col justify-center items-center gap-1"
+                                            className="block p-2 bg-slate-100 rounded-full"
                                             onClick={() => navigate("/createblogpost")}>
-                                            <span className="block p-1.5 bg-slate-100 rounded-full shadow-md">
-                                                <IoMdAdd size={23} />
-                                            </span>
-                                            <span className="text-xs font-sec" >
-                                                Add
-                                            </span>
+                                            <IoMdAdd size={23} />
                                         </button>
                                     </li>
                                     <li>
@@ -98,9 +93,9 @@ const Footer = () => {
                                             className="flex flex-col justify-center items-center gap-1"
                                             onClick={() => navigate("/saves")}
                                         >
-                                            <MdSettingsBackupRestore
+                                            <MdLabelImportantOutline
                                                 size={26}
-                                                className={`transition-colors duration-500 
+                                                className={`transition-colors duration-500 -rotate-90
                                                         ${location.pathname ===
                                                         "/saves"
                                                         ? "text-green-500"
@@ -126,7 +121,7 @@ const Footer = () => {
                                         >
                                             <Displayimage
                                                 useCancle={false}
-                                                url={apiEndPont + "/media/" + User.avatar}
+                                                url={User.avatar ? apiEndPont + "/media/" + User.avatar : ""}
                                                 className={`w-8 h-8 object-cover rounded-full transition duration-500 border-2
                                                         ${location.pathname === "/profile/" + User.userName ? "border-green-400" : ""}
                                                     `}
@@ -148,7 +143,7 @@ const Footer = () => {
                                                 className={`
                                                     transition-colors duration-500 text-xs font-sec
                                                     ${location.pathname ===
-                                                    "/profile/" + User.userName
+                                                        "/profile/" + User.userName
                                                         ? "text-green-500"
                                                         : " bg-inherit"
                                                     }`}>

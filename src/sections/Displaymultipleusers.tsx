@@ -19,36 +19,35 @@ const Displaymultipleusers = ({ title, horizontal = true, users }: Props) => {
             </span> :
             null
         }
-        {horizontal ? <div
-            className="w-full overflow-x-auto scroll-smooth snap-x snap-mandatory"
-        >
-            <div className="flex gap-4 w-max px-4">
-                {users ?
-                    users.length ?
-                        users.map(user =>
-                            <Displayuserinfor
-                                key={user.userName}
-                                short={true}
-                                user={user}
-                                className="block min-w-[100px] snap-start shrink-0"
-                                onClick={() => navigate("/profile/" + user.userName)}
-                            />
-                        ) :
-                        null
-                    :
-                    <>
-                        {
-                            Array(4).fill("")
-                                .map((_, index) =>
-                                    <Displayuserloading
-                                        key={index}
-                                    />
-                                )
-                        }
-                    </>
-                }
-            </div>
-        </div> :
+        {horizontal ?
+            <div className="overflow-x-auto scroll-smooth snap-x snap-mandatory"
+            >            <div className="flex gap-4 w-max px-4">
+                    {users ?
+                        users.length ?
+                            users.map(user =>
+                                <Displayuserinfor
+                                    key={user.userName}
+                                    short={true}
+                                    user={user}
+                                    className="block min-w-[100px] snap-start shrink-0"
+                                    onClick={() => navigate("/profile/" + user.userName)}
+                                />
+                            ) :
+                            null
+                        :
+                        <>
+                            {
+                                Array(4).fill("")
+                                    .map((_, index) =>
+                                        <Displayuserloading
+                                            key={index}
+                                        />
+                                    )
+                            }
+                        </>
+                    }
+                </div>
+            </div> :
             <div>
                 <div className="space-y-4">
                     {users ?

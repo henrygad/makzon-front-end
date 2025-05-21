@@ -123,6 +123,7 @@ const Searchform = ({
                         </span>
                     )}
                 </>
+
                 <label htmlFor="search" className="flex-1 flex">
                     <input
                         ref={searchInputRef}
@@ -130,7 +131,7 @@ const Searchform = ({
                         type="text"
                         placeholder="Search..."
                         autoComplete="true"
-                        className="flex-1 font-text text-sm text-slate-600 font-medium min-w-[280px] sm:min-w-[320px] md:min-w-[420px] outline-none px-2 py-2"
+                        className="flex-1 font-text text-sm text-slate-600 font-medium w-full outline-none px-2 py-2"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onFocus={() => {
