@@ -70,7 +70,7 @@ const Othersprofile = ({ userName }: { userName: string | undefined }) => {
                         id: "blogposts",
                         tab: <>
                             <section className=" mb-6">
-                                <div className="flex justify-between items-start gap-4" >
+                                <div className="flex justify-between items-start">
                                     {/* disply user infor*/}
                                     <Displayuserinfor
                                         short={false}
@@ -143,23 +143,11 @@ const Othersprofile = ({ userName }: { userName: string | undefined }) => {
                             <Displaymultipleposts
                                 title={`Published ${blogposts?.filter(post => post.status.toLowerCase() == "published").length || 0} articles`}
                                 posts={blogposts?.filter(post => post.status.toLowerCase() == "published") || null}
-                                updatepost={({ blogpost: updateBlogpost, type }) => {
+                                updatepost={({ blogpost, type }) => {
                                     if (type === "EDIT") {
-                                        setBlogposts((pre) => pre ?
-                                            pre.map((blogpost) =>
-                                                blogpost._id === updateBlogpost._id
-                                                    ? { ...blogpost, ...updateBlogpost }
-                                                    : blogpost
-                                            ) :
-                                            pre
-                                        );
+                                        setBlogposts(pre => pre ? pre.map(post => post._id === blogpost._id ? { ...post, ...blogpost } : post) : pre);
                                     } else if (type === "DELETE") {
-                                        setBlogposts((pre) => pre ?
-                                            pre.filter(
-                                                (blogpost) => blogpost._id !== updateBlogpost._id
-                                            ) :
-                                            pre
-                                        );
+                                        setBlogposts((pre) => pre ?pre.filter((blogpost) => blogpost._id !== blogpost._id) :pre);
                                     }
                                 }}
                             />

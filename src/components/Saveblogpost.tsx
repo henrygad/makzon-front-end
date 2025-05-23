@@ -3,7 +3,8 @@ import { useAppDispatch } from "../redux";
 import { editProfile } from "../redux/slices/userProfileSlices";
 import postProps from "../types/post.type";
 import userProps from "../types/user.type";
-import { MdLabelImportantOutline } from "react-icons/md";
+import { GoBookmark } from "react-icons/go";
+import { addSaveBlogposts, removeSaveBlogpost } from "../redux/slices/userBlogpostSlices";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Saveblogpost = ({ User, blogpost }: { User: userProps, blogpost: postProps }) => {
@@ -20,20 +21,24 @@ const Saveblogpost = ({ User, blogpost }: { User: userProps, blogpost: postProps
             });
             const save: string = await res.data.data.save;
             let updateUserSaves: userProps = User;
+
             if (User.saves.includes(save)) {
                 updateUserSaves = { ...User, saves: User.saves.filter((saveId) => saveId !== save) };
+                appDispatch(removeSaveBlogpost({_id: blogpost._id!}));
             } else {
                 updateUserSaves = { ...User, saves: [...User.saves, save] };
+                appDispatch(addSaveBlogposts(blogpost));
             }
-            appDispatch(editProfile(updateUserSaves));
+            appDispatch(editProfile(updateUserSaves));                       
+
         } catch (error) {
             console.error(error);
         }
     };
 
-    return <MdLabelImportantOutline
+    return <GoBookmark
         size={23}
-        className={`${User.saves && User.saves.includes(blogpost._id || "") ? "text-green-600" : ""} -rotate-90`}
+        className={`${User.saves && User.saves.includes(blogpost._id || "") ? "text-green-600" : ""}`}
         onClick={() => handleSave(User, blogpost)}
     />;    
 };

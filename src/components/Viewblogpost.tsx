@@ -20,7 +20,7 @@ const Viewblogpost = ({ displayType, blogpostRef, blogpost, updateBlogpost }: Pr
 
     const viewBlogpost = async (_id: string, sessionId: string) => {
         if (blogpost.views &&
-            blogpost.views?.includes(sessionId)) {
+            blogpost.views.includes(sessionId)) {
             return;
         }
         let viewedBlogpost: postProps | null = null;

@@ -3,9 +3,9 @@ import { useAppSelector } from "../redux";
 import { GrHomeOption } from "react-icons/gr";
 import { LuSearch } from "react-icons/lu";
 import { IoMdAdd } from "react-icons/io";
-import { MdLabelImportantOutline} from "react-icons/md";
 import Displayimage from "../components/Displayimage";
 import avatarPlaceholder from "../assets/avaterplaceholder.svg";
+import { GoBookmark } from "react-icons/go";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Footer = () => {
@@ -93,9 +93,9 @@ const Footer = () => {
                                             className="flex flex-col justify-center items-center gap-1"
                                             onClick={() => navigate("/saves")}
                                         >
-                                            <MdLabelImportantOutline
-                                                size={26}
-                                                className={`transition-colors duration-500 -rotate-90
+                                            <GoBookmark 
+                                                size={24}
+                                                className={`transition-colors duration-500
                                                         ${location.pathname ===
                                                         "/saves"
                                                         ? "text-green-500"

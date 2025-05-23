@@ -70,9 +70,7 @@ const Trending = ({
                 posts={trendingPosts}
                 updatepost={({ blogpost, type }) => {
                     if (type === "EDIT") {
-                        setTrendingPosts((pre) =>
-                            pre ? ({ ...pre, ...blogpost }) : pre
-                        );
+                        setTrendingPosts(pre => pre ? pre.map(post => post._id === blogpost._id ? { ...post, ...blogpost } : post) : pre);
                     } else if (type === "DELETE") {
                         setTrendingPosts(null);
                     }

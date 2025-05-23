@@ -86,10 +86,8 @@ const App = () => {
         // fetch user search history
         axios(apiEndPont + "/search/history")
           .then((res) => res.data)
-          .then((data) => {
-            console.log(data, "search history");
-            const getSearchHistories = data.data as { _id: string, search: string }[];
-            console.log(getSearchHistories, "fetch search history");
+          .then((data) => {           
+            const getSearchHistories = data.data as { _id: string, search: string }[];            
             setSearchHistories(getSearchHistories);
           })
           .catch((error) => console.error(error));
@@ -207,7 +205,8 @@ const App = () => {
           .then((res) => res.data)
           .then(data => {
             const feeds = data.data as postProps[];
-            setPostFeeds([...feeds]);
+            console.log("initail fetch feeds");
+            setPostFeeds(feeds);
           })
           .catch((error) => console.error(error));
 
@@ -302,8 +301,10 @@ const App = () => {
         const newNotification: notificationProps = JSON.parse(
           event.data.notification
         );
-        setNotificationUpdate(newNotification);
-        appDispatch(addNotifications(newNotification));
+        if (newNotification) {
+          setNotificationUpdate(newNotification);
+          appDispatch(addNotifications(newNotification));
+        }
       };
       notificationEventSource.onerror = (error) => {
         console.error(error);
@@ -311,7 +312,7 @@ const App = () => {
       };
 
 
-      // Post feeds live update
+    // Post feeds live update
       const postFeedsEventSource = new EventSource(
         apiEndPont + "/post/user/get/timeline/stream",
         {
@@ -321,13 +322,20 @@ const App = () => {
       postFeedsEventSource.onmessage = (event) => {
         const data = JSON.parse(event.data) as { eventType: string, post: postProps };
         const { eventType, post: newPostFeeds } = data;
-        console.log(newPostFeeds);
+
         if (newPostFeeds) {
           if (eventType.toLowerCase() === "delete") {
             setPostFeeds(pre => pre ? pre.filter(post => post._id !== newPostFeeds._id) : pre);
-          } else {
+          }
+          if (eventType.toLowerCase() === "insert") {
             setNewPostFeeds(pre => pre ? [newPostFeeds, ...pre] : [newPostFeeds]);
           }
+          if (eventType.toLowerCase() === "update") {            
+            setPostFeeds(pre => pre ?
+              pre.map(post => post._id === newPostFeeds._id ? { ...post, ...newPostFeeds } : post) :
+              pre);
+          }
+         
         }
       };
       postFeedsEventSource.onerror = (error) => {
@@ -337,8 +345,6 @@ const App = () => {
     }
 
   }, [User.login]);
-
-  console.log(postFeeds);
 
   return (
     <>

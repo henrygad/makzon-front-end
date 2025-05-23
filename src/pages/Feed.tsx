@@ -9,9 +9,9 @@ type Props = {
 }
 
 const Feed = ({
-    postFeeds,
-    setNewPostFeeds,
+    postFeeds,    
     newPostFeeds,
+    setNewPostFeeds,
     setPostFeeds
 }: Props) => {
 
@@ -32,7 +32,7 @@ const Feed = ({
                         <div className="absolute -top-10 left-0 right-0 bg-green-600 z-10 rounded-lg p-1">
                             <button
                                 className="text-center text-sm  text-white font-text font-medium w-full mx-auto cursor-pointer"
-                                onClick={handleViewedNotifications}
+                               onClick={handleViewedNotifications}
                             >
                                 New feeds is available
                             </button>
@@ -46,10 +46,8 @@ const Feed = ({
         <Displaymultipleposts          
             posts={postFeeds}
             updatepost={({ blogpost, type }) => {
-                if (type === "EDIT") {
-                    setPostFeeds((pre) =>
-                        pre ? ({ ...pre, ...blogpost }) : pre
-                    );
+                if (type === "EDIT") {                    
+                    setPostFeeds(pre => pre ? pre.map(post => post._id === blogpost._id ? { ...post, ...blogpost } : post) : pre);
                 } else if (type === "DELETE") {
                     setPostFeeds(pre => pre ? pre.filter(post => post._id !== blogpost._id) : pre);
                 }
