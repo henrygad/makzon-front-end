@@ -79,7 +79,7 @@ const Userprofile = ({ User, loading: loadingUserData }: { User: userProps, load
                             </div>
 
                             {/* navigate to user followers and following  */}
-                            <div className={`flex justify-end items-center gap-3 ${!loadingUserData ? "animate-pulse":""}`}>
+                            <div className={`flex justify-end items-center gap-3 ${!loadingUserData ? "animate-pulse" : ""}`}>
                                 {!loadingUserData ?
                                     <>
                                         <button
@@ -130,26 +130,38 @@ const Userprofile = ({ User, loading: loadingUserData }: { User: userProps, load
                             <Dialog
                                 dialog={dialog}
                                 handleDialog={handleDialog}
-                                className="flex gap-8 border rounded-lg px-12 py-10 bg-white"
+                                className="font-text text-slate-800 font-normal"
                                 children={<>
-                                    <button
-                                        className="text-sm font-text text-slate-600 cursor-pointer"
-                                        onClick={() => {
-                                            handleDialog();
-                                            const clear = setTimeout(() => {
-                                                navigate(`?url=${apiEndPont + "/media/" + User.avatar}&type=image#single-image`);
-                                                clearTimeout(clear);
-                                            }, 100);
-                                        }}
-                                    >
-                                        View Picture
-                                    </button>
-                                    <button
-                                        className="text-sm font-text text-slate-600 cursor-pointer"
-                                        onClick={() => navigate("/profile/update")}
-                                    >
-                                        Edit Profile
-                                    </button>
+                                    <span className="flex items-center gap-3 border-b p-4">
+                                        <span className="text-base whitespace-pre font-semibold">
+                                            What would you like to do?
+                                        </span>
+                                    </span>
+                                    <span className="flex text-sm font-medium text-slate-60 px-4 border-t">
+                                        <span className="flex-1 flex justify-start items-center px-2 py-4">
+                                            <button
+                                                className="font-text text-nowrap whitespace-pre text-sm cursor-pointer"
+                                                onClick={() => {
+                                                    handleDialog();
+                                                    const clear = setTimeout(() => {
+                                                        navigate(`?url=${apiEndPont + "/media/" + User.avatar}&type=image#single-image`);
+                                                        clearTimeout(clear);
+                                                    }, 100);
+                                                }}
+                                            >
+                                                View Picture
+                                            </button>
+
+                                        </span>
+                                        <span className="flex-1 flex justify-end items-center border-l px-2 py-4">
+                                            <button
+                                                className="font-text text-nowrap whitespace-pre text-sm cursor-pointer"
+                                                onClick={() => navigate("/updateprofile")}
+                                            >
+                                                Edit Profile
+                                            </button>
+                                        </span>
+                                    </span>
                                 </>}
                             />
                         </section>

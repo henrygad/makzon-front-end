@@ -34,7 +34,7 @@ const Likecomment = ({ blogpost, comment, setCommentLikes }: Props) => {
             setCommentLikes(pre => ([userName, ...pre]));
             setIsLiked(true);
         } catch (error) {
-            console.error(error);            
+            console.error(error);
         }
 
         let options: unknown;
@@ -64,11 +64,11 @@ const Likecomment = ({ blogpost, comment, setCommentLikes }: Props) => {
             to: comment.author || "",
             message: `liked your comment, ${comment.body.text || ""}`,
             checked: false,
-            url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
+            url: "/post/" + blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
         });
     };
 
-    const unLike =async (comment: commentProps, userName: string) => {
+    const unLike = async (comment: commentProps, userName: string) => {
         try {
             const url = apiEndPont + "/comment/" + comment._id;
             const data: commentProps = { ...comment, likes: (comment.likes || []).filter(like => like !== userName) };
@@ -81,7 +81,7 @@ const Likecomment = ({ blogpost, comment, setCommentLikes }: Props) => {
         } catch (error) {
             console.error(error);
         }
-              
+
     };
 
     const handleCommentLiking = (comment: commentProps, userName: string) => {

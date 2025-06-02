@@ -47,7 +47,7 @@ const Likeblogpost = ({ blogpost, updateBlogpost }: Props) => {
             to: blogpost.author || "",
             message: `liked your blogpost, ${blogpost.title}`,
             checked: false,
-            url: blogpost.author + "/" + blogpost.slug + "#blogpost-likes",
+            url: "/post/" + blogpost.author + "/" + blogpost.slug + "/#blogpost-likes",            
         });
     };
 

@@ -1,150 +1,123 @@
 import { useEffect, useRef, useState } from "react";
 import Displayimage from "../components/Displayimage";
 import { useAppDispatch, useAppSelector } from "../redux";
-import { useNavigate } from "react-router-dom";
-import Model from "../components/Model";
 import userProps from "../types/user.type";
 import { editProfile } from "../redux/slices/userProfileSlices";
 import avatarPlaceholder from "./../assets/avaterplaceholder.svg";
-import Fileinput from "../components/Fileinput";
-import useGetLocalFiles from "../hooks/useGetLocalFiles";
-import { IoMdArrowRoundBack, IoMdImages } from "react-icons/io";
-import Makzontexteditor from "makzontexteditor";
 import Customselection from "../components/Customselection";
 import { Countries, Professions } from "../assets/date";
 import { Button } from "../components/Button";
 import { addMedia } from "../redux/slices/userMediaSlices";
 import axios from "axios";
-import useSanitize from "../hooks/useSanitize";
 import Displayscreenloading from "../components/loaders/Displayscreenloading";
-import { GrView } from "react-icons/gr";
+import useDateFormat from "../hooks/useDateFormat";
+import Displaychangemedia from "../sections/Displaychangemedia";
+import useDialog from "../hooks/useDialog";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Updateprofile = () => {
-    const navigate = useNavigate();
     const { data: User, loading } = useAppSelector(
         (state) => state.userProfileSlices.userProfile
     );
-    const { selectedMedia } = useAppSelector(
-        (state) => state.userMediaSlices.media
-    );
+
     const appDispatch = useAppDispatch();
 
     const [userData, setUserData] = useState<userProps | null>(null);
-    const [displayAvatar, setDisplayAvatar] = useState("");
     const [displayPhoneNumber, setDisplayPhoneNumber] = useState<{
         code: string;
         number: string | undefined;
     }>({ code: "+234", number: undefined });
 
     const [searchProfession, setSearchProfession] = useState("");
-    const [searchCountry, setSearchCountry] = useState("");
     const [displayDateOfBirth, setDisplayDateOfBirth] = useState(false);
 
     const firstNameInputRef = useRef<HTMLInputElement | null>(null);
     const lastNameInputRef = useRef<HTMLInputElement | null>(null);
-    const bioInputRef = useRef<HTMLDivElement | null>(null);
+    const bioInputRef = useRef<HTMLTextAreaElement | null>(null);
     const professionInputRef = useRef<HTMLInputElement | null>(null);
     const displayEmailInputRef = useRef<HTMLInputElement | null>(null);
     const displayPhoneNumberInputRef = useRef<HTMLInputElement | null>(null);
     const websiteInputRef = useRef<HTMLInputElement | null>(null);
     const birthDayInputRef = useRef<HTMLInputElement | null>(null);
     const sexInputRef = useRef<HTMLSelectElement | null>(null);
-    const countryInputRef = useRef<HTMLInputElement | null>(null);
+    const countryInputRef = useRef<HTMLSelectElement | null>(null);
 
-    const [focusInput, setFocusInput] = useState("");
-    const [onChangeInInputs, setOnChangeInInputs] = useState([""]);
-    const { getLocalFiles } = useGetLocalFiles();
-    const holdSelectedMediaRef = useRef<string | undefined>(undefined);
+    const [toEdit, setToEdit] = useState<Record<string, string | undefined>>({
+        "": "",
+    });
+    const [onChange, setOnChange] = useState<string[]>([]);
 
     const [blob, setBlob] = useState<Blob | undefined>(undefined);
     const [loadingUpdatedData, setLoadingUpdatedData] = useState(false);
-    const sanitize = useSanitize();
 
-    const updatedAvatar = async (file: Blob) => {
+    const { dialog, handleDialog } = useDialog();
+
+    const formatDate = useDateFormat();
+
+    const updatedOtherData = async (user: userProps, imageBlob: Blob | undefined) => {
         setLoadingUpdatedData(true);
         try {
+
+            // Create new form data
             const formData = new FormData();
-            formData.append("avatar", file);
+
+            // if there is image blob attach file to formdata
+            if (imageBlob) formData.append("avatar", imageBlob);
+
+            // Append other user data to formData
+            for (const key in user) {
+                const value = user[key as keyof userProps];
+                if (value !== undefined) formData.append(key, JSON.stringify(value));
+            }
 
             const url = apiEndPont + "/user";
-            const res = await axios.patch(url, formData, {
-                baseURL: apiEndPont,
-                withCredentials: true,
-                headers: {
-                    "Content-Type": "multipart/form-data"
-                }
-            });
-            const updatedUserData: userProps = await res.data.data;
-            appDispatch(editProfile(updatedUserData));
-            appDispatch(addMedia({
-                _id: Date.now().toString(),
-                filename: updatedUserData?.avatar,
-                size: 100,
-                fieldname: "avatar",
-                mimetype: updatedUserData?.avatar.split(".")[1],
-                uploader: updatedUserData.userName
-            }));
-
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoadingUpdatedData(false);
-        }
-    };
-
-    const updatedOtherData = async (user: userProps) => {
-        setLoadingUpdatedData(true);
-        try {
-            const url = apiEndPont + "/user";
-            const res = await axios.patch(
-                url,
-                { ...user },
+            const res = await axios.patch(url,
+                formData,
                 {
                     baseURL: apiEndPont,
                     withCredentials: true,
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
                 }
             );
             const updatedUserData: userProps = await res.data.data;
+
             if (updatedUserData) {
                 appDispatch(editProfile(updatedUserData));
+
+                if (imageBlob) {
+                    appDispatch(
+                        addMedia({
+                            _id: Date.now().toString(),
+                            filename: updatedUserData?.avatar,
+                            size: 100,
+                            fieldname: "avatar",
+                            mimetype: updatedUserData?.avatar.split(".")[1],
+                            uploader: updatedUserData.userName,
+                        })
+                    );
+                }
             }
+
         } catch (error) {
             console.error(error);
         } finally {
             setLoadingUpdatedData(false);
+            setToEdit({ "": "" });
+            setOnChange([]);
+            if (imageBlob) setBlob(undefined);
         }
     };
-
-    const handleUpadteUserData = (data: unknown) => {
-        const getData = data as userProps;
-        updatedOtherData({ ...User, ...getData });
-        setFocusInput("");
-    };
-
-    useEffect(() => {
-        if (selectedMedia && selectedMedia.length) {
-            holdSelectedMediaRef.current = selectedMedia[0].filename;
-        } else {
-            if (holdSelectedMediaRef.current) {
-                setDisplayAvatar(apiEndPont + "/media/" + holdSelectedMediaRef.current);
-                setUserData((pre) => pre ? ({ ...pre, avatar: holdSelectedMediaRef.current! }) : pre);
-                setBlob(undefined);
-                setOnChangeInInputs((pre) => pre.includes("avatar") ? pre : [...pre, "avatar"]);
-                holdSelectedMediaRef.current = undefined;
-            }
-        }
-    }, [selectedMedia]);
 
     useEffect(() => {
         if (User) {
-            if (User.avatar) {
-                setDisplayAvatar(apiEndPont + "/media/" + User.avatar);
-            }
-            setUserData((pre) => pre ? ({ ...pre, ...User }) : ({ ...User }));
+            setUserData((pre) => (pre ?
+                { ...pre, ...User, avatar: User.avatar ? apiEndPont + "/media/" + User.avatar : "" } :
+                { ...User, avatar: User.avatar ? apiEndPont + "/media/" + User.avatar : "" }
+            ));
             setDisplayDateOfBirth(User.displayDateOfBirth);
-            if (User.displayPhoneNumber &&
-                User.displayPhoneNumber.split("-")[1]) {
+            if (User.displayPhoneNumber && User.displayPhoneNumber.split("-")[1]) {
                 setDisplayPhoneNumber({
                     code: User.displayPhoneNumber.split("-")[0],
                     number: User.displayPhoneNumber.split("-")[1],
@@ -155,919 +128,809 @@ const Updateprofile = () => {
 
     return (
         <>
-            <header className="container py-4">
-                <h3 className="font-text text-xl font-medium whitespace-pre">
-                    Update Profile
-                </h3>
-            </header>
-            <main className="container font-text overflow-x-hidden pb-20">
-                <div className="space-y-4 mt-4">
-                    {!loading ? (
+            <main className="container font-text font-normal text-slate-800 overflow-x-hidden">
+                {
+                    !loading ?
                         <>
-                            {/* display avatar */}
-                            <div>
+                            <section className="mt-4">
+                                {/* display avatar */}
                                 <Displayimage
-                                    url={User?.avatar ? apiEndPont + "/media/" + User.avatar : ""}
+                                    url={userData?.avatar || ""}
                                     alt={User.userName}
-                                    useCancle={false}
+                                    useCancle={onChange.includes("avatar") ? true : false}
                                     className="h-16 w-16 object-contain rounded-full border cursor-pointer"
                                     placeHolder={
                                         <img
                                             src={avatarPlaceholder}
                                             className="absolute top-0 bottom-0 right-0 left-0 h-16 w-16  object-contain rounded-full border cursor-pointer"
-                                            onClick={() => navigate("#insert-profile-picture")}
+                                            onClick={handleDialog}
                                         />
                                     }
-                                    loadingPlaceHolder={<span className="absolute top-0 bottom-0 right-0 left-0 h-16 w-16 object-contain rounded-full border border-slate-200 bg-slate-200 animate-pulse"></span>}
-                                    onClick={() => navigate("#insert-profile-picture")}
+                                    loadingPlaceHolder={
+                                        <span className="absolute top-0 bottom-0 right-0 left-0 h-16 w-16 object-contain rounded-full border border-slate-200 bg-slate-200 animate-pulse cursor-pointer"
+                                            onClick={handleDialog}
+                                        >
+                                        </span>
+                                    }
+                                    onCancle={() => {
+                                        setUserData((pre) => pre ? { ...pre, avatar: apiEndPont + "/media/" + User.avatar } : pre);
+                                        setBlob(undefined);
+                                        setOnChange(pre => pre.filter(id => id !== "avatar"));
+                                    }}
+                                    onClick={handleDialog}
                                 />
-                            </div>
-                            {/* first name */}
-                            <label htmlFor="first-name" className="block space-y-0.5">
-                                <span className="block font-semibold">First name</span>
-                                <span className="flex flex-wrap justify-between items-center gap-2">
-                                    <input
-                                        id="first-name"
-                                        ref={firstNameInputRef}
-                                        type="text"
-                                        className={`flex-1 py-1 ${focusInput === "first-name" ? "px-2" : ""
-                                            } capitalize rounded-md`}
-                                        autoComplete="false"
-                                        placeholder="Your first name..."
-                                        value={userData?.name?.givenName || ""}
-                                        onChange={(e) => {
-                                            setUserData((pre) => pre ? ({
-                                                ...pre,
-                                                name: {
-                                                    givenName: e.target.value,
-                                                    familyName: pre.name?.familyName,
-                                                },
-                                            }) : pre);
-                                            setOnChangeInInputs((pre) => {
-                                                if (pre.includes("first-name")) {
-                                                    return pre;
-                                                } else {
-                                                    return [...pre, "first-name"];
-                                                }
-                                            });
-                                        }}
-                                        onFocus={() => setFocusInput("first-name")}
-                                    />
-                                    {onChangeInInputs.includes("first-name") ? (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    name: {
-                                                        familyName: User.name?.familyName,
-                                                        givenName: userData?.name?.givenName,
-                                                    },
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                setOnChangeInInputs((pre) =>
-                                                    pre.filter((inputId) => inputId !== "first-name")
-                                                );
-                                            }}
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                if (firstNameInputRef.current) {
-                                                    firstNameInputRef.current.focus();
-                                                    setFocusInput("first-name");
-                                                }
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-                                </span>
-                            </label>
-                            {/* last name */}
-                            <label htmlFor="last-name" className="block space-y-0.5">
-                                <span className="block font-semibold">Last name</span>
-                                <span className="flex flex-wrap justify-between items-center gap-2">
-                                    <input
-                                        id="last-name"
-                                        ref={lastNameInputRef}
-                                        type="text"
-                                        className={`flex-1 py-1 ${focusInput === "last-name" ? "px-2" : ""
-                                            } capitalize rounded-md`}
-                                        placeholder="Your last name..."
-                                        value={userData?.name?.familyName || ""}
-                                        onChange={(e) => {
-                                            setUserData((pre) => pre ? ({
-                                                ...pre,
-                                                name: {
-                                                    givenName: pre.name?.givenName,
-                                                    familyName: e.target.value,
-                                                },
-                                            }) : pre);
-
-                                            setOnChangeInInputs((pre) => {
-                                                if (pre.includes("last-name")) {
-                                                    return pre;
-                                                } else {
-                                                    return [...pre, "last-name"];
-                                                }
-                                            });
-                                        }}
-                                        onFocus={() => setFocusInput("last-name")}
-                                    />
-                                    {onChangeInInputs.includes("last-name") ? (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    name: {
-                                                        familyName: userData?.name?.familyName,
-                                                        givenName: User.name?.givenName,
-                                                    },
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                setOnChangeInInputs((pre) =>
-                                                    pre.filter((inputId) => inputId !== "last-name")
-                                                );
-                                            }}
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                if (lastNameInputRef.current) {
-                                                    lastNameInputRef.current.focus();
-                                                    setFocusInput("last-name");
-                                                }
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-                                </span>
-                            </label>
-                            {/* bio */}
-                            <div id="bio">
-                                <span className="block font-semibold">Bio</span>
-                                <div className="flex flex-wrap justify-between items-center gap-2">
-                                    <Makzontexteditor
-                                        inputRef={bioInputRef}
-                                        wrapperClassName="flex-1"
-                                        inputClassName={`w-full min-w-[200px] min-h-[100px] max-h-[10px] py-2 
-                                        ${focusInput === "bio"
-                                                ? "px-2 outline outline-2 outline-yellow-600 sm:outline-stone-600"
-                                                : ""
-                                            } 
-                                        rounded-md overflow-y-auto`}
-                                        placeholder={User.bio?.trim() ? "" : "Your bio"}
-                                        useToolBar={false}
-                                        autoFocus={false}
-                                        setContext={{
-                                            new: User.bio?.trim() ? false : true,
-                                            context: sanitize(User.bio).__html || "",
-                                        }}
-                                        setGetValue={(value) => {
-                                            setUserData((pre) => pre ? ({ ...pre, bio: value._html }) : pre);
-                                            setOnChangeInInputs((pre) => {
-                                                if (pre.includes("bio")) {
-                                                    return pre;
-                                                } else {
-                                                    return [...pre, "bio"];
-                                                }
-                                            });
-                                        }}
-                                    />
-                                    {onChangeInInputs.includes("bio") ? (
-                                        <button
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    bio: userData?.bio,
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                setOnChangeInInputs((pre) =>
-                                                    pre.filter((inputId) => inputId !== "bio")
-                                                );
-                                            }}
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                if (bioInputRef.current) {
-                                                    bioInputRef.current.focus();
-                                                    setFocusInput("bio");
-                                                }
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                            {/* profession */}
-                            <label htmlFor="profession" className="block space-y-0.5">
-                                <span className="block font-semibold">Profession</span>
-                                <span className="flex flex-wrap justify-between items-center gap-2">
-                                    <span className="relative">
+                            </section>
+                            <section className="space-y-4 mt-4">
+                                {/* first name */}
+                                <label htmlFor="first-name" className="block space-y-0.5">
+                                    <p className="text-sm capitalize">First name</p>
+                                    <span className="flex flex-wrap justify-between items-center gap-2">
                                         <input
-                                            id="profession"
-                                            ref={professionInputRef}
+                                            id="first-name"
+                                            ref={firstNameInputRef}
                                             type="text"
-                                            placeholder="Your profession..."
-                                            className={`block w-full py-1 ${focusInput === "profession" ? "px-2" : ""
-                                                } rounded-md`}
-                                            value={userData?.profession || ""}
+                                            className={`${toEdit["firstName"] ? "block" : "hidden"
+                                                } flex-1 min-w-0 py-1 px-2 capitalize border border-slate-800 rounded-md outline-none"`}
+                                            autoComplete="false"
+                                            value={userData?.name?.givenName || ""}
                                             onChange={(e) => {
-                                                setSearchProfession(e.target.value);
-                                                setUserData((pre) => pre ? ({
-                                                    ...pre,
-                                                    profession: e.target.value,
-                                                }) : pre);
-                                                setOnChangeInInputs((pre) => {
-                                                    if (pre.includes("profession")) {
-                                                        return pre;
-                                                    } else {
-                                                        return [...pre, "profession"];
-                                                    }
-                                                });
-                                            }}
-                                            onFocus={() => {
-                                                setFocusInput((pre) =>
-                                                    pre === "profession" ? "" : "profession"
-                                                );
+                                                setUserData((pre) => pre ? { ...pre, name: { givenName: e.target.value, familyName: pre.name?.familyName } } : pre);
+                                                if (!onChange.includes("firstName")) {
+                                                    setOnChange((pre) => ([...pre, "firstName"]));
+                                                }
                                             }}
                                         />
-                                        <Customselection
-                                            arrOfOptions={Professions}
-                                            className="top-9 right-0 left-0 w-full min-h-[180px] max-h-[180px] border border-blue-600 py-2 rounded-md shadow-md shadow-gray-400 overflow-y-auto"
-                                            dropDown={focusInput === "profession" ? true : false}
-                                            useSearch={true}
-                                            search={searchProfession}
-                                            select={userData?.profession || ""}
-                                            setSelect={(value) => {
-                                                setUserData((pre) => pre ? ({
-                                                    ...pre,
-                                                    profession: value as string,
-                                                }) : pre);
-                                                setOnChangeInInputs((pre) => {
-                                                    if (pre.includes("profession")) {
-                                                        return pre;
-                                                    } else {
-                                                        return [...pre, "profession"];
-                                                    }
-                                                });
-                                            }}
-                                        />
-                                    </span>
-                                    {onChangeInInputs.includes("profession") ? (
-                                        <button
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    profession: userData?.profession,
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                setOnChangeInInputs((pre) =>
-                                                    pre.filter((inputId) => inputId !== "profession")
-                                                );
-                                                setFocusInput("");
-                                            }}
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                if (professionInputRef.current) {
-                                                    professionInputRef.current.focus();
-                                                    setFocusInput("profession");
-                                                }
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-                                </span>
-                            </label>
-                            {/* display email */}
-                            <label htmlFor="display-email" className="block space-y-0.5">
-                                <span className="block font-semibold">Display email</span>
-                                <span className="flex flex-wrap justify-between items-center gap-2">
-                                    <input
-                                        id="display-email"
-                                        ref={displayEmailInputRef}
-                                        type="email"
-                                        className={`flex-1 py-1 ${focusInput === "display-email" ? "px-2" : ""
-                                            } rounded-md`}
-                                        placeholder="Display email..."
-                                        value={userData?.displayEmail || ""}
-                                        onChange={(e) => {
-                                            setUserData((pre) => pre ? ({
-                                                ...pre,
-                                                displayEmail: e.target.value,
-                                            }) : pre);
-
-                                            setOnChangeInInputs((pre) => {
-                                                if (pre.includes("display-email")) {
-                                                    return pre;
-                                                } else {
-                                                    return [...pre, "display-email"];
-                                                }
-                                            });
-                                        }}
-                                        onFocus={() => setFocusInput("display-email")}
-                                    />
-                                    {onChangeInInputs.includes("display-email") ? (
-                                        <button
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    displayEmail: userData?.displayEmail,
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                setOnChangeInInputs((pre) =>
-                                                    pre.filter((inputId) => inputId !== "display-email")
-                                                );
-                                            }}
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                if (displayEmailInputRef.current) {
-                                                    displayEmailInputRef.current.focus();
-                                                    setFocusInput("display-email");
-                                                }
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-                                </span>
-                            </label>
-                            {/* display phone number */}
-                            <label
-                                htmlFor="display-phone-number"
-                                className="block w-full space-y-0.5"
-                            >
-                                <span className="block font-semibold">
-                                    Display Phone number
-                                </span>
-                                <span className="flex flex-wrap justify-between items-center gap-2">
-                                    <span className="flex-1 flex items-center gap-2">
-                                        {focusInput === "display-phone-number" ? (
-                                            <select
-                                                name="countries-code"
-                                                id="countries-code"
-                                                value={displayPhoneNumber?.code}
-                                                className="text-base font-text p-1 border rounded-md"
-                                                onChange={(e) => {
-                                                    setDisplayPhoneNumber((pre) => ({ ...pre, code: e.target.value }));
-                                                    setOnChangeInInputs((pre) => {
-                                                        if (pre.includes("display-phone-number")) {
-                                                            return pre;
-                                                        } else {
-                                                            return [...pre, "display-phone-number"];
+                                        {!toEdit["firstName"] ? (
+                                            <>
+                                                <span className="block flex-1 text-base">
+                                                    <p className="py-1 capitalize">
+                                                        {User?.name?.givenName || ""}
+                                                    </p>
+                                                </span>
+                                                <button
+                                                    className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                    onClick={() => {
+                                                        if (firstNameInputRef.current) {
+                                                            firstNameInputRef.current.focus();
+                                                            setToEdit((pre) => ({
+                                                                ...pre,
+                                                                firstName: "firstName",
+                                                            }));
                                                         }
-                                                    });
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                onClick={() => {
+                                                    if (firstNameInputRef.current) {
+                                                        setOnChange((pre) => pre.filter(id => id !== "firstName"));
+                                                        setToEdit((pre) => ({
+                                                            ...pre,
+                                                            firstName: undefined,
+                                                        }));
+                                                        firstNameInputRef.current.blur();
+                                                    }
                                                 }}
                                             >
-                                                {Countries && Countries.length
-                                                    ? Countries.map((country) => (
-                                                        <option key={country.code} value={country.code}>
-                                                            {country.country} ({country.code})
-                                                        </option>
-                                                    ))
-                                                    : null}
-                                            </select>
-                                        ) : null}
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </span>
+                                </label>
+                                {/* last name */}
+                                <label htmlFor="last-name" className="block space-y-0.5">
+                                    <p className="text-sm">Last name</p>
+                                    <span className="flex flex-wrap justify-between items-center gap-2">
                                         <input
-                                            id="display-phone-number"
-                                            ref={displayPhoneNumberInputRef}
-                                            type="number"
-                                            className={`flex-1 py-1 ${focusInput === "display-phone-number" ? "px-2" : ""
-                                                } rounded-md`}
-                                            placeholder="Phone number..."
-                                            value={displayPhoneNumber?.number || ""}
+                                            id="last-name"
+                                            ref={lastNameInputRef}
+                                            className={`${toEdit["lastName"] ? "block" : "hidden"
+                                                } flex-1 min-w-0 py-1 px-2 capitalize border border-slate-800 rounded-md outline-none"`}
+                                            value={userData?.name?.familyName || ""}
                                             onChange={(e) => {
-                                                setDisplayPhoneNumber((pre) => ({ ...pre, number: e.target.value.toString().trim() }));
-                                                setOnChangeInInputs((pre) => {
-                                                    if (pre.includes("display-phone-number")) {
-                                                        return pre;
-                                                    } else {
-                                                        return [...pre, "display-phone-number"];
-                                                    }
-                                                });
+                                                setUserData((pre) =>
+                                                    pre
+                                                        ? {
+                                                            ...pre,
+                                                            name: {
+                                                                givenName: pre.name?.givenName,
+                                                                familyName: e.target.value,
+                                                            },
+                                                        }
+                                                        : pre
+                                                );
+
+                                                if (!onChange.includes("lastName")) {
+                                                    setOnChange((pre) => ([...pre, "lastName"]));
+                                                }
                                             }}
-                                            onFocus={() => setFocusInput("display-phone-number")}
                                         />
-                                    </span>
-                                    {onChangeInInputs.includes("display-phone-number") ? (
-                                        <button
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    displayPhoneNumber: displayPhoneNumber?.number ? (displayPhoneNumber.code + "-" + displayPhoneNumber.number) : undefined,
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                setOnChangeInInputs((pre) =>
-                                                    pre.filter(
-                                                        (inputId) => inputId !== "display-phone-number"
-                                                    )
-                                                );
-                                            }}
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                if (displayPhoneNumberInputRef.current) {
-                                                    displayPhoneNumberInputRef.current.focus();
-                                                    setFocusInput("display-phone-number");
-                                                }
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-                                </span>
-                            </label>
-                            {/* website */}
-                            <label htmlFor="website" className="block space-y-0.5">
-                                <span className="block font-semibold">Website</span>
-                                <span className="flex flex-wrap justify-between items-center gap-2">
-                                    <input
-                                        id="website"
-                                        ref={websiteInputRef}
-                                        type="text"
-                                        className={`flex-1 py-1 ${focusInput === "website" ? "px-2" : ""
-                                            } rounded-md`}
-                                        placeholder="Your website..."
-                                        value={userData?.website || ""}
-                                        onChange={(e) => {
-                                            setUserData((pre) => pre ? ({
-                                                ...pre,
-                                                website: e.target.value,
-                                            }) : pre);
-
-                                            setOnChangeInInputs((pre) => {
-                                                if (pre.includes("website")) {
-                                                    return pre;
-                                                } else {
-                                                    return [...pre, "website"];
-                                                }
-                                            });
-                                        }}
-                                        onFocus={() => setFocusInput("website")}
-                                    />
-                                    {onChangeInInputs.includes("website") ? (
-                                        <button
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    website: userData?.website,
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                setOnChangeInInputs((pre) =>
-                                                    pre.filter((inputId) => inputId !== "website")
-                                                );
-                                            }}
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                if (websiteInputRef.current) {
-                                                    websiteInputRef.current.focus();
-                                                    setFocusInput("website");
-                                                }
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-                                </span>
-                            </label>
-                            {/* birthday */}
-                            <label htmlFor="birth-day" className="block space-y-1">
-                                <span className="block font-semibold">Birthday</span>
-                                <span className="flex flex-wrap justify-between items-center gap-2">
-                                    <input
-                                        id="birth-day"
-                                        ref={birthDayInputRef}
-                                        type="date"
-                                        className={`flex-1 py-1 ${focusInput === "birth-day" ? "px-2" : ""
-                                            } rounded-md`}
-                                        placeholder="Display email..."
-                                        value={userData?.dateOfBirth || ""}
-                                        onChange={(e) => {
-                                            setUserData((pre) => pre ? ({
-                                                ...pre,
-                                                dateOfBirth: e.target.value,
-                                            }) : pre);
-
-                                            setOnChangeInInputs((pre) => {
-                                                if (pre.includes("birth-day")) {
-                                                    return pre;
-                                                } else {
-                                                    return [...pre, "birth-day"];
-                                                }
-                                            });
-                                        }}
-                                        onFocus={() => setFocusInput("birth-day")}
-                                    />
-                                    {onChangeInInputs.includes("birth-day") ? (
-                                        <button
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    displayDateOfBirth,
-                                                    dateOfBirth: userData?.dateOfBirth,
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                setOnChangeInInputs((pre) =>
-                                                    pre.filter((inputId) => inputId !== "birth-day")
-                                                );
-                                            }}
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                if (birthDayInputRef.current) {
-                                                    birthDayInputRef.current.focus();
-                                                    setFocusInput("birth-day");
-                                                }
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-                                </span>
-                                {focusInput === "birth-day" ? (
-                                    <span className="flex items-center gap-2 w-full">
-                                        <span className="text-sm font-text text-wrap">
-                                            Display Birthday
-                                        </span>
-                                        <span className="flex flex-nowrap items-center gap-1 text-sm font-text font-semibold border border-gray-500 shadow-inner shadow-gray-500 bg-gray-100">
-                                            <button
-                                                className={` py-0.5 px-1.5 ${!displayDateOfBirth ? "bg-white" : ""
-                                                    } cursor-pointer`}
-                                                onClick={() => {
-                                                    setDisplayDateOfBirth(false);
-                                                    setOnChangeInInputs((pre) => {
-                                                        if (pre.includes("birth-day")) {
-                                                            return pre;
-                                                        } else {
-                                                            return [...pre, "birth-day"];
+                                        {!toEdit["lastName"] ? (
+                                            <>
+                                                <span className="block flex-1 text-base">
+                                                    <p className="py-1 capitalize">
+                                                        {User?.name?.familyName || ""}
+                                                    </p>
+                                                </span>
+                                                <button
+                                                    className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                    onClick={() => {
+                                                        if (lastNameInputRef.current) {
+                                                            lastNameInputRef.current.focus();
+                                                            setToEdit((pre) => ({
+                                                                ...pre,
+                                                                lastName: "lastName",
+                                                            }));
                                                         }
-                                                    });
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                onClick={() => {
+                                                    if (lastNameInputRef.current) {
+                                                        setToEdit((pre) => ({ ...pre, lastName: undefined }));
+                                                        setOnChange(pre => pre.filter(id => id !== "lastName"));
+                                                        lastNameInputRef.current.blur();
+                                                    }
                                                 }}
                                             >
-                                                No
+                                                Cancel
                                             </button>
-                                            <button
-                                                className={`py-0.5 px-1.5 ${displayDateOfBirth ? "bg-white" : ""
-                                                    } cursor-pointer`}
-                                                onClick={() => {
-                                                    setDisplayDateOfBirth(true);
-                                                    setOnChangeInInputs((pre) => {
-                                                        if (pre.includes("birth-day")) {
-                                                            return pre;
-                                                        } else {
-                                                            return [...pre, "birth-day"];
+                                        )}
+                                    </span>
+                                </label>
+                                {/* bio */}
+                                <label htmlFor="bio" className="block space-y-0.5">
+                                    <p className="text-sm">Bio</p>
+                                    <span className="flex flex-wrap justify-between items-end gap-2">
+                                        <textarea
+                                            id="bio"
+                                            ref={bioInputRef}
+                                            className={`${toEdit["bio"] ? "block" : "hidden"
+                                                } flex-1 w-auto min-w-[200px] h-auto min-h-[100px] py-1 px-2 capitalize border border-slate-800 rounded-md outline-none resize-none`}
+                                            value={userData?.bio || ""}
+                                            onChange={(e) => {
+                                                setUserData((pre) =>
+                                                    pre ? { ...pre, bio: e.target.value } : pre
+                                                );
+                                                if (!onChange.includes("bio")) {
+                                                    setOnChange((pre) => ([...pre, "bio"]));
+                                                }
+                                            }}
+                                        />
+                                        {!toEdit["bio"] ? (
+                                            <>
+                                                <span className="block flex-1 text-base">
+                                                    <p className="py-1 capitalize">{User?.bio || ""}</p>
+                                                </span>
+                                                <button
+                                                    className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                    onClick={() => {
+                                                        if (bioInputRef.current) {
+                                                            setToEdit((pre) => ({ ...pre, bio: "bio" }));
+                                                            bioInputRef.current.focus();
                                                         }
-                                                    });
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                onClick={() => {
+                                                    if (bioInputRef.current) {
+                                                        setToEdit((pre) => ({ ...pre, bio: undefined }));
+                                                        setOnChange(pre => pre.filter(id => id !== "bio"));
+                                                        bioInputRef.current.blur();
+                                                    }
                                                 }}
                                             >
-                                                Yes
+                                                Cancel
                                             </button>
-                                        </span>
+                                        )}
                                     </span>
-                                ) : null}
-                            </label>
-                            {/* sex (selection) */}
-                            <label htmlFor="sex" className="block space-y-0.5">
-                                <span className="block font-semibold">Sex</span>
-                                <span className="flex flex-wrap justify-between items-center gap-2">
-                                    <span className="flex-1 block relative">
+                                </label>
+                                {/* profession */}
+                                <label htmlFor="profession" className="block space-y-0.5">
+                                    <p className="text-sm">Profession</p>
+                                    <span className="flex flex-wrap justify-between items-center gap-2">
                                         <span
+                                            className={`${toEdit["profession"] ? "block" : "hidden"
+                                                } flex-1 relative`}
+                                        >
+                                            <input
+                                                id="profession"
+                                                ref={professionInputRef}
+                                                type="text"
+                                                className="block w-full min-w-0 py-1 px-2 capitalize border border-slate-800 rounded-md outline-none"
+                                                value={userData?.profession || ""}
+                                                onChange={(e) => {
+                                                    setSearchProfession(e.target.value);
+                                                    setUserData((pre) =>
+                                                        pre
+                                                            ? {
+                                                                ...pre,
+                                                                profession: e.target.value,
+                                                            }
+                                                            : pre
+                                                    );
+
+                                                    if (!onChange.includes("profession")) {
+                                                        setOnChange((pre) => ([...pre, "profession"]));
+                                                    }
+                                                }}
+                                            />
+                                            <Customselection
+                                                arrOfOptions={Professions}
+                                                className="top-9 right-0 left-0 w-full min-h-[180px] max-h-[180px] border border-blue-600 py-2 rounded-md shadow-md shadow-gray-400 overflow-y-auto"
+                                                dropDown={searchProfession.trim() ? true : false}
+                                                useSearch={true}
+                                                search={searchProfession}
+                                                select={userData?.profession || ""}
+                                                setSelect={(value) => {
+                                                    setUserData((pre) =>
+                                                        pre
+                                                            ? {
+                                                                ...pre,
+                                                                profession: value as string,
+                                                            }
+                                                            : pre
+                                                    );
+                                                    setSearchProfession("");
+                                                }}
+                                            />
+                                        </span>
+                                        {!toEdit["profession"] ? (
+                                            <>
+                                                <span className="block flex-1 text-base">
+                                                    <p className="py-1 capitalize">
+                                                        {User?.profession || ""}
+                                                    </p>
+                                                </span>
+                                                <button
+                                                    className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                    onClick={() => {
+                                                        if (professionInputRef.current) {
+                                                            setToEdit((pre) => ({
+                                                                ...pre,
+                                                                profession: "profession",
+                                                            }));
+                                                            professionInputRef.current.focus();
+                                                        }
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                onClick={() => {
+                                                    if (professionInputRef.current) {
+                                                        setToEdit((pre) => ({
+                                                            ...pre,
+                                                            profession: undefined,
+                                                        }));
+                                                        setOnChange((pre) => pre.filter(id => id !== "profession"));
+                                                        professionInputRef.current.blur();
+                                                    }
+                                                }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </span>
+                                </label>
+                                {/* display email */}
+                                <label htmlFor="display-email" className="block space-y-0.5">
+                                    <p className="text-sm">Display email</p>
+                                    <span className="flex flex-wrap justify-between items-center gap-2">
+                                        <input
+                                            id="display-email"
+                                            ref={displayEmailInputRef}
+                                            type="email"
+                                            className={`${toEdit["displayEmail"] ? "block" : "hidden"
+                                                } flex-1 min-w-0 py-1 px-2 border border-slate-800 rounded-md outline-none"`}
+                                            value={userData?.displayEmail || ""}
+                                            onChange={(e) => {
+                                                setUserData((pre) =>
+                                                    pre
+                                                        ? {
+                                                            ...pre,
+                                                            displayEmail: e.target.value,
+                                                        }
+                                                        : pre
+                                                );
+
+                                                if (!onChange.includes("displayEmail")) {
+                                                    setOnChange((pre) => ([...pre, "displayEmail"]));
+                                                }
+                                            }}
+                                        />
+                                        {!toEdit["displayEmail"] ? (
+                                            <>
+                                                <span className="block flex-1 text-base">
+                                                    <p className="py-1">
+                                                        {User?.displayEmail || ""}
+                                                    </p>
+                                                </span>
+                                                <button
+                                                    className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                    onClick={() => {
+                                                        if (displayEmailInputRef.current) {
+                                                            displayEmailInputRef.current.focus();
+                                                            setToEdit((pre) => ({
+                                                                ...pre,
+                                                                displayEmail: "displayEmail",
+                                                            }));
+                                                        }
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </>
+
+                                        ) : (
+                                            <button
+                                                className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                onClick={() => {
+                                                    if (displayEmailInputRef.current) {
+                                                        setToEdit((pre) => ({ ...pre, displayEmail: undefined }));
+                                                        displayEmailInputRef.current.blur();
+                                                        setOnChange(pre => pre.filter(id => id !== "displayEmail"));
+                                                    }
+                                                }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </span>
+                                </label>
+                                {/* display phone number */}
+                                <label
+                                    htmlFor="display-phone-number"
+                                    className="block w-full space-y-0.5"
+                                >
+                                    <p className="text-sm">Display Phone number</p>
+                                    <span className="flex flex-wrap justify-between items-center gap-2">
+                                        <span className={`flex-1 ${toEdit["displayPhoneNumber"] ? "flex" : "hidden"} flex-wrap justify-between items-center gap-x-2`}>
+                                            <>
+                                                {Countries?.length ?
+                                                    <select
+                                                        name="countries-code"
+                                                        id="countries-code"
+                                                        value={displayPhoneNumber?.code}
+                                                        className="text-sm min-w-0 py-1.5 px-1 border rounded-md"
+                                                        onChange={(e) => {
+                                                            setDisplayPhoneNumber((pre) => ({ ...pre, code: e.target.value, }));
+                                                            if (!onChange.includes("displayPhoneNumber")) {
+                                                                setOnChange((pre) => ([...pre, "displayPhoneNumber"]));
+                                                            }
+                                                        }}
+                                                    >
+                                                        {
+                                                            Countries.map((country) => (
+                                                                <option key={country.code} value={country.code}>
+                                                                    {country.country} {country.code}
+                                                                </option>
+                                                            ))
+                                                        }
+                                                    </select> :
+                                                    null
+                                                }
+                                            </>
+                                            <input
+                                                id="display-phone-number"
+                                                ref={displayPhoneNumberInputRef}
+                                                type="number"
+                                                className="flex-1 min-w-0 py-1 px-2 capitalize border border-slate-800 rounded-md outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                value={displayPhoneNumber?.number || ""}
+                                                onChange={(e) => {
+                                                    setDisplayPhoneNumber((pre) => ({
+                                                        ...pre,
+                                                        number: e.target.value.toString().trim(),
+                                                    }));
+                                                    if (!onChange.includes("displayPhoneNumber")) {
+                                                        setOnChange((pre) => ([...pre, "displayPhoneNumber"]));
+                                                    }
+                                                }}
+                                            />
+                                        </span>
+                                        {!toEdit["displayPhoneNumber"] ? (
+                                            <>
+                                                <span className="block flex-1 text-base">
+                                                    <p className="py-1 capitalize">
+                                                        {User.displayPhoneNumber}
+                                                    </p>
+                                                </span>
+                                                <button
+                                                    className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                    onClick={() => {
+                                                        if (displayPhoneNumberInputRef.current) {
+                                                            displayPhoneNumberInputRef.current.focus();
+                                                            setToEdit(pre => ({ ...pre, displayPhoneNumber: "displayPhoneNumber" }));
+                                                        }
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </>
+
+                                        ) : (
+                                            <button
+                                                className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                onClick={() => {
+                                                    if (displayPhoneNumberInputRef.current) {
+                                                        setToEdit((pre) => ({ ...pre, displayPhoneNumber: undefined }));
+                                                        setOnChange(pre => pre.filter(id => id !== "displayPhoneNumber"));
+                                                        displayPhoneNumberInputRef.current.blur();
+                                                    }
+                                                }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </span>
+                                </label>
+                                {/* website */}
+                                <label htmlFor="website" className="block space-y-0.5">
+                                    <p className="text-sm">Website</p>
+                                    <span className="flex flex-wrap justify-between items-center gap-2">
+                                        <input
+                                            id="website"
+                                            ref={websiteInputRef}
+                                            type="text"
+                                            className={`${toEdit["website"] ? "block" : "hidden"
+                                                } flex-1 min-w-0 py-1 px-2 border border-slate-800 rounded-md outline-none"`}
+                                            value={userData?.website || ""}
+                                            onChange={(e) => {
+                                                setUserData((pre) =>
+                                                    pre
+                                                        ? {
+                                                            ...pre,
+                                                            website: e.target.value,
+                                                        }
+                                                        : pre
+                                                );
+                                                if (!onChange.includes("website")) {
+                                                    setOnChange((pre) => ([...pre, "website"]));
+                                                }
+
+                                            }}
+                                        />
+                                        {!toEdit["website"] ? (
+                                            <>
+                                                <span className="block flex-1 text-base">
+                                                    <p className="py-1">
+                                                        {User?.website || ""}
+                                                    </p>
+                                                </span>
+                                                <button
+                                                    className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                    onClick={() => {
+                                                        if (websiteInputRef.current) {
+                                                            setToEdit(pre => ({ ...pre, website: "website" }));
+                                                            websiteInputRef.current.focus();
+                                                        }
+
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                onClick={() => {
+                                                    if (websiteInputRef.current) {
+                                                        setToEdit((pre) => ({
+                                                            ...pre,
+                                                            website: undefined,
+                                                        }));
+                                                        setOnChange(pre => pre.filter(id => id !== "website"));
+                                                        websiteInputRef.current.blur();
+                                                    }
+                                                }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </span>
+                                </label>
+                                {/* birthday */}
+                                <label htmlFor="birth-day" className="block space-y-1">
+                                    <p className="text-sm capitalize">Birth Day</p>
+                                    <span className="flex flex-wrap justify-between items-end gap-2">
+                                        <span className={`${toEdit["birthDay"] ? "block" : "hidden"} space-y-2`}>
+                                            <input
+                                                id="birth-day"
+                                                ref={birthDayInputRef}
+                                                type="date"
+                                                className="w-full min-w-0 py-1 px-2 capitalize border border-slate-800 rounded-md outline-none"
+                                                value={userData?.dateOfBirth || ""}
+                                                onChange={(e) => {
+                                                    setUserData((pre) =>
+                                                        pre
+                                                            ? {
+                                                                ...pre,
+                                                                dateOfBirth: e.target.value,
+                                                            }
+                                                            : pre
+                                                    );
+
+                                                    if (!onChange.includes("birthDay")) {
+                                                        setOnChange((pre) => ([...pre, "birthDay"]));
+                                                    }
+                                                }}
+                                            />
+                                            <span className="flex items-center gap-2 w-full">
+                                                <span className="text-sm text-wrap">
+                                                    Display date of birth
+                                                </span>
+                                                <span className="flex flex-nowrap items-center gap-1 text-sm font-text font-semibold border border-gray-500 shadow-inner shadow-gray-500 bg-gray-100">
+                                                    <button
+                                                        className={` py-0.5 px-1.5 ${!displayDateOfBirth ? "bg-white" : ""
+                                                            } cursor-pointer`}
+                                                        onClick={() => {
+                                                            setDisplayDateOfBirth(false);
+                                                            if (!onChange.includes("birthDay")) {
+                                                                setOnChange((pre) => ([...pre, "birthDay"]));
+                                                            }
+                                                        }}
+                                                    >
+                                                        No
+                                                    </button>
+                                                    <button
+                                                        className={`py-0.5 px-1.5 ${displayDateOfBirth ? "bg-white" : ""
+                                                            } cursor-pointer`}
+                                                        onClick={() => {
+                                                            setDisplayDateOfBirth(true);
+                                                            if (!onChange.includes("birthDay")) {
+                                                                setOnChange((pre) => ([...pre, "birthDay"]));
+                                                            }
+                                                        }}
+                                                    >
+                                                        Yes
+                                                    </button>
+                                                </span>
+                                            </span>
+                                        </span>
+                                        {!toEdit["birthDay"] ? (
+                                            <>
+                                                <span className="block flex-1 text-base">
+                                                    <p className="py-1">
+                                                        {formatDate(User?.dateOfBirth || "")}
+                                                    </p>
+                                                </span>
+                                                <button
+                                                    className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                    onClick={() => {
+                                                        if (birthDayInputRef.current) {
+                                                            birthDayInputRef.current.focus();
+                                                            setToEdit(pre => ({ ...pre, birthDay: "birthDay" }));
+                                                        }
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                onClick={() => {
+                                                    if (birthDayInputRef.current) {
+                                                        setToEdit((pre) => ({
+                                                            ...pre,
+                                                            birthDay: undefined,
+                                                        }));
+                                                        setOnChange(pre => pre.filter(id => id !== "birthDay"));
+                                                        setDisplayDateOfBirth(User.displayDateOfBirth);
+                                                        birthDayInputRef.current.blur();
+                                                    }
+                                                }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </span>
+                                </label>
+                                {/* sex (selection) */}
+                                <label htmlFor="sex" className="block space-y-0.5">
+                                    <p className="text-sm capitalize">Gender</p>
+                                    <span className="flex flex-wrap justify-between items-center gap-2">
+                                        <select
+                                            name="sex"
                                             id="sex"
                                             ref={sexInputRef}
-                                            className={`block w-full py-1 ${focusInput === "sex"
-                                                ? "px-2 outline outline-2 outline-yellow-600 sm:outline-stone-600"
-                                                : ""
-                                                } rounded-md`}
-                                            onClick={() => setFocusInput("sex")}
-                                        >
-                                            {userData?.sex || "Your sex"}
-                                        </span>
-                                        <Customselection
-                                            arrOfOptions={["Male", "Female"]}
-                                            className="top-9 right-0 left-0 w-full  bg-white border border-blue-600 py-2 rounded-md shadow-md shadow-gray-400 overflow-y-auto z-10"
-                                            dropDown={focusInput === "sex" ? true : false}
-                                            useSearch={false}
-                                            select={userData?.sex || ""}
-                                            setSelect={(value) => {
-                                                setFocusInput("");
-                                                setUserData((pre) => pre ? ({
-                                                    ...pre,
-                                                    sex: value as string,
-                                                }) : pre);
-                                                setOnChangeInInputs((pre) => {
-                                                    if (pre.includes("sex")) {
-                                                        return pre;
-                                                    } else {
-                                                        return [...pre, "sex"];
-                                                    }
-                                                });
-                                            }}
-                                        />
-                                    </span>
-                                    {onChangeInInputs.includes("sex") ? (
-                                        <button
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    sex: userData?.sex,
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                setOnChangeInInputs((pre) =>
-                                                    pre.filter((inputId) => inputId !== "sex")
-                                                );
-                                            }}
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                if (sexInputRef.current) {
-                                                    sexInputRef.current.focus();
-                                                    setFocusInput("sex");
-                                                }
-                                            }}
-                                        >
-                                            Edit
-                                        </button>
-                                    )}
-                                </span>
-                            </label>
-                            {/* country (selection) */}
-                            <label htmlFor="country" className="block space-y-0.5">
-                                <span className="block font-semibold">Country</span>
-                                <span className="flex flex-wrap justify-between items-center gap-2">
-                                    <span className="relative">
-                                        <input
-                                            id="country"
-                                            ref={countryInputRef}
-                                            type="text"
-                                            placeholder="Your country..."
-                                            className={`block w-full py-1 ${focusInput === "country" ? "px-2" : ""
-                                                } rounded-md`}
-                                            value={userData?.country || ""}
+                                            value={userData?.sex}
+                                            className={`${toEdit["sex"] ? "block" : "hidden"} flex-1 min-w-0 py-1 px-2 capitalize border border-slate-800 rounded-md outline-none cursor-pointer`}
                                             onChange={(e) => {
-                                                setSearchCountry(e.target.value);
-                                                setUserData((pre) => pre ? ({
-                                                    ...pre,
-                                                    country: e.target.value,
-                                                }) : pre);
-                                                setOnChangeInInputs((pre) => {
-                                                    if (pre.includes("country")) {
-                                                        return pre;
-                                                    } else {
-                                                        return [...pre, "country"];
-                                                    }
-                                                });
-                                            }}
-                                            onFocus={() => {
-                                                setFocusInput((pre) =>
-                                                    pre === "country" ? "" : "country"
-                                                );
-                                            }}
-                                        />
-                                        <Customselection
-                                            arrOfOptions={Countries.map((country) => country.country)}
-                                            className="bottom-9 right-0 left-0 w-full min-h-[180px] max-h-[180px] border border-blue-600 py-2 rounded-md shadow-md shadow-gray-400 overflow-y-auto"
-                                            useSearch={true}
-                                            search={searchCountry}
-                                            select={userData?.country || ""}
-                                            setSelect={(value) => {
-                                                setUserData((pre) => pre ? ({
-                                                    ...pre,
-                                                    country: value as string,
-                                                }) : pre);
-                                                setOnChangeInInputs((pre) => {
-                                                    if (pre.includes("country")) {
-                                                        return pre;
-                                                    } else {
-                                                        return [...pre, "country"];
-                                                    }
-                                                });
-                                            }}
-                                            dropDown={focusInput === "country" ? true : false}
-                                        />
-                                    </span>
-                                    {onChangeInInputs.includes("country") ? (
-                                        <button
-                                            onClick={() => {
-                                                const updatedUserData = {
-                                                    country: userData?.country,
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                                setOnChangeInInputs((pre) =>
-                                                    pre.filter((inputId) => inputId !== "country")
-                                                );
-                                                setFocusInput("");
-                                            }}
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                        >
-                                            Save
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
-                                            onClick={() => {
-                                                if (countryInputRef.current) {
-                                                    countryInputRef.current.focus();
-                                                    setFocusInput("country");
+                                                setUserData((pre) => pre ? { ...pre, sex: e.target.value } : pre);
+                                                if (!onChange.includes("sex")) {
+                                                    setOnChange((pre) => ([...pre, "sex"]));
                                                 }
                                             }}
                                         >
-                                            Edit
-                                        </button>
-                                    )}
-                                </span>
-                            </label>                           
-                        </>
-                    ) : (
-                       <Displayscreenloading loading={loading} />
-                    )}
-                </div>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="others">others</option>
+                                        </select>
+                                        {!toEdit["sex"] ? (
+                                            <>
+                                                <span className="block flex-1 text-base">
+                                                    <p className="py-1 capitalize">
+                                                        {User?.sex}
+                                                    </p>
+                                                </span>
+                                                <button
+                                                    className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                    onClick={() => {
+                                                        if (sexInputRef.current) {
+                                                            sexInputRef.current.focus();
+                                                            setToEdit(pre => ({ ...pre, sex: "sex" }));
+                                                        }
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                onClick={() => {
+                                                    if (sexInputRef.current) {
+                                                        setToEdit((pre) => ({
+                                                            ...pre,
+                                                            sex: undefined,
+                                                        }));
+                                                        setOnChange(pre => pre.filter(id => id !== "sex"));
+                                                        sexInputRef.current.blur();
+                                                    }
+                                                }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </span>
+                                </label>
+                                {/* country (selection) */}
+                                <label htmlFor="country" className="block space-y-0.5">
+                                    <p className="text-sm capitalize">Country</p>
+                                    <span className="flex flex-wrap justify-between items-center gap-2">
+                                        <>
+                                            {Countries?.length ?
+                                                <select
+                                                    name="country"
+                                                    id="country"
+                                                    ref={countryInputRef}
+                                                    value={userData?.country}
+                                                    className={`${toEdit["country"] ? "block" : "hidden"} flex-1 min-w-0 py-1 px-2 capitalize border border-slate-800 rounded-md outline-none cursor-pointer`}
+                                                    onChange={(e) => {
+                                                        setUserData((pre) => pre ? { ...pre, country: e.target.value } : pre);
+                                                        if (!onChange.includes("country")) {
+                                                            setOnChange((pre) => ([...pre, "country"]));
+                                                        }
+                                                    }}
+                                                >
+                                                    {
+                                                        Countries.map(country =>
+                                                            <option
+                                                                key={country.country}
+                                                                value={country.country}
+                                                            >
+                                                                {country.country}
+                                                            </option>
+                                                        )
+                                                    }
+                                                </select> :
+                                                null
+                                            }
+                                        </>
+                                        {!toEdit["country"] ? (
+                                            <>
+                                                <span className="block flex-1 text-base">
+                                                    <p className="py-1 capitalize">
+                                                        {User?.country || ""}
+                                                    </p>
+                                                </span>
+                                                <button
+                                                    className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                    onClick={() => {
+                                                        if (countryInputRef.current) {
+                                                            setToEdit(pre => ({ ...pre, country: "country" }));
+                                                            countryInputRef.current.focus();
+                                                        }
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <button
+                                                className="text-xs border border-slate-800 py-1.5 px-3 rounded-full cursor-pointer"
+                                                onClick={() => {
+                                                    if (countryInputRef.current) {
+                                                        setToEdit((pre) => ({
+                                                            ...pre,
+                                                            country: undefined,
+                                                        }));
+                                                        setOnChange(pre => pre.filter(id => id !== "country"));
+                                                        countryInputRef.current.blur();
+                                                    }
+                                                }}
+                                            >
+                                                Cancel
+                                            </button>
+                                        )}
+                                    </span>
+                                </label>
+                            </section>
+                        </> :
+                        <Displayscreenloading loading={loading} />
+                }
             </main>
-            <footer>
+            <footer className="mt-8">
                 {/* update all user data btn */}
                 <div className="container fixed bottom-0 left-0 right-0 py-2 bg-white z-10">
                     <div className="flex justify-center items-center">
-                        {onChangeInInputs.length > 1 ? (
+                        {onChange.length ? (
                             <Button
                                 fieldName={"Save changes"}
                                 className="font-text text-sm text-white font-semibold py-1.5 min-w-[180px] rounded-full transition-colors border-2 bg-green-600 shadow"
                                 onClick={() => {
-                                    const updatedUserData = {
-                                        ...userData,
-                                        displayPhoneNumber: (
-                                            displayPhoneNumber?.number ?
-                                                (displayPhoneNumber.code + "-" + displayPhoneNumber.number) :
-                                                undefined
-                                        ),
-                                        displayDateOfBirth,
-                                    };
-                                    handleUpadteUserData(updatedUserData);
-                                    setOnChangeInInputs([""]);
+                                    if (userData) {
+                                        const updateUserData = {
+                                            ...userData,
+                                            displayPhoneNumber: displayPhoneNumber?.number
+                                                ? displayPhoneNumber.code +
+                                                "-" +
+                                                displayPhoneNumber.number
+                                                : "",
+                                            displayDateOfBirth,
+                                        };
+                                        updatedOtherData(updateUserData, blob);
+                                    }
                                 }}
                             />
-                        ) : null}
-                   </div>
+                        ) :
+                            null}
+                    </div>
                 </div>
 
                 {/* Screen loading */}
-                <Displayscreenloading
-                    loading={loadingUpdatedData}
-                />
-                {/* model for profile picture */}
-                <Model
-                    id="insert-profile-picture"
-                    children={
-                        <div className="font-text bg-white px-8 pb-6 rounded-md">
-                            {/* header */}
-                            <header className="flex justify-start items-center gap-4 mt-2 mb-4">
-                                <button
-                                    className="cursor-pointer"
-                                    onClick={() => navigate(-1)}
-                                >
-                                    <IoMdArrowRoundBack size={20} />
-                                </button>
-                                <div className="flex-1 flex justify-center">
-                                    <span className="block font-prim text-2xl font-bold">
-                                        Profile picture
-                                    </span>
-                                </div>
-                            </header>
-                            {/* body change profile picture */}
-                            <main>
-                                {/* display avatar */}
-                                <div className="flex justify-center items-center">
-                                    <Displayimage
-                                        url={displayAvatar}
-                                        useCancle={true}
-                                        onCancle={() => {
-                                            setDisplayAvatar("");
-                                            setUserData((pre) => pre ? ({
-                                                ...pre,
-                                                avatar: ""
-                                            }) : pre);
-                                            setBlob(undefined);
-                                            setOnChangeInInputs((pre) => pre.includes("avatar") ? pre : [...pre, "avatar"]);
-                                        }}
-                                        parentClassName=""
-                                        className="h-[100px] w-[100px] object-contain rounded-full border cursor-pointer"
-                                        placeHolder={
-                                            <img
-                                                src={avatarPlaceholder}
-                                                className="absolute top-0 bottom-0 right-0 h-[100px] w-[100px] rounded-full object-contain border cursor-pointer"
-                                                onClick={() => navigate(`?url=${displayAvatar}&type=image#single-image`)}
-                                            />
-                                        }
-                                        loadingPlaceHolder={<span className="absolute top-0 bottom-0 right-0 left-0 h-[100px] w-[100px] rounded-full border border-slate-200 bg-slate-200 animate-pulse"></span>}
-                                        onClick={() => navigate(`?url=${displayAvatar}&type=image#single-image`)}
-                                    />
-                                </div>
-                                {/* profile picture btn */}
-                                <div className="flex justify-between items-center gap-8 mt-8 mb-4">
-                                    {/* view btn */}
-                                    <span>
-                                        <button
-                                            className="block text-white bg-gray-500 p-3 rounded-full shadow-sm cursor-pointer"
-                                            onClick={() => navigate(`?url=${displayAvatar}&type=image#single-image`)}
-                                        >
-                                            <GrView size={20} />
-                                        </button>
-                                        View
-                                    </span>
-                                    {/* get image from device btn  */}
-                                    <Fileinput
-                                        id="choose-profile-picture"
-                                        accept="image/png, image/gif, image/jpeg"
-                                        type="image"
-                                        fieldName="Device"
-                                        className="cursor-pointer"
-                                        handleGetFile={async (fileList) => {
-                                            if (fileList) {
-                                                setBlob(fileList[0]);
-                                                const data = await getLocalFiles(fileList);
-                                                setDisplayAvatar(data[0].url);
-                                                setOnChangeInInputs((pre) => pre.includes("avatar") ? pre : [...pre, "avatar"]);
-                                            }
-                                        }}
-                                    />
-                                    {/* display galary btn  */}
-                                    <span className="text-sm text-center">
-                                        <button
-                                            className="block text-white bg-orange-500 p-3 rounded-full shadow-sm cursor-pointer"
-                                            onClick={() => {
-                                                navigate("#display-image-galary");
-                                            }}
-                                        >
-                                            <IoMdImages size={25} />
-                                        </button>
-                                        Galary
-                                    </span>
-                                </div>
-                            </main>
-                            {/* change avatar btn */}
-                            <footer>
-                                {onChangeInInputs.includes("avatar") ?
-                                    (<button
-                                        className="text-white text-base font-text font-semibold w-full py-1.5 bg-blue-600 border rounded-lg shadow "
-                                        onClick={() => {
-                                            if (blob) {
-                                                updatedAvatar(blob);
-                                            } else {
-                                                const updatedUserData = {
-                                                    avatar: userData?.avatar
-                                                };
-                                                handleUpadteUserData(updatedUserData);
-                                            }
-                                            setOnChangeInInputs((pre) => pre.filter(item => item !== "avatar"));
-                                            navigate(-1);
-                                        }}
-                                    >
-                                        Save
-                                    </button>
-                                    ) :
-                                    null
-                                }
-                            </footer>
-                        </div>
-                    }
+                <Displayscreenloading loading={loadingUpdatedData} />
+                {/* display add media model */}
+                <Displaychangemedia
+                    title="Select image"
+                    dialog={dialog}
+                    handleDialog={handleDialog}
+                    viewMediaUrl={userData?.avatar || ""}
+                    setGetMediaFromDevice={({ blob, tempUrl }) => {
+                        setBlob(blob);
+                        setUserData((pre) =>
+                            pre ? { ...pre, avatar: tempUrl } : pre
+                        );
+                        if (!onChange.includes("avatar")) {
+                            setOnChange((pre) => ([...pre, "avatar"]));
+                        }
+                    }}
+                    setGetMediaFromGalary={(url) => {
+                        setUserData((pre) =>
+                            pre ? { ...pre, avatar: apiEndPont + "/media/" + url[0] } : pre
+                        );
+                        if (!onChange.includes("avatar")) {
+                            setOnChange((pre) => ([...pre, "avatar"]));
+                        }
+                    }}
                 />
             </footer>
         </>

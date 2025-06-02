@@ -67,7 +67,7 @@ const Notification = () => {
 
     return (
         <main className="container">
-            <menu className="flex items-center justify-betweenbg-gray-50 border py-1 px-3 mb-3 rounded shadow-sm">
+            <menu className="flex items-center justify-between bg-gray-50 py-1 px-3 mb-3">
                 {isSelect &&
                     selections &&
                     selections?.length ? <ul>

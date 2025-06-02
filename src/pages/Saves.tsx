@@ -5,7 +5,7 @@ import Displaymultipleposts from "../sections/Displaymultipleposts";
 
 
 const Saves = () => {
-  const { data: Savedposts } = useAppSelector((state) => state.userBlogpostSlices.savedBlogposts);
+  const { data: Savedposts} = useAppSelector((state) => state.userBlogpostSlices.savedBlogposts);
   const appDispatch = useAppDispatch();
 
   return <main className="container">    

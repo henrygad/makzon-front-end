@@ -2,14 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import useGetLocalFiles from "../hooks/useGetLocalFiles";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import Displayimage from "../components/Displayimage";
-import Model from "../components/Model";
-import Fileinput from "../components/Fileinput";
-import { IoMdImages } from "react-icons/io";
 import { Button } from "../components/Button";
 import postProps from "../types/post.type";
 import Popupmessage from "../components/Popupmessag";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../redux";
+import { useAppDispatch, } from "../redux";
 import {
     addBlogpost,
     addDraft,
@@ -22,7 +19,8 @@ import { addMedia } from "../redux/slices/userMediaSlices";
 import axios from "axios";
 import Displayscreenloading from "../components/loaders/Displayscreenloading";
 import Makzontexteditor, { deleteAll } from "makzontexteditor";
-import { GrView } from "react-icons/gr";
+import Displaychangemedia from "./Displaychangemedia";
+import useDialog from "../hooks/useDialog";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
@@ -31,17 +29,14 @@ type Props = {
 
 const Addpost = ({ existingPost }: Props) => {
     const navigate = useNavigate();
-    const { selectedMedia } = useAppSelector(
-        (state) => state.userMediaSlices.media
-    );
+
     const appDispatch = useAppDispatch();
 
     const { getLocalFiles, loading: loadingUploadedLocalFile } = useGetLocalFiles();
 
     const [title, setTitle] = useState("");
-    const [image, setImage] = useState("");
-    const [displayImage, setDisplayImage] = useState("");
-    const [imageBlob, setImageBlob] = useState<Blob | undefined>(undefined);
+    const [image, setImage] = useState("");    
+    const [blob, setBlob] = useState<Blob | undefined>(undefined);
     const [article, setArticle] = useState({
         _html: "",
         text: "",
@@ -56,12 +51,13 @@ const Addpost = ({ existingPost }: Props) => {
 
     const [loadingUploadedFileBlob, setLoadingUploadedFileBlob] = useState(false);
     const fileFromGalaryRef = useRef<string | undefined | null>(undefined);
-    const holdSelectedMediaRef = useRef<string | undefined>(undefined);
     const editorRef = useRef<HTMLDivElement | null>(null);
     const [slugPatter, setSlugPatter] = useState("-");
     const [isEmpty, setIsEmpty] = useState(true);
     const [popUpMsg, setPopUpMsg] = useState("");
     const [popUp, setPopUp] = useState(false);
+
+    const { dialog, handleDialog } = useDialog();
 
     const handleFilterSlug = (slug: string, slugPatter: string) => {
         const filterSlug = slug
@@ -124,14 +120,14 @@ const Addpost = ({ existingPost }: Props) => {
         }
     };
 
-    const publish = async (blogpost: postProps, imageBlob: Blob | undefined, isUpdate: boolean) => {
+    const publish = async (blogpost: postProps, blob: Blob | undefined, isUpdate: boolean) => {
         setLoadingUploadedPost(true);
 
         // Create new form data
         const formData = new FormData();
 
-        // Attach data for formdata
-        if (imageBlob) formData.append("post", imageBlob);
+        // Attach data to formdata
+        if (blob) formData.append("post", blob);
         for (const key in blogpost) {
             const value = blogpost[key as keyof postProps];
             if (value !== undefined) formData.append(key, JSON.stringify(value));
@@ -140,7 +136,8 @@ const Addpost = ({ existingPost }: Props) => {
         // api for publishing post
         const url = apiEndPont + "/post";
 
-        if (!isUpdate) { // To add new blogpost        
+        if (!isUpdate) {
+            // To add new blogpost
             try {
                 const res = await axios.post(url, formData, {
                     baseURL: apiEndPont,
@@ -200,14 +197,14 @@ const Addpost = ({ existingPost }: Props) => {
         }
     };
 
-    const draft = async (blogpost: postProps, imageBlob: Blob | undefined, isUpdate: boolean) => {
+    const draft = async (blogpost: postProps, blob: Blob | undefined, isUpdate: boolean) => {
         setLoadingUploadedPost(true);
 
         // Create new form data  
         const formData = new FormData();
 
         // Attach data for formdata
-        if (imageBlob) formData.append("post", imageBlob);
+        if (blob) formData.append("post", blob);
         for (const key in blogpost) {
             const value = blogpost[key as keyof postProps];
             if (value !== undefined) formData.append(key, JSON.stringify(value));
@@ -265,7 +262,7 @@ const Addpost = ({ existingPost }: Props) => {
                     _html: { title, body: article._html },
                     catigories: catigories.map((catigory) => catigory.cat),
                 };
-                await publish(editBlogpost, imageBlob, true);
+                await publish(editBlogpost, blob, true);
 
             } else if (existingPost.status.toLowerCase() === "unpublished") {// or if it unpublished, edit and published post
                 const editBlogpost: postProps = {
@@ -277,7 +274,7 @@ const Addpost = ({ existingPost }: Props) => {
                     catigories: catigories.map((catigory) => catigory.cat),
                     status: "published"
                 };
-                await publish(editBlogpost, imageBlob, true);
+                await publish(editBlogpost, blob, true);
 
             } else if (existingPost.status.toLowerCase() === "drafted") { //  Or if it is a drafted post
                 if (existingPost.publishedId) { // Then edit and published drafted post data                    
@@ -292,7 +289,7 @@ const Addpost = ({ existingPost }: Props) => {
                         catigories: catigories.map((catigory) => catigory.cat),
                         status: "published",
                     };
-                    await publish(editBlogpost, imageBlob, true);
+                    await publish(editBlogpost, blob, true);
                 } else { // Or create new publish post from drafted post
                     const createBlogpost = {
                         title,
@@ -306,7 +303,7 @@ const Addpost = ({ existingPost }: Props) => {
                         shares: [],
                         views: [],
                     };
-                    await publish(createBlogpost, imageBlob, false);
+                    await publish(createBlogpost, blob, false);
                 }
             }
         } else {// Create new publish post data            
@@ -322,16 +319,15 @@ const Addpost = ({ existingPost }: Props) => {
                 shares: [],
                 views: [],
             };
-            await publish(createBlogpost, imageBlob, false);
+            await publish(createBlogpost, blob, false);
         }
 
         setPopUpMsg("Blogpost has been published");
         setPopUp(true);
 
         setTitle("");
-        setImageBlob(undefined);
-        setImage("");
-        setDisplayImage("");
+        setBlob(undefined);
+        setImage("");        
         setImageCaption("");
         setArticle({
             _html: "",
@@ -360,7 +356,7 @@ const Addpost = ({ existingPost }: Props) => {
                 catigories: catigories.map((catigory) => catigory.cat),
                 slug: handleFilterSlug(slug || title, slugPatter).trim(),
             };
-            await draft(editDraft, imageBlob, true);
+            await draft(editDraft, blob, true);
         } else {
             // Create new draft blogpost
             const createDraft: postProps = {
@@ -373,15 +369,14 @@ const Addpost = ({ existingPost }: Props) => {
                 slug: handleFilterSlug(slug || title, slugPatter).trim(),
                 status: "drafted",
             };
-            await draft(createDraft, imageBlob, false);
+            await draft(createDraft, blob, false);
         }
 
         setPopUpMsg("Blogpost had been draft");
         setPopUp(true);
 
         setTitle("");
-        setImageBlob(undefined);
-        setDisplayImage("");
+        setBlob(undefined);        
         setImage("");
         setImageCaption("");
         setArticle({
@@ -396,29 +391,9 @@ const Addpost = ({ existingPost }: Props) => {
     };
 
     useEffect(() => {
-        if (selectedMedia && selectedMedia[0]) {
-            holdSelectedMediaRef.current = selectedMedia[0].filename;
-        } else {
-            if (holdSelectedMediaRef.current) {
-                if (fileFromGalaryRef.current === null) {
-                    fileFromGalaryRef.current = apiEndPont + "/media/" + holdSelectedMediaRef.current;
-                } else {
-                    setImage(holdSelectedMediaRef.current);
-                    setDisplayImage(apiEndPont + "/media/" + holdSelectedMediaRef.current);
-                    setImageBlob(undefined);
-                }
-                holdSelectedMediaRef.current = undefined;
-            }
-        }
-    }, [selectedMedia]);
-
-    useEffect(() => {
         if (existingPost) {
             setTitle(existingPost.title || "");
-            setImage(existingPost.image);
-            if (existingPost.image) {
-                setDisplayImage(apiEndPont + "/media/" + existingPost.image);
-            }
+            setImage(existingPost.image? apiEndPont + "/media/" + existingPost.image: "");
             setArticle({
                 _html: existingPost._html.body,
                 text: existingPost.body,
@@ -435,307 +410,249 @@ const Addpost = ({ existingPost }: Props) => {
         }
     }, [existingPost]);
 
-    return (
-        <section>
-            <div className="space-y-8">
-                {/* draft button */}
-                <div className="flex justify-end items-center pr-2">
-                    <Button
-                        fieldName={"Draft"}
-                        className={`py-1 px-4 font-text text-sm font-semibold text-slate-800 rounded-full transition-colors border-2 shadow shadow-slate-100 
+    return <>
+        <section className="space-y-8">
+            {/* draft button */}
+            <div className="flex justify-end items-center pr-2">
+                <Button
+                    fieldName={"Draft"}
+                    className={`py-1 px-4 font-text text-sm font-semibold text-slate-800 rounded-full transition-colors border-2 shadow shadow-slate-100 
                         ${isEmpty ? "opacity-25" : ""}`}
-                        disabled={isEmpty}
-                        onClick={handleDraftBtn}
-                    />
-                </div>
-                {/* rich text editor */}
-                <Makzontexteditor
-                    inputRef={editorRef}
-                    wrapperClassName="h-full w-full"
-                    toolBarClassName="w-full border p-4 sticky top-0 z-10 bg-white"
-                    inputClassName="w-full min-h-[480px] max-h-[480px] p-4 border overflow-y-auto"
-                    placeholder="Start writing..."
-                    useToolBar={{
-                        useInline: {
-                            heading: true,
-                            font: true,
-                            size: true,
-                            bold: true,
-                            italic: true,
-                            underline: true,
-                            textTransform: true,
-                            anchorlink: true,
-                            textColor: true,
-                            backGroundColor: true,
-                            alignment: true,
-                            listing: true,
-                            emoji: true,
-                        },
-                        useBlock: true,
-                        useDelete: true,
-                        useHistor: true,
-                    }}
-                    autoFocus={true}
-                    setContext={{
-                        new: existingPost ? false : true,
-                        context: existingPost?._html.body || "",
-                    }}
-                    setGetValue={(value) => {
-                        if (value.text.trim()) {
-                            setIsEmpty(false);
-                            setArticle(value);
-                        }/* else{
-                            setIsEmpty(true);
-                        } */
-
-                        const title = value.text.split(" ", 10);
-                        if (title.length > 10) {
-                            return;
-                        }
-                        setTitle(title.join(" "));
-                    }}
-                    handleLocalFile={handleLocalFile}
-                    handleGalary={handleGalaryFile}
-                    onAddFile={async (blob, string) => {
-                        if (blob) return await uploadFile(blob);
-                        else return string;
-                    }}
+                    disabled={isEmpty}
+                    onClick={handleDraftBtn}
                 />
-                {/* catigories */}
-                <div className="space-y-1 font-text">
-                    <span>Catigories</span>
-                    {catigories.map((catigory, index) => (
-                        <label
-                            htmlFor={catigory._id}
-                            key={index}
-                            className="flex items-center gap-4"
+            </div>
+            {/* rich text editor */}
+            <Makzontexteditor
+                inputRef={editorRef}
+                wrapperClassName="h-full w-full"
+                toolBarClassName="w-full border p-4 sticky top-0 z-10 bg-white"
+                inputClassName="w-full min-h-[480px] max-h-[480px] p-4 border overflow-y-auto"
+                placeholder="Start writing..."
+                useToolBar={{
+                    useInline: {
+                        heading: true,
+                        font: true,
+                        size: true,
+                        bold: true,
+                        italic: true,
+                        underline: true,
+                        textTransform: true,
+                        anchorlink: true,
+                        textColor: true,
+                        backGroundColor: true,
+                        alignment: true,
+                        listing: true,
+                        emoji: true,
+                    },
+                    useBlock: true,
+                    useDelete: true,
+                    useHistor: true,
+                }}
+                autoFocus={true}
+                setContext={{
+                    new: existingPost ? false : true,
+                    context: existingPost?._html.body || "",
+                }}
+                getValue={(value) => {
+                    setIsEmpty(false);
+                    setArticle(value);
+
+                    const title = value.text.split(" ", 10);
+                    if (title.length > 10) {
+                        return;
+                    }
+                    setTitle(title.join(" "));
+                }}
+                handleLocalFile={handleLocalFile}
+                handleGalary={handleGalaryFile}
+                onAddFile={async (blob, string) => {
+                    if (blob) return await uploadFile(blob);
+                    else return string;
+                }}
+            />
+            {/* catigories */}
+            <div className="space-y-1 font-text">
+                <span>Catigories</span>
+                {catigories.map((catigory, index) => (
+                    <label
+                        htmlFor={catigory._id}
+                        key={index}
+                        className="flex items-center gap-4"
+                    >
+                        <input
+                            ref={catigoryInputRef}
+                            id={catigory._id}
+                            type="text"
+                            className="text-sm w-full border-2 p-1 rounded-md outline-blue-700 mt-2"
+                            placeholder="Add"
+                            value={catigories[index].cat}
+                            onChange={(e) => {
+                                if (isEmpty) {
+                                    setIsEmpty(false);
+                                }
+                                setCatigories((pre) =>
+                                    pre[index]
+                                        ? pre.map((mapCatigory) =>
+                                            mapCatigory._id === catigory._id
+                                                ? { ...mapCatigory, cat: e.target.value }
+                                                : mapCatigory
+                                        )
+                                        : pre
+                                );
+                            }}
+                        />
+                        <button
+                            id="add-catigory"
+                            className="cursor-pointer"
+                            onClick={() => {
+                                setCatigories((pre) =>
+                                    pre
+                                        ? [...pre, { _id: Date.now().toString(), cat: "" }]
+                                        : pre
+                                );
+                                const clear = setTimeout(() => {
+                                    if (catigoryInputRef.current)
+                                        catigoryInputRef.current.focus();
+                                    clearTimeout(clear);
+                                }, 100);
+                            }}
                         >
-                            <input
-                                ref={catigoryInputRef}
-                                id={catigory._id}
-                                type="text"
-                                className="text-sm w-full border-2 p-1 rounded-md outline-blue-700 mt-2"
-                                placeholder="Add"
-                                value={catigories[index].cat}
-                                onChange={(e) => {
-                                    if (isEmpty) {
-                                        setIsEmpty(false);
-                                    }
-                                    setCatigories((pre) =>
-                                        pre[index]
-                                            ? pre.map((mapCatigory) =>
-                                                mapCatigory._id === catigory._id
-                                                    ? { ...mapCatigory, cat: e.target.value }
-                                                    : mapCatigory
-                                            )
-                                            : pre
-                                    );
-                                }}
-                            />
+                            <FaPlus size={10} />
+                        </button>
+                        {index > 0 ? (
                             <button
-                                id="add-catigory"
+                                id="delete-catigory"
                                 className="cursor-pointer"
                                 onClick={() => {
-                                    setCatigories((pre) =>
-                                        pre
-                                            ? [...pre, { _id: Date.now().toString(), cat: "" }]
-                                            : pre
-                                    );
-                                    const clear = setTimeout(() => {
-                                        if (catigoryInputRef.current)
-                                            catigoryInputRef.current.focus();
-                                        clearTimeout(clear);
-                                    }, 100);
+                                    setCatigories((pre) => [
+                                        ...pre.filter(
+                                            (filCatigory) => filCatigory._id != catigory._id
+                                        ),
+                                    ]);
                                 }}
                             >
-                                <FaPlus size={10} />
+                                <FaMinus size={10} />
                             </button>
-                            {index > 0 ? (
-                                <button
-                                    id="delete-catigory"
-                                    className="cursor-pointer"
-                                    onClick={() => {
-                                        setCatigories((pre) => [
-                                            ...pre.filter(
-                                                (filCatigory) => filCatigory._id != catigory._id
-                                            ),
-                                        ]);
-                                    }}
-                                >
-                                    <FaMinus size={10} />
-                                </button>
-                            ) : null}
-                        </label>
-                    ))}
-                </div>
-                {/* slug */}
-                <label
-                    htmlFor="blog-post-slug"
-                    className="block w-full space-y-1 font-text"
+                        ) : null}
+                    </label>
+                ))}
+            </div>
+            {/* slug */}
+            <label
+                htmlFor="blog-post-slug"
+                className="block w-full space-y-1 font-text"
+            >
+                <span className="block">Slug</span>
+                <input
+                    id="blog-post-slug"
+                    type="text"
+                    className="block text-sm w-full p-1 border-2 rounded-md outline-blue-700"
+                    placeholder="Your post slug"
+                    value={handleFilterSlug(slug || title, slugPatter)}
+                    onChange={(e) => {
+                        if (existingPost &&
+                            (existingPost.publishedId ||
+                                existingPost.status.toLowerCase() === "published" ||
+                                existingPost.status.toLowerCase() === "unpublished")) return;
+
+                        if (isEmpty) {
+                            setIsEmpty(false);
+                        }
+                        setSlug(e.target.value.toLowerCase());
+                    }}
+                />
+            </label>
+            {/* permalink */}
+            <div className="flex items-center justify-start gap-1  text-sm font-text">
+                <span className="font-semibold">Permalink patter:</span>
+                <select
+                    name="permal-link-patter"
+                    id="permal-link-patter"
+                    value={slugPatter}
+                    onChange={(e) => setSlugPatter(e.target.value)}
                 >
-                    <span className="block">Slug</span>
+                    <option value="-">Morning-blogposting-is-great</option>
+                    <option value="&">Morning&blogposting&is&great</option>
+                    <option value="%">Morning%blogposting%is%great</option>
+                </select>
+            </div>
+            {/*display image  */}
+            <div className="space-y-1 w-full font-text">
+                <span className="block">Display Image</span>
+                <Displayimage
+                    url={image}
+                    alt={imageCaption}
+                    useCancle={true}
+                    onCancle={() => {
+                        setImage("");                        
+                    }}
+                    placeHolder={
+                        <span
+                            onClick={() => navigate("#insert-display-image")}
+                            className="absolute top-0 bottom-0 right-0 left-0 h-[140px] w-[140px] border border-slate-200 bg-slate-200 rounded-md cursor-pointer"
+                        ></span>
+                    }
+                    className="h-[140px] w-[140px] object-contain rounded cursor-pointer border"
+                    onClick={() => navigate("#insert-display-image")}
+                />
+                <span className="block">
                     <input
-                        id="blog-post-slug"
                         type="text"
-                        className="block text-sm w-full p-1 border-2 rounded-md outline-blue-700"
-                        placeholder="Your post slug"
-                        value={handleFilterSlug(slug || title, slugPatter)}
-                        onChange={(e) => {
-                            if (existingPost &&
-                                (existingPost.publishedId ||
-                                    existingPost.status.toLowerCase() === "published" ||
-                                    existingPost.status.toLowerCase() === "unpublished")) return;
+                        placeholder="Image caption..."
+                        className="blcok text-xs w-[145px] px-2 py-1 border rounded-md"
+                        value={imageCaption}
+                        onChange={(e) => setImageCaption(e.target.value)}
+                    />
+                </span>
+            </div>
+            {/* publish button */}
+            <div className="container fixed bottom-0 left-0 right-0 py-2 bg-white z-10">
+                <div className="flex justify-center items-center">
+                    {
+                        (slug.trim() && title.trim()) || !isEmpty ?
+                            <Button
+                                fieldName={"Publish"}
+                                className="font-text text-sm text-white font-semibold py-1.5 min-w-[180px] rounded-full transition-colors border-2 bg-green-600 shadow"
+                                onClick={handlePublishBtn}
+                            /> :
+                            null
+                    }
 
-                            if (isEmpty) {
-                                setIsEmpty(false);
-                            }
-                            setSlug(e.target.value.toLowerCase());
-                        }}
-                    />
-                </label>
-                {/* permalink */}
-                <div className="flex items-center justify-start gap-1  text-sm font-text">
-                    <span className="font-semibold">Permalink patter:</span>
-                    <select
-                        name="permal-link-patter"
-                        id="permal-link-patter"
-                        value={slugPatter}
-                        onChange={(e) => setSlugPatter(e.target.value)}
-                    >
-                        <option value="-">Morning-blogposting-is-great</option>
-                        <option value="&">Morning&blogposting&is&great</option>
-                        <option value="%">Morning%blogposting%is%great</option>
-                    </select>
-                </div>
-                {/*display image  */}
-                <div className="space-y-1 w-full font-text">
-                    <span className="block">Display Image</span>
-                    <Displayimage
-                        url={displayImage}
-                        alt={imageCaption}
-                        useCancle={true}
-                        onCancle={() => {
-                            setImage("");
-                            setDisplayImage("");
-                        }}
-                        placeHolder={
-                            <span
-                                onClick={() => navigate("#insert-display-image")}
-                                className="absolute top-0 bottom-0 right-0 left-0 h-[140px] w-[140px] border border-slate-200 bg-slate-200 rounded-md cursor-pointer"
-                            ></span>
-                        }
-                        className="h-[140px] w-[140px] object-contain rounded cursor-pointer border"
-                        onClick={() => navigate("#insert-display-image")}
-                    />
-                    <span className="block">
-                        <input
-                            type="text"
-                            placeholder="Image caption..."
-                            className="blcok text-xs w-[145px] px-2 py-1 border rounded-md"
-                            value={imageCaption}
-                            onChange={(e) => setImageCaption(e.target.value)}
-                        />
-                    </span>
-                </div>
-                {/* publish button */}
-                <div className="container fixed bottom-0 left-0 right-0 py-2 bg-white z-10">
-                    <div className="flex justify-center items-center">
-                        {
-                            (slug.trim() && title.trim()) || !isEmpty ?
-                                <Button
-                                    fieldName={"Publish"}
-                                    className="font-text text-sm text-white font-semibold py-1.5 min-w-[180px] rounded-full transition-colors border-2 bg-green-600 shadow"
-                                    onClick={handlePublishBtn}
-                                /> :
-                                null
-                        }
-
-                    </div>
-                </div>
-                {/* pop up message */}
-                <div className="relative">
-                    <Popupmessage
-                        className="max-w-40 text-start"
-                        popUp={popUp}
-                        setPopUp={setPopUp}
-                        children={popUpMsg}
-                    />
                 </div>
             </div>
+            {/* pop up message */}
+            <div className="relative">
+                <Popupmessage
+                    className="max-w-40 text-start"
+                    popUp={popUp}
+                    setPopUp={setPopUp}
+                    children={popUpMsg}
+                />
+            </div>
+        </section>
+        <section>
             {/* Screen loading */}
             <Displayscreenloading
                 loading={loadingUploadedLocalFile || loadingUploadedFileBlob || loadingUploadedPost}
             />
-            <Model
-                id="insert-display-image"
-                children={
-                    <div className="relative font-text p-6 space-y-6 rounded shadow-sm bg-white">
-                        <header className="flex justify-center items-center gap-6">
-                            <h2 className="text-xl font-text font-semibold">
-                                Add Display Image
-                            </h2>
-                            <button
-                                onClick={() => {
-                                    navigate(-1);
-                                }}
-                                className="text-red-800 font-bold text-sm cursor-pointer"
-                            >
-                                X
-                            </button>
-                        </header>
-                        <main className="flex flex-wrap items-center justify-between gap-6 m">
-                            <span>
-                                <button
-                                    className="block text-white bg-gray-500 p-3 rounded-full shadow-sm cursor-pointer"
-                                    onClick={() =>
-                                        navigate(
-                                            `?url=${image ? apiEndPont + "/media/" + image : ""
-                                            }&type=image#single-image`
-                                        )
-                                    }
-                                >
-                                    <GrView size={20} />
-                                </button>
-                                View
-                            </span>
-                            <Fileinput
-                                id="choose-display-blogpost-image"
-                                accept="image/png, image/gif, image/jpeg"
-                                type="image"
-                                fieldName="Device"
-                                className="cursor-pointer"
-                                handleGetFile={async (e) => {
-                                    if (e) {
-                                        setImageBlob(e[0]);
-                                        const data = await getLocalFiles(e);
-                                        if (data[0]) {
-                                            const url = data[0].url;
-                                            setDisplayImage(url);
-                                            navigate("#add-post");
-                                            if (isEmpty) {
-                                                setIsEmpty(false);
-                                            }
-                                        }
-                                    }
-                                }}
-                            />
-                            <span className="text-sm text-center">
-                                <button
-                                    className="block text-white bg-orange-500 p-3 rounded-full shadow-sm cursor-pointer"
-                                    onClick={() => {
-                                        navigate("#display-image-galary");
-                                    }}
-                                >
-                                    <IoMdImages size={25} className="text-white" />
-                                </button>
-                                Galary
-                            </span>
-                        </main>
-                    </div>
-                }
-            />
         </section>
-    );
+        <Displaychangemedia
+            title="Select image from"
+            dialog={dialog}
+            handleDialog={handleDialog}
+            viewMediaUrl={image}
+            setGetMediaFromDevice={({ blob, tempUrl }) => {
+                setBlob(blob);
+                setImage(tempUrl);
+                setIsEmpty(false);
+            }}
+            setGetMediaFromGalary={(urls) => {
+                setImage(apiEndPont + "/media/" + urls[0]);
+                setIsEmpty(false);
+            }}
+        />
+    </>;
 };
 
 export default Addpost;

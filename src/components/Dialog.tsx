@@ -11,12 +11,12 @@ const Dialog = ({ dialog, handleDialog= ()=> null, className, children }:
 
     return dialog ?
         <span
-            className="fixed top-0 bottom-0 right-0 left-0 flex bg-blue-300/10 z-50"
+            className="fixed top-0 bottom-0 right-0 left-0 flex bg-gray-600/55 z-50"
         >
             <span
                 className="container flex-1 flex justify-center items-center">
                 <span
-                    className={`block shadow-md ${className}`}
+                    className={`block bg-white rounded-xl shadow-md -mt-20 ${className}`}
                     ref={dialogRef}
                 >
                     {children}

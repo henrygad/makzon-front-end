@@ -1,10 +1,10 @@
-import { IoMdArrowRoundBack } from "react-icons/io";
-import Model from "../components/Model";
+import Model from "../components/Modal";
 import Displayimage from "../components/Displayimage";
 import { useLocation, useNavigate } from "react-router-dom";
 import Displayvideo from "../components/Displayvideo";
 import { useEffect, useState } from "react";
 import useFilterQuery from "../hooks/useFilterQuery";
+import { IoArrowBackSharp } from "react-icons/io5";
 
 const Displaysinglemedialmodel = () => {
     const navigate = useNavigate();
@@ -30,7 +30,7 @@ const Displaysinglemedialmodel = () => {
                         className="absolute top-2 left-2 bg-white cursor-pointer z-20"
                         onClick={() => navigate(-1)}
                     >
-                        <IoMdArrowRoundBack size={20} />
+                        <IoArrowBackSharp size={24} />
                     </button>
                     {media?.type ?
                         <>

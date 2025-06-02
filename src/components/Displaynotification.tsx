@@ -192,7 +192,7 @@ export const Single = ({
 
   return (
     <span
-      className={`block ${isSelect ? "border-blue-100 p-3" : "p-2"} ${selections?.includes(notification._id || "") ? "bg-blue-100" : ""} ${!notification.checked && !isSelect ? "bg-yellow-100" : ""} space-y-1 border cursor-pointer`}
+      className={`block ${isSelect ? "border-blue-100 p-3" : "p-2"} ${selections?.includes(notification._id || "") ? "bg-blue-100" : ""} ${!notification.checked && !isSelect ? "bg-yellow-100" : ""} space-y-1 rounded-md cursor-pointer`}
       onClick={() => {
         if (isSelect) {
           if (selections?.includes(notification._id || "")) {
@@ -351,7 +351,7 @@ export const Multiple = ({
 
   return (
     <span
-      className={`block ${isSelect ? "border-blue-100 p-3" : "p-2"} ${selections?.includes(lastNotic._id || "") ? "bg-blue-100" : ""} ${!lastNotic.checked && !isSelect ? "bg-yellow-100" : ""} space-y-1 border cursor-pointer`}
+      className={`block ${isSelect ? "border-blue-100 p-3" : "p-2"} ${selections?.includes(lastNotic._id || "") ? "bg-blue-100" : ""} ${!lastNotic.checked && !isSelect ? "bg-yellow-100" : ""} space-y-1 rounded-md cursor-pointer`}
       onClick={() => {
         if (isSelect) {
           if (selections?.includes(lastNotic._id || "")) {

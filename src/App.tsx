@@ -29,7 +29,6 @@ import {
 } from "./redux/slices/userBlogpostSlices";
 import mediaProps from "./types/media.type";
 import { fetchMedia } from "./redux/slices/userMediaSlices";
-import Displaymultiplemedismodel from "./sections/Displaymultiplemedismodel";
 import Displaysinglemedialmodel from "./sections/Displaysinglemedialmodel";
 import {
   addNotifications,
@@ -204,8 +203,7 @@ const App = () => {
         })
           .then((res) => res.data)
           .then(data => {
-            const feeds = data.data as postProps[];
-            console.log("initail fetch feeds");
+            const feeds = data.data as postProps[];            
             setPostFeeds(feeds);
           })
           .catch((error) => console.error(error));
@@ -298,10 +296,10 @@ const App = () => {
         }
       );
       notificationEventSource.onmessage = (event) => {
-        const newNotification: notificationProps = JSON.parse(
-          event.data.notification
-        );
-        if (newNotification) {
+        const data = JSON.parse(event.data) as { notification: notificationProps };
+        const { notification: newNotification } = data;
+
+        if (newNotification) {          
           setNotificationUpdate(newNotification);
           appDispatch(addNotifications(newNotification));
         }
@@ -386,7 +384,7 @@ const App = () => {
               setSearchError={setSearchError}
             />}
           />
-          <Route path="/:author/:slug" element={<Blogpost />} />
+          <Route path="/post/:author/:slug" element={<Blogpost />} />
           <Route
             path="signup"
             element={!User.login ? <Signup /> : <Navigate to="/verify/user" />}
@@ -446,7 +444,7 @@ const App = () => {
             element={User.login ? <Profile /> : <Navigate to="/login" />}
           />
           <Route
-            path="/profile/update"
+            path="updateprofile"
             element={User.login ? <Updateprofile /> : <Navigate to="/login" />}
           />
           <Route
@@ -458,13 +456,12 @@ const App = () => {
             element={User.login ? <Settings /> : <Navigate to="/login" />}
           />
           <Route
-            path="/settings/security"
+            path="/security"
             element={User.login ? <Security /> : <Navigate to="/login" />}
           />
         </Routes>
       </Suspense>
       <Footer />
-      <Displaymultiplemedismodel />
       <Displaysinglemedialmodel />
     </>
   );

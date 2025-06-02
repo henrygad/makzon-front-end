@@ -114,7 +114,7 @@ const Displayblogpost = ({
 
     const handleToView = (blogpost: postProps, hashId: string | null = null) => {
         if (displayType.trim().toLowerCase() === "_html") return;
-        const url = "/" + blogpost.author + "/" + blogpost.slug + (hashId ? "/#" + hashId : "");
+        const url = "/post/" + blogpost.author + "/" + blogpost.slug + (hashId ? "/#" + hashId : "");
         navigate(url);
     };
 
@@ -342,7 +342,7 @@ const Displayblogpost = ({
                                     if (displayType === "TEXT") {
                                         handleToView(blogpost);
                                     } else {
-                                        navigate(`?url=${blogpost.image}&type=image#single-image`);
+                                        navigate(`?url=${apiEndPont+"/media/"+blogpost.image}&type=image#single-image`);
                                     }
                                 }}
                             />

@@ -106,7 +106,7 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                 to: parentComment.author,
                 message: `replyed to your comment, ${trim(parentComment.body.text, 20)}`,
                 checked: false,
-                url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
+                url: "/post/" + blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
             });
         } else {
             sendNotification({
@@ -121,7 +121,7 @@ const Comment = ({ blogpost, replyId = null, parentComment, replying, setComment
                 to: blogpost.author!,
                 message: `commented on, ${blogpost.title}`,
                 checked: false,
-                url: blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
+                url: "/post/" + blogpost.author + "/" + blogpost.slug + "/#blogpost-comments",
             });
         }
 

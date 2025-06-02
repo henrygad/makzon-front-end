@@ -13,7 +13,7 @@ const Settings = () => {
                     <li>
                         <button
                             className="cursor-pointer"
-                            onClick={() => navigate("security")}
+                            onClick={() => navigate("/security")}
                         >
                            Security
                         </button>    

@@ -3,8 +3,7 @@ import mediaProps from "../../types/media.type";
 //import image from "../../assert/profilepic.png";
 
 type Initialstate = {
-    media: {      
-        selectedMedia?: mediaProps[]
+    media: {              
         data: mediaProps[]
         loading: boolean
         error: string
@@ -12,8 +11,7 @@ type Initialstate = {
 };
 
 const initialState: Initialstate = {
-    media: {
-        selectedMedia: [],        
+    media: {               
         data: [],
         loading: true,
         error: "",
@@ -35,24 +33,11 @@ const usermedia = createSlice({
             state.media.data = state.media.data.filter(
                 (md) => md._id !== action.payload._id
             );
-        },
-        addSelectedMedia: (state, action: { payload: mediaProps }) => {
-            const getPreValue = state.media.selectedMedia || [];
-            state.media.selectedMedia = [...getPreValue, action.payload];
-        },       
-        removeSelectedMedia: (state, action: { payload: {_id: string } }) => {
-            const getPreValue = state.media.selectedMedia || [];
-            state.media.selectedMedia = getPreValue.filter((md) => md._id !== action.payload._id);
-        },
-        clearSelectedMedia: (state, action: { payload: [] }) => {
-            state.media.selectedMedia = action.payload || [];
-        },
+        },        
     }
 });
 
 export const {
-    fetchMedia, addMedia, deleteMdia,
-    addSelectedMedia,
-   removeSelectedMedia, clearSelectedMedia
+    fetchMedia, addMedia, deleteMdia,     
 } = usermedia.actions;
 export default usermedia.reducer;

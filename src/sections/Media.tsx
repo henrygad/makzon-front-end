@@ -1,16 +1,18 @@
 import axios from "axios";
 import Displaymedia from "../components/Displaymedia";
 import { useAppDispatch, useAppSelector } from "../redux";
-import { addSelectedMedia, clearSelectedMedia, deleteMdia } from "../redux/slices/userMediaSlices";
-import { useEffect, useState } from "react";
+import { deleteMdia } from "../redux/slices/userMediaSlices";
+import { useState } from "react";
 import { MdDeleteOutline } from "react-icons/md";
 import Displayscreenloading from "../components/loaders/Displayscreenloading";
+import mediaProps from "../types/media.type";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 
 const Media = () => {
-    const { data: Media, loading: loadingMedia, selectedMedia } = useAppSelector(state => state.userMediaSlices.media);
+    const { data: Media, loading: loadingMedia } = useAppSelector(state => state.userMediaSlices.media);
     const appDispatch = useAppDispatch();
+    const [selectMedia, setSelectMedia] = useState<mediaProps[]>([]);
     const [useSelect, setUseSelect] = useState(false);
 
     const [loading, setLoading] = useState(false);
@@ -24,7 +26,7 @@ const Media = () => {
                     baseURL: apiEndPont,
                     withCredentials: true
                 }
-            );                        
+            );
             appDispatch(deleteMdia({ _id }));
         } catch (error) {
             console.error(error);
@@ -38,42 +40,34 @@ const Media = () => {
     const handleSelectAll = () => {
         if (Media) {
             Media.map(md => {
-                appDispatch(addSelectedMedia({ ...md }));
+                setSelectMedia(pre => [...pre, md]);
             });
         }
     };
 
     const handleMultipleMediaDelete = () => {
-        if (selectedMedia) {
-            selectedMedia.map(async(md) => {
-                await handleDelete(md.filename);
-            });
-            appDispatch(clearSelectedMedia([]));
-        }
+        selectMedia.map(async (md) => {
+            await handleDelete(md.filename);
+        });
+        setSelectMedia([]);
     };
 
-    useEffect(() => {
-        if (!selectedMedia?.length) {
-            setUseSelect(false);
-        }
-    }, [selectedMedia]);
 
     return <section>
-        <menu className="flex items-center justify-betweenbg-gray-50 border py-1 px-3 mb-3 rounded shadow-sm">
+        <menu className="flex items-center justify-between bg-gray-50 py-1 px-3 mb-3">
             {useSelect &&
-                selectedMedia &&
-                selectedMedia?.length ? <ul>
-                <li>
-                    <button
-                        className="flex items-center gap-1 text-red-800"
-                        onClick={() => handleMultipleMediaDelete()}
-                    >
-                        <MdDeleteOutline color="red" size={18} />
-                        ({selectedMedia &&
-                            selectedMedia.length || 0})
-                    </button>
-                </li>
-            </ul> :
+                selectMedia.length ?
+                <ul>
+                    <li>
+                        <button
+                            className="flex items-center gap-1 text-red-800"
+                            onClick={() => handleMultipleMediaDelete()}
+                        >
+                            <MdDeleteOutline color="red" size={18} />
+                            {selectMedia.length || 0}
+                        </button>
+                    </li>
+                </ul> :
                 null
             }
             <ul className="flex-1 flex justify-end gap-4">
@@ -99,7 +93,7 @@ const Media = () => {
                         className="text-base font-text font-bold text-slate-800"
                         onClick={() => {
                             setUseSelect(false);
-                            appDispatch(clearSelectedMedia([]));
+                            setSelectMedia([]);
                         }}
                     >
                         X
@@ -108,24 +102,31 @@ const Media = () => {
                 }
             </ul>
         </menu>
-        <div className={`flex flex-wrap items-center gap-2 ${useSelect ? "p-3" : ""}`}>
+        <div className="flex flex-wrap gap-2 py-4">
             {!loadingMedia ?
-                Media &&
-                    Media.length ?
-                    Media.map(md =>
-                        <Displaymedia
-                            key={md._id}
-                            media={md}
-                            useSelect={useSelect}
-                            handleDelete={handleDelete}
-                        />
-                    ) :
-                    <div>No media yet</div> :
-                <div>loading...</div>
+                <>
+                    {
+                        Media &&
+                            Media.length ?
+                            Media.map(md =>
+                                <Displaymedia
+                                    key={md._id}
+                                    media={md}
+                                    useSelect={useSelect}
+                                    handleDelete={handleDelete}
+                                    selectMedia={selectMedia}
+                                    setSelectMedia={setSelectMedia}
+                                />
+                            ) :
+                            <span className="text-xl font-text font-bold flex justify-center items-center">No Image</span>
+
+                    }
+                </> :
+                <span className="text-base font-text font-normal flex justify-center items-center">Loading...</span>
             }
         </div>
         {/* diplay loader */}
-        <Displayscreenloading  loading={loading} />
+        <Displayscreenloading loading={loading} />
     </section>;
 };
 

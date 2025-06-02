@@ -45,15 +45,15 @@ const Displayimage = ({
         return <span className="absolute top-0 bottom-0 right-0 left-0 border border-slate-200 bg-slate-200 rounded-md"></span>;
     };
 
-    return <span className={`${parentClassName} inline-block relative`} >
+    return <span className={`inline-block relative ${parentClassName} `} >
         <>
             {/* use cancle */}
             {useCancle ?
                 <span
                     onClick={() => onCancle(url)}
-                    className={`${error || loading ? "opacity-0" : ""} absolute top-2 right-2 font-semibold text-sm cursor-pointer`}
+                    className={`${error || loading ? "opacity-0" : ""} absolute top-2.5 right-2.5 font-semibold text-sm cursor-pointer`}
                 >
-                    <MdDeleteOutline color="red" size={14} />
+                    <MdDeleteOutline color="gray" size={13} />
                 </span> :
                 null
             }
@@ -70,7 +70,7 @@ const Displayimage = ({
             <img
                 src={url || " "}
                 alt={alt}
-                className={`${error || loading ? "opacity-0" : ""} ${className} border`}                
+                className={`${error || loading ? "opacity-0" : ""} ${className}`}                
                 onError={() => {
                     setLoading(false);
                     setError(true);

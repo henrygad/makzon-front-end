@@ -2022,10 +2022,10 @@ magic-string@^0.30.5:
   dependencies:
     "@jridgewell/sourcemap-codec" "^1.5.0"
 
-makzontexteditor@1.1.8:
-  version "1.1.8"
-  resolved "https://registry.yarnpkg.com/makzontexteditor/-/makzontexteditor-1.1.8.tgz#f55d16599a03038b8a996311d5abe4b4efecafee"
-  integrity sha512-PG04srn+A7coHQAF2vkZiSUh5jE5dKLOf6IDOOCt7abaAHrFpxLMr3GLEZufLU4LSnrMghtQ02y0CcKdDt5dDg==
+makzontexteditor@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/makzontexteditor/-/makzontexteditor-1.2.0.tgz#b78fd9953de2dd42ccac37e6fea853cee00ae433"
+  integrity sha512-6iBZ8Jrjp0BgGafalFqsfNefLQ+eVfh+f+Vh3SC60cUzLRrwn0vbWLXYhMD6qXJ2021RrSxy8ZkCjqA6bxG6gg==
   dependencies:
     react "^19.1.0"
     react-dom "^19.1.0"
