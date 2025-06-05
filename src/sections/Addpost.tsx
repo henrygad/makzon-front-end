@@ -17,7 +17,7 @@ import {
 import mediaProps from "../types/media.type";
 import { addMedia } from "../redux/slices/userMediaSlices";
 import axios from "axios";
-import Displayscreenloading from "../components/loaders/Displayscreenloading";
+import Displayscreenloading from "../loaders/Displayscreenloading";
 import Makzontexteditor, { deleteAll } from "makzontexteditor";
 import Displaychangemedia from "./Displaychangemedia";
 import useDialog from "../hooks/useDialog";
@@ -67,15 +67,7 @@ const Addpost = ({ existingPost }: Props) => {
         return filterSlug;
     };
 
-    const handleLocalFile = async (files: FileList) => {
-        const data = await getLocalFiles(files);
-        if (data[0]) {
-            return data[0].url;
-        }
-        return "";
-    };
-
-    const handleGalaryFile = () => {
+    const handleTextEditorGalaryFile = () => {
         return new Promise<string>((res) => {
             navigate("#display-image-galary");
             fileFromGalaryRef.current = null;
@@ -85,8 +77,8 @@ const Addpost = ({ existingPost }: Props) => {
                     fileFromGalaryRef.current = undefined;
                 } else {
                     const clear = setTimeout(() => {
-                        check();
                         clearTimeout(clear);
+                        check();
                     }, 100);
                 }
             };
@@ -256,7 +248,7 @@ const Addpost = ({ existingPost }: Props) => {
             if (existingPost.status.toLowerCase() === "published") { // And it already published then edit and publish post 
                 const editBlogpost: postProps = {
                     ...existingPost,
-                    image,
+                    image: image.split("/")[image.split("/").length - 1],
                     title,
                     body: article.text,
                     _html: { title, body: article._html },
@@ -267,7 +259,7 @@ const Addpost = ({ existingPost }: Props) => {
             } else if (existingPost.status.toLowerCase() === "unpublished") {// or if it unpublished, edit and published post
                 const editBlogpost: postProps = {
                     ...existingPost,
-                    image,
+                    image: image.split("/")[image.split("/").length - 1],
                     title,
                     body: article.text,
                     _html: { title, body: article._html },
@@ -282,7 +274,7 @@ const Addpost = ({ existingPost }: Props) => {
                         ...existingPost,
                         _id: existingPost.publishedId,
                         publishedId: undefined,
-                        image,
+                        image: image.split("/")[image.split("/").length - 1],
                         title,
                         body: article.text,
                         _html: { title, body: article._html },
@@ -293,7 +285,7 @@ const Addpost = ({ existingPost }: Props) => {
                 } else { // Or create new publish post from drafted post
                     const createBlogpost = {
                         title,
-                        image,
+                        image: image.split("/")[image.split("/").length - 1],
                         body: article.text,
                         _html: { title, body: article._html },
                         catigories: catigories.map((catigory) => catigory.cat),
@@ -306,10 +298,11 @@ const Addpost = ({ existingPost }: Props) => {
                     await publish(createBlogpost, blob, false);
                 }
             }
-        } else {// Create new publish post data            
+        } else {
+            // Create new publish post data
             const createBlogpost = {
                 title,
-                image,
+                image: image.split("/")[image.split("/").length - 1],
                 body: article.text,
                 _html: { title, body: article._html },
                 catigories: catigories.map((catigory) => catigory.cat),
@@ -349,7 +342,7 @@ const Addpost = ({ existingPost }: Props) => {
             // Edit old draft blogpost
             const editDraft: postProps = {
                 ...existingPost,
-                image,
+                image: image.split("/")[image.split("/").length - 1],
                 title,
                 body: article.text,
                 _html: { title, body: article._html },
@@ -362,7 +355,7 @@ const Addpost = ({ existingPost }: Props) => {
             const createDraft: postProps = {
                 publishedId: existingPost?._id, // Copy existing post id for drafting post                                
                 title,
-                image,
+                image: image.split("/")[image.split("/").length - 1],
                 body: article.text,
                 _html: { title, body: article._html },
                 catigories: catigories.map((catigory) => catigory.cat),
@@ -464,8 +457,14 @@ const Addpost = ({ existingPost }: Props) => {
                     }
                     setTitle(title.join(" "));
                 }}
-                handleLocalFile={handleLocalFile}
-                handleGalary={handleGalaryFile}
+                handleLocalFile={async (files: FileList) => {
+                    const data = await getLocalFiles(files);
+                    if (data[0]) {
+                        return data[0].url;
+                    }
+                    return "";
+                }}
+                handleGalary={handleTextEditorGalaryFile}
                 onAddFile={async (blob, string) => {
                     if (blob) return await uploadFile(blob);
                     else return string;
@@ -589,12 +588,12 @@ const Addpost = ({ existingPost }: Props) => {
                     }}
                     placeHolder={
                         <span
-                            onClick={() => navigate("#insert-display-image")}
+                            onClick={handleDialog}
                             className="absolute top-0 bottom-0 right-0 left-0 h-[140px] w-[140px] border border-slate-200 bg-slate-200 rounded-md cursor-pointer"
                         ></span>
                     }
                     className="h-[140px] w-[140px] object-contain rounded cursor-pointer border"
-                    onClick={() => navigate("#insert-display-image")}
+                    onClick={handleDialog}
                 />
                 <span className="block">
                     <input
@@ -607,7 +606,7 @@ const Addpost = ({ existingPost }: Props) => {
                 </span>
             </div>
             {/* publish button */}
-            <div className="container fixed bottom-0 left-0 right-0 py-2 bg-white z-10">
+            <div className="container fixed bottom-0 left-0 right-0 py-2 bg-white z-[8]">
                 <div className="flex justify-center items-center">
                     {
                         (slug.trim() && title.trim()) || !isEmpty ?
@@ -647,9 +646,16 @@ const Addpost = ({ existingPost }: Props) => {
                 setImage(tempUrl);
                 setIsEmpty(false);
             }}
-            setGetMediaFromGalary={(urls) => {
-                setImage(apiEndPont + "/media/" + urls[0]);
-                setIsEmpty(false);
+            setGetMediaFromGalary={(urls) => { 
+                if (fileFromGalaryRef.current === null) {                                
+                    fileFromGalaryRef.current = apiEndPont + "/media/" + urls[0];
+                } else {
+                    setImage(apiEndPont + "/media/" + urls[0]);
+                    setIsEmpty(false);                    
+                }
+            }}
+            onCancelGetMediaFromGalary={() => {
+                fileFromGalaryRef.current = undefined;
             }}
         />
     </>;

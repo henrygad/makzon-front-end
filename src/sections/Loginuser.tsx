@@ -10,7 +10,7 @@ import { fetchProfile } from "../redux/slices/userProfileSlices";
 import { useAppDispatch, useAppSelector } from "../redux";
 import Cookies from "js-cookie";
 import loginProps from "../types/login.type";
-import Displayscreenloading from "../components/loaders/Displayscreenloading";
+import Displayscreenloading from "../loaders/Displayscreenloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 

@@ -6,7 +6,7 @@ import { useAppDispatch } from "../redux";
 import { deleteDraft } from "../redux/slices/userBlogpostSlices";
 import axios from "axios";
 import { useState } from "react";
-import Displayscreenloading from "./loaders/Displayscreenloading";
+import Displayscreenloading from "../loaders/Displayscreenloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const Displaydraft = ({ blogpost }: { blogpost: postProps }) => {

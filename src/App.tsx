@@ -21,7 +21,7 @@ import {
 import userProps from "./types/user.type";
 import postProps from "./types/post.type";
 import { useAppDispatch, useAppSelector } from "./redux";
-import { fetchProfile } from "./redux/slices/userProfileSlices";
+import { editProfile, fetchProfile } from "./redux/slices/userProfileSlices";
 import {
   fetchBlogposts,
   fetchDrafts,
@@ -40,7 +40,7 @@ import Footer from "./sections/Footer";
 import errorProps from "./types/error.type";
 import Cookies from "js-cookie";
 import axios from "axios";
-import Displayscreenloading from "./components/loaders/Displayscreenloading";
+import Displayscreenloading from "./loaders/Displayscreenloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 const App = () => {
@@ -58,7 +58,7 @@ const App = () => {
   const [trendingPosts, setTrendingPosts] = useState<postProps[] | null>(null);
 
   const [postFeeds, setPostFeeds] = useState<postProps[] | null>(null);
-  const [newPostFeeds, setNewPostFeeds] = useState<postProps[] | null>(null);
+  const [getNewPostFeeds, setGetNewPostFeeds] = useState<postProps[] | null>(null);
 
   const [notificationUpdate, setNotificationUpdate] =
     useState<notificationProps | null>(null);
@@ -73,10 +73,10 @@ const App = () => {
     })
       .then((res) => res.data)
       .then((data) => {
-        const clientSession = data as { sessionId: string };
+        const client = data as { sessionId: string };
         appDispatch(
           fetchProfile({
-            data: { ...User, sessionId: clientSession.sessionId },
+            data: { ...User, sessionId: client.sessionId },
             loading: true,
             error: "",
           })
@@ -85,8 +85,8 @@ const App = () => {
         // fetch user search history
         axios(apiEndPont + "/search/history")
           .then((res) => res.data)
-          .then((data) => {           
-            const getSearchHistories = data.data as { _id: string, search: string }[];            
+          .then((data) => {
+            const getSearchHistories = data.data as { _id: string, search: string }[];
             setSearchHistories(getSearchHistories);
           })
           .catch((error) => console.error(error));
@@ -203,7 +203,7 @@ const App = () => {
         })
           .then((res) => res.data)
           .then(data => {
-            const feeds = data.data as postProps[];            
+            const feeds = data.data as postProps[];
             setPostFeeds(feeds);
           })
           .catch((error) => console.error(error));
@@ -266,7 +266,7 @@ const App = () => {
       })
       .catch((error) => {
         const getError = error as errorProps;
-        const errorMsg: string = getError.response.data.message;
+        const errorMsg: string = getError.response?.data?.message || "";
         if (errorMsg.toLowerCase().includes("unauthorized")) {
           appDispatch(
             fetchProfile({
@@ -284,9 +284,26 @@ const App = () => {
         }
       });
 
-
-    // fetch live update
     if (User.login) {
+
+      // Followers live update
+      const followersEventSource = new EventSource(
+        apiEndPont + "/user/followers/stream",
+        {
+          withCredentials: true,
+        }
+      );
+      followersEventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data) as { eventType: string, followers: string[] };
+        const { followers } = data;           
+        const user = { ...User, followers } as userProps;
+        appDispatch(editProfile(user));       
+      };
+      followersEventSource.onerror = (error) => {
+        console.error(error);
+        followersEventSource.close();
+      };
+
 
       // Notification live update 
       const notificationEventSource = new EventSource(
@@ -296,10 +313,9 @@ const App = () => {
         }
       );
       notificationEventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data) as { notification: notificationProps };
-        const { notification: newNotification } = data;
-
-        if (newNotification) {          
+        const data = JSON.parse(event.data) as { eventType: string, notification: notificationProps };
+        const { eventType, notification: newNotification } = data;
+        if (eventType.toLowerCase() === "insert") {
           setNotificationUpdate(newNotification);
           appDispatch(addNotifications(newNotification));
         }
@@ -309,8 +325,7 @@ const App = () => {
         notificationEventSource.close();
       };
 
-
-    // Post feeds live update
+      // Post feeds live update
       const postFeedsEventSource = new EventSource(
         apiEndPont + "/post/user/get/timeline/stream",
         {
@@ -321,20 +336,24 @@ const App = () => {
         const data = JSON.parse(event.data) as { eventType: string, post: postProps };
         const { eventType, post: newPostFeeds } = data;
 
-        if (newPostFeeds) {
-          if (eventType.toLowerCase() === "delete") {
-            setPostFeeds(pre => pre ? pre.filter(post => post._id !== newPostFeeds._id) : pre);
-          }
-          if (eventType.toLowerCase() === "insert") {
-            setNewPostFeeds(pre => pre ? [newPostFeeds, ...pre] : [newPostFeeds]);
-          }
-          if (eventType.toLowerCase() === "update") {            
-            setPostFeeds(pre => pre ?
-              pre.map(post => post._id === newPostFeeds._id ? { ...post, ...newPostFeeds } : post) :
-              pre);
-          }
-         
+
+        if (eventType.toLowerCase() === "delete") {
+          setPostFeeds(pre => pre ? pre.filter(post => post._id !== newPostFeeds._id) : pre);
         }
+        if (eventType.toLowerCase() === "insert") {
+          if (newPostFeeds.author === User.userName) {
+            setPostFeeds(pre => pre ? [newPostFeeds, ...pre] : [newPostFeeds]);
+          } else {
+            setGetNewPostFeeds(pre => pre ? [newPostFeeds, ...pre] : [newPostFeeds]);
+          }
+        }
+        if (eventType.toLowerCase() === "update") {
+          setPostFeeds(pre => pre ?
+            pre.map(post => post._id === newPostFeeds._id ? { ...post, ...newPostFeeds } : post) :
+            pre);
+        }
+
+
       };
       postFeedsEventSource.onerror = (error) => {
         console.error(error);
@@ -425,8 +444,8 @@ const App = () => {
               <Feed
                 postFeeds={postFeeds}
                 setPostFeeds={setPostFeeds}
-                newPostFeeds={newPostFeeds}
-                setNewPostFeeds={setNewPostFeeds}
+                newPostFeeds={getNewPostFeeds}
+                setNewPostFeeds={setGetNewPostFeeds}
               /> :
               <Navigate to="/login" />
             }

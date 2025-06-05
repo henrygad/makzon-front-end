@@ -9,7 +9,7 @@ import { Countries, Professions } from "../assets/date";
 import { Button } from "../components/Button";
 import { addMedia } from "../redux/slices/userMediaSlices";
 import axios from "axios";
-import Displayscreenloading from "../components/loaders/Displayscreenloading";
+import Displayscreenloading from "../loaders/Displayscreenloading";
 import useDateFormat from "../hooks/useDateFormat";
 import Displaychangemedia from "../sections/Displaychangemedia";
 import useDialog from "../hooks/useDialog";
@@ -69,7 +69,7 @@ const Updateprofile = () => {
                 const value = user[key as keyof userProps];
                 if (value !== undefined) formData.append(key, JSON.stringify(value));
             }
-
+            
             const url = apiEndPont + "/user";
             const res = await axios.patch(url,
                 formData,
@@ -295,7 +295,7 @@ const Updateprofile = () => {
                                             id="bio"
                                             ref={bioInputRef}
                                             className={`${toEdit["bio"] ? "block" : "hidden"
-                                                } flex-1 w-auto min-w-[200px] h-auto min-h-[100px] py-1 px-2 capitalize border border-slate-800 rounded-md outline-none resize-none`}
+                                                } flex-1 w-auto min-w-[200px] h-auto min-h-[100px] py-1 px-2 border border-slate-800 rounded-md outline-none resize-none`}
                                             value={userData?.bio || ""}
                                             onChange={(e) => {
                                                 setUserData((pre) =>
@@ -890,6 +890,7 @@ const Updateprofile = () => {
                                     if (userData) {
                                         const updateUserData = {
                                             ...userData,
+                                            avatar: userData.avatar.split("/")[userData.avatar.split("/").length - 1],
                                             displayPhoneNumber: displayPhoneNumber?.number
                                                 ? displayPhoneNumber.code +
                                                 "-" +

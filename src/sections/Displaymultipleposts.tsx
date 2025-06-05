@@ -1,5 +1,5 @@
 import Displayblogpost from "../components/Displayblogpost";
-import Displayblogpostloading from "../components/loaders/Displayblogpostloading";
+import Displayblogpostloading from "../loaders/Displayblogpostloading";
 import postProps from "../types/post.type";
 
 type Props = {

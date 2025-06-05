@@ -18,31 +18,42 @@ import Shareblogpost from "./Shareblogpost";
 import Viewblogpost from "./Viewblogpost";
 import { useAppSelector } from "../redux";
 import axios from "axios";
-import Displayscreenloading from "./loaders/Displayscreenloading";
+import Displayscreenloading from "../loaders/Displayscreenloading";
 import Saveblogpost from "./Saveblogpost";
 import useDateFormat from "../hooks/useDateFormat";
 import useAutoNavigate from "../hooks/useAutoNavigate";
 import { GrView } from "react-icons/gr";
 import { TbMessageReport } from "react-icons/tb";
-import { MdBlockFlipped, MdOutlineDelete, MdOutlineUnpublished, MdPublishedWithChanges } from "react-icons/md";
+import {
+    MdBlockFlipped,
+    MdOutlineDelete,
+    MdOutlineUnpublished,
+    MdPublishedWithChanges,
+} from "react-icons/md";
 import { FiEdit } from "react-icons/fi";
+import { useQuery } from "@tanstack/react-query";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
     displayType: string;
     blogpost: postProps;
-    updateBlogpost: ({ type, blogpost }: { type: "EDIT", blogpost: postProps } | { type: "DELETE", blogpost: { _id: string } }) => void;
+    updateBlogpost: ({
+        type,
+        blogpost,
+    }:
+        | { type: "EDIT"; blogpost: postProps }
+        | { type: "DELETE"; blogpost: { _id: string } }) => void;
     autoViewComment?: {
-        blogpostParentComment: string | null,
-        targetComment: string,
-    }
+        blogpostParentComment: string | null;
+        targetComment: string;
+    };
     autoViewLike?: {
         comment?: {
-            blogpostParentComment: string | null,
-            targetComment: string,
-        }
-        targetLike: string
-    }
+            blogpostParentComment: string | null;
+            targetComment: string;
+        };
+        targetLike: string;
+    };
 };
 
 const Displayblogpost = ({
@@ -50,12 +61,24 @@ const Displayblogpost = ({
     blogpost,
     updateBlogpost,
     autoViewComment,
-    autoViewLike
+    autoViewLike,
 }: Props) => {
     const navigate = useNavigate();
-    const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
+    const { data: User } = useAppSelector(
+        (state) => state.userProfileSlices.userProfile
+    );
 
-    const [authorInfor, setAuthorInfor] = useState<userProps | null>(null);
+
+    // fetch author details
+    const url = apiEndPont + "/user/" + blogpost.author;
+    const { data: authorInfor } = useQuery<userProps>({
+        queryKey: ["author", blogpost.author],
+        queryFn: () => axios.get(url, { withCredentials: true, baseURL: apiEndPont }).then(res => res.data.data),
+        //keepPreviousData: true,
+        enabled: !!blogpost.author, // Prevent fetch if undefined
+        staleTime: 1000 * 60 * 5, // 5 minutes
+    });
+    
     const [comments, setComments] = useState<commentProps[] | null>(null);
     const blogpostRef = useRef<HTMLDivElement | null>(null);
     const tabRef = useRef<HTMLDivElement | null>(null);
@@ -66,22 +89,23 @@ const Displayblogpost = ({
 
     const [loading, setLoading] = useState(false);
 
+
     const publicBlogpostMenus = [
         {
             name: "View post",
-            icon: <GrView size={14} />,
+            icon: <GrView size={18} />,
             func: () => {
                 handleToView(blogpost);
             },
         },
         {
             name: "Report",
-            icon: <TbMessageReport size={14} />,
+            icon: <TbMessageReport size={18} />,
             func: () => console.log("Report"),
         },
         {
             name: "Block",
-            icon: <MdBlockFlipped size={14} />,
+            icon: <MdBlockFlipped size={18} />,
             func: () => console.log("Block"),
         },
     ];
@@ -89,14 +113,19 @@ const Displayblogpost = ({
     const privateBlogpostMenu = [
         {
             name: "Edit",
-            icon: <FiEdit size={14} />,
+            icon: <FiEdit size={18} />,
             func: () => {
                 handleToEdit(blogpost);
             },
         },
         {
             name: blogpost.status === "published" ? "Unpublish" : "publish",
-            icon: blogpost.status === "published" ? <MdPublishedWithChanges size={14} /> : <MdOutlineUnpublished size={14} />,
+            icon:
+                blogpost.status === "published" ? (
+                    <MdOutlineUnpublished size={18} />
+                ) : (
+                    <MdPublishedWithChanges size={18} />
+                ),
             func: () => {
                 if (blogpost.status === "published") {
                     handleUnpublish(blogpost);
@@ -107,14 +136,19 @@ const Displayblogpost = ({
         },
         {
             name: "Delete",
-            icon: <MdOutlineDelete size={15} />,
+            icon: <MdOutlineDelete size={18} />,
             func: () => handleDelete(blogpost._id || ""),
         },
     ];
 
     const handleToView = (blogpost: postProps, hashId: string | null = null) => {
         if (displayType.trim().toLowerCase() === "_html") return;
-        const url = "/post/" + blogpost.author + "/" + blogpost.slug + (hashId ? "/#" + hashId : "");
+        const url =
+            "/post/" +
+            blogpost.author +
+            "/" +
+            blogpost.slug +
+            (hashId ? "/#" + hashId : "");
         navigate(url);
     };
 
@@ -129,7 +163,7 @@ const Displayblogpost = ({
             const data: postProps = { ...blogpost, status: "published" };
             const res = await axios.patch(url, data, {
                 baseURL: apiEndPont,
-                withCredentials: true
+                withCredentials: true,
             });
             const publishBlogpost = await res.data.data;
 
@@ -139,7 +173,6 @@ const Displayblogpost = ({
         } finally {
             setLoading(true);
         }
-
     };
 
     const handleUnpublish = async (blogpost: postProps) => {
@@ -149,7 +182,7 @@ const Displayblogpost = ({
             const data: postProps = { ...blogpost, status: "unpublished" };
             const res = await axios.patch(url, data, {
                 baseURL: apiEndPont,
-                withCredentials: true
+                withCredentials: true,
             });
             const unpublishBlogpost = await res.data.data;
             updateBlogpost({ blogpost: unpublishBlogpost, type: "EDIT" });
@@ -166,7 +199,7 @@ const Displayblogpost = ({
             const url = apiEndPont + "/post/" + _id;
             await axios.delete(url, {
                 baseURL: apiEndPont,
-                withCredentials: true
+                withCredentials: true,
             });
             updateBlogpost({ blogpost: { _id }, type: "DELETE" });
         } catch (error) {
@@ -177,27 +210,15 @@ const Displayblogpost = ({
     };
 
     useEffect(() => {
-        // Fetch author short details
-        const url = apiEndPont + "/user/" + blogpost.author;
-        axios(url, {
-            withCredentials: true,
-            baseURL: apiEndPont
-        })
-            .then(async (res) => {
-                const userInfor: userProps = await res.data.data;
-                setAuthorInfor(userInfor);
-            })
-            .catch((error) =>
-                console.error(error)
-            );
-    }, [blogpost.author]);
-
-    useEffect(() => {
         if (!blogpost._id) return;
-        const url = apiEndPont + "/comment?postId=" + blogpost._id + "&replyId=null&skip=0&limit=20";
+        const url =
+            apiEndPont +
+            "/comment?postId=" +
+            blogpost._id +
+            "&replyId=null&skip=0&limit=20";
         axios(url, {
             baseURL: apiEndPont,
-            withCredentials: true
+            withCredentials: true,
         })
             .then(async (res) => {
                 const parentComments: commentProps[] = await res.data.data;
@@ -205,24 +226,24 @@ const Displayblogpost = ({
 
                 // fetch children comment
                 parentComments.forEach((comment) => {
-                    const url = apiEndPont + "/comment?replyId=" + comment._id + "&skip=0&limit=20";
+                    const url =
+                        apiEndPont + "/comment?replyId=" + comment._id + "&skip=0&limit=20";
                     axios(url, {
                         baseURL: apiEndPont,
-                        withCredentials: true
+                        withCredentials: true,
                     })
                         .then(async (res) => {
                             const childComment = await res.data.data;
-                            setComments(parentCom => parentCom ?
-                                parentCom.map((com) => ({ ...com, children: childComment })) :
+                            setComments((parentCom) =>
                                 parentCom
+                                    ? parentCom.map((com) => ({ ...com, children: childComment }))
+                                    : parentCom
                             );
                         })
-                        .catch((err) =>
-                            console.error(err)
-                        );
+                        .catch((err) => console.error(err));
                 });
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error(err);
             });
     }, [blogpost._id]);
@@ -231,10 +252,7 @@ const Displayblogpost = ({
         // Auto navigate to comment or like tab if hashId is present in the URL
         const hashId = location.hash.trim().slice(1);
         const tabId = ["blogpost-comments", "blogpost-likes"];
-        if (hashId &&
-            tabId.includes(hashId) &&
-            blogpost &&
-            tabRef.current) {
+        if (hashId && tabId.includes(hashId) && blogpost && tabRef.current) {
             const clear = setTimeout(() => {
                 autoNavigate(tabRef.current!);
                 clearTimeout(clear);
@@ -242,83 +260,88 @@ const Displayblogpost = ({
         }
     }, [location.hash, blogpost, tabRef.current]);
 
-
-    return <>
-        <div
-            ref={blogpostRef}
-            className="space-y-1 p-2 rounded-md"
-        >
-            {/* author info and side menu */}
-            <span className="flex items-start justify-between gap-6">
-                <Displayuserinfor
-                    short={true}
-                    user={authorInfor}
-                    onClick={() => navigate("/profile/" + authorInfor?.userName)}
-                />
-                <Dropmenu
-                    children={
-                        <ul className="min-w-[140px] text-sm font-text p-5 space-y-6 rounded-md border bg-white ">
-                            {
-                                (blogpost.author &&
-                                    blogpost.author.trim() === User.userName ?
-                                    [...privateBlogpostMenu, ...publicBlogpostMenus]
-                                    : publicBlogpostMenus)
-                                    .map((menu) =>
-                                        displayType === "_HTML" &&
-                                            menu.name === "View post" ?
-                                            null :
-                                            <li
-                                                key={menu.name}
-                                                className="font-text text-xs font-medium flex gap-2 cursor-pointer"
-                                                onClick={(e) => {
-                                                    menu.func();
-                                                    e.stopPropagation();
-                                                }}>
-                                                {menu.icon} <span>{menu.name}</span>
-                                            </li>)
-                            }
-                        </ul>
-                    }
-                />
-            </span>
-            <article className="font-text text-base">
-                {/* post date */}
-                <span className="block font-text text-xs text-slate-900 font-medium pl-2 py-1">
-                    <span className="block">Post {dateFormat(blogpost.createdAt!)}</span>
+    return (
+        <>
+            <div ref={blogpostRef} className="space-y-1 p-2 rounded-md">
+                {/* author info and side menu */}
+                <span className="flex items-start justify-between gap-6">
+                    <Displayuserinfor
+                        short={true}
+                        user={authorInfor}
+                        onClick={() => navigate("/profile/" + authorInfor?.userName)}
+                    />
+                    <Dropmenu
+                        children={
+                            <ul className="min-w-[140px] text-sm  text-slate-700 font-text pl-5 pr-8 py-5 space-y-6 rounded-md border bg-white ">
+                                {(blogpost.author && blogpost.author.trim() === User.userName
+                                    ? [...privateBlogpostMenu, ...publicBlogpostMenus]
+                                    : publicBlogpostMenus
+                                ).map((menu) =>
+                                    displayType === "_HTML" &&
+                                        menu.name === "View post" ? null : (
+                                        <li
+                                            key={menu.name}
+                                            className="flex gap-2 cursor-pointer"
+                                            onClick={(e) => {
+                                                menu.func();
+                                                e.stopPropagation();
+                                            }}
+                                        >
+                                            {menu.icon}{" "}
+                                            <span className="text-nowrap whitespace-pre">
+                                                {menu.name}
+                                            </span>
+                                        </li>
+                                    )
+                                )}
+                            </ul>
+                        }
+                    />
                 </span>
-                {/* list catigories */}
-                <span className="block text-sm font-text font-medium text-slate-500 pb-4">
-                    <ul className="flex flex-wrap items-center gap-x-1 ">
-                        {blogpost.catigories && blogpost.catigories.length
-                            ? blogpost.catigories.map((catigory, index) => (
-                                catigory.trim() ?
-                                    <li
-                                        key={index}
-                                        className="flex items-center "
-                                    >
-                                        {index > 0 ? <span className="font-extralight text-slate-900">/</span> : null} {catigory}
-                                    </li> :
-                                    null
-                            ))
-                            : null}
-                    </ul>
-                </span>
-                {/* post article */}
-                <>
-                    {displayType.toLowerCase() === "_html" ?
-                        <span dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}></span> :
-                        <span
-                            className="break-words hyphens-auto line-clamp-3 cursor-pointer"
-                            onClick={() => handleToView(blogpost)}
-                        >
-                            {blogpost.body}
+                <article className="font-text text-base">
+                    {/* post date */}
+                    <span className="block font-text text-xs text-slate-900 font-medium pl-2 py-1">
+                        <span className="block">
+                            Posted {dateFormat(blogpost.createdAt!)}
                         </span>
-                    }
-                </>
-                {/* display post image */}
-                <>
-                    {
-                        blogpost.image ? (
+                    </span>
+                    {/* list catigories */}
+                    <span className="block text-sm font-text font-medium text-slate-500 pb-4">
+                        <ul className="flex flex-wrap items-center gap-x-1 ">
+                            {blogpost.catigories && blogpost.catigories.length
+                                ? blogpost.catigories.map((catigory, index) =>
+                                    catigory.trim() ? (
+                                        <li key={index} className="flex items-center ">
+                                            {index > 0 ? (
+                                                <span className="font-extralight text-slate-900">
+                                                    /
+                                                </span>
+                                            ) : null}{" "}
+                                            {catigory}
+                                        </li>
+                                    ) : null
+                                )
+                                : null}
+                        </ul>
+                    </span>
+                    {/* post article */}
+                    <>
+                        {displayType.toLowerCase() === "_html" ? (
+                            <span
+                                dangerouslySetInnerHTML={sanitize(blogpost._html.body || "")}
+                            ></span>
+                        ) : (
+                            <span
+                                className="break-words hyphens-auto line-clamp-3 cursor-pointer"
+                                onClick={() => handleToView(blogpost)}
+                            >
+                                {blogpost.body}
+                            </span>
+                        )}
+                    </>
+                    {/* display post image */}
+                    <>
+                        {blogpost.image ? (
                             <Displayimage
                                 url={apiEndPont + "/media/" + blogpost.image}
                                 alt={blogpost.title}
@@ -333,7 +356,9 @@ const Displayblogpost = ({
                                             if (displayType === "TEXT") {
                                                 handleToView(blogpost);
                                             } else {
-                                                navigate(`?url=${blogpost.image}&type=image#single-image`);
+                                                navigate(
+                                                    `?url=${blogpost.image}&type=image#single-image`
+                                                );
                                             }
                                         }}
                                     />
@@ -342,91 +367,77 @@ const Displayblogpost = ({
                                     if (displayType === "TEXT") {
                                         handleToView(blogpost);
                                     } else {
-                                        navigate(`?url=${apiEndPont+"/media/"+blogpost.image}&type=image#single-image`);
+                                        navigate(
+                                            `?url=${apiEndPont + "/media/" + blogpost.image
+                                            }&type=image#single-image`
+                                        );
                                     }
                                 }}
                             />
-                        ) :
-                            null
-                    }
-                </>
-            </article>
-            {/* post stat */}
-            <span className="flex justify-around gap-4">
-                {/* comment btn */}
-                <button
-                    id="blogpost-comment-btn"
-                    className="flex items-center gap-2 cursor-pointer"
-                >
-                    <Comment
-                        blogpost={blogpost}
-                        replyId={null}
-                        parentComment={null}
-                        replying={[]}
-                        setComments={setComments}
-                    />
-                    <span
-                        onClick={() => handleToView(blogpost, "blogpost-comments")}
+                        ) : null}
+                    </>
+                </article>
+                {/* post stat */}
+                <span className="flex justify-around gap-4">
+                    {/* comment btn */}
+                    <button
+                        id="blogpost-comment-btn"
+                        className="flex items-center gap-2 cursor-pointer"
                     >
-                        {comments && comments.length}
-                    </span>
-                </button>
-                {/* like btn */}
-                <button
-                    id="blogpost-like-btn"
-                    className="flex items-center gap-2 cursor-pointer"
-                >
-                    <Likeblogpost
-                        blogpost={blogpost}
-                        updateBlogpost={updateBlogpost}
-                    />
-                    <span
-                        onClick={() => handleToView(blogpost, "blogpost-likes")}
+                        <Comment
+                            blogpost={blogpost}
+                            replyId={null}
+                            parentComment={null}
+                            replying={[]}
+                            setComments={setComments}
+                        />
+                        <span onClick={() => handleToView(blogpost, "blogpost-comments")}>
+                            {comments && comments.length}
+                        </span>
+                    </button>
+                    {/* like btn */}
+                    <button
+                        id="blogpost-like-btn"
+                        className="flex items-center gap-2 cursor-pointer"
                     >
-                        {blogpost?.likes && blogpost.likes.length || 0}
-                    </span>
-                </button>
-                {/* share btn */}
-                <button
-                    id="blogpost-share-btn"
-                    className="flex items-center gap-2 cursor-pointer"
-                >
-                    <Shareblogpost
-                        blogpost={blogpost}
-                        updateBlogpost={updateBlogpost}
-                    />
-                    <span>
-                        {blogpost?.shares && blogpost.shares.length || 0}
-                    </span>
-                </button>
-                {/* Save */}
-                <button
-                    id="blogpost-save-btn"
-                    className="flex items-center gap-2 cursor-pointer"
-                >
-                    <Saveblogpost User={User} blogpost={blogpost} />
-                </button>
-                {/* view btn */}
-                <span
-                    id="blogpost-view-btn"
-                    className="flex items-center gap-2"
-                >
-                    <Viewblogpost
-                        blogpostRef={blogpostRef}
-                        displayType={displayType}
-                        blogpost={blogpost}
-                        updateBlogpost={updateBlogpost}
-                    />
-                    <span>
-                        {blogpost?.views && blogpost.views.length || 0}
+                        <Likeblogpost blogpost={blogpost} updateBlogpost={updateBlogpost} />
+                        <span onClick={() => handleToView(blogpost, "blogpost-likes")}>
+                            {(blogpost?.likes && blogpost.likes.length) || 0}
+                        </span>
+                    </button>
+                    {/* share btn */}
+                    <button
+                        id="blogpost-share-btn"
+                        className="flex items-center gap-2 cursor-pointer"
+                    >
+                        <Shareblogpost
+                            blogpost={blogpost}
+                            updateBlogpost={updateBlogpost}
+                        />
+                        <span>{(blogpost?.shares && blogpost.shares.length) || 0}</span>
+                    </button>
+                    {/* Save */}
+                    <button
+                        id="blogpost-save-btn"
+                        className="flex items-center gap-2 cursor-pointer"
+                    >
+                        <Saveblogpost User={User} blogpost={blogpost} />
+                    </button>
+                    {/* view btn */}
+                    <span id="blogpost-view-btn" className="flex items-center gap-2">
+                        <Viewblogpost
+                            blogpostRef={blogpostRef}
+                            displayType={displayType}
+                            blogpost={blogpost}
+                            updateBlogpost={updateBlogpost}
+                        />
+                        <span>{(blogpost?.views && blogpost.views.length) || 0}</span>
                     </span>
                 </span>
-            </span>
-        </div>
-        {/* Only display on single post page */}
-        <>
-            {
-                displayType.toLowerCase() === "_html" ?
+            </div>
+            {/* Only display on single post page */}
+            <>
+                {displayType.toLowerCase() === "_html" ? (
                     <>
                         <menu className="border-t border-b">
                             <ul className="flex items-center gap-6 p-2">
@@ -452,29 +463,33 @@ const Displayblogpost = ({
                             arrOfTab={[
                                 {
                                     id: "blogpost-comments",
-                                    tab: <Blogpostcomments
-                                        blogpost={blogpost}
-                                        comments={comments}
-                                        setComments={setComments}
-                                        autoViewComment={autoViewComment}
-                                        autoViewLike={autoViewLike}
-                                    />
+                                    tab: (
+                                        <Blogpostcomments
+                                            blogpost={blogpost}
+                                            comments={comments}
+                                            setComments={setComments}
+                                            autoViewComment={autoViewComment}
+                                            autoViewLike={autoViewLike}
+                                        />
+                                    ),
                                 },
                                 {
                                     id: "blogpost-likes",
-                                    tab: <Blogpostlikes
-                                        likes={blogpost.likes || []}
-                                        autoViewLike={autoViewLike}
-                                    />
+                                    tab: (
+                                        <Blogpostlikes
+                                            likes={blogpost.likes || []}
+                                            autoViewLike={autoViewLike}
+                                        />
+                                    ),
                                 },
                             ]}
                         />
-                    </> :
-                    null
-            }
+                    </>
+                ) : null}
+            </>
+            <Displayscreenloading loading={loading} />
         </>
-        <Displayscreenloading loading={loading} />
-    </>;
+    );
 };
 
 export default Displayblogpost;

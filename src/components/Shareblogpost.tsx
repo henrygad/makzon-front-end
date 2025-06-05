@@ -10,6 +10,7 @@ import Dialog from "./Dialog";
 import useDialog from "../hooks/useDialog";
 import axios from "axios";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
+const domain = import.meta.env.VITE_DOMAIN_NAME;
 
 type Props = {
     blogpost: postProps,
@@ -19,16 +20,16 @@ type Props = {
 const Shareblogpost = ({ blogpost, updateBlogpost }: Props) => {
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
 
-    const { dialog, handleDialog} = useDialog();
+    const { dialog, handleDialog } = useDialog();
 
     const handleShareBlogpost = async (_id: string) => {
         const clear = setTimeout(() => {
-            handleDialog();           
+            handleDialog();
         }, 500);
-       
+
         const sessionId = User.sessionId || User.userName;
         if (blogpost.shares &&
-            blogpost.shares.includes(sessionId)) {           
+            blogpost.shares.includes(sessionId)) {
             return;
         }
 
@@ -46,7 +47,7 @@ const Shareblogpost = ({ blogpost, updateBlogpost }: Props) => {
             updateBlogpost({ blogpost: sharedBlogpost, type: "EDIT" });
         } catch (error) {
             console.error(error);
-        } 
+        }
         return () => clearTimeout(clear);
     };
 
@@ -79,7 +80,7 @@ const Shareblogpost = ({ blogpost, updateBlogpost }: Props) => {
                             className="flex justify-center items-center rounded-full h-12 w-12 border shadow"
                             onClick={() => handleShareBlogpost(blogpost._id || "")}
                         >
-                            <Copytoclipboard body={encodeURIComponent(blogpost.url || blogpost.author + "/" + blogpost.slug)} />
+                            <Copytoclipboard body={domain + "/post/" + (blogpost.url || blogpost.author + "/" + blogpost.slug)} />
                         </span>
                         <span
                             id="share-to-facebook-btn"
@@ -125,7 +126,7 @@ const Shareblogpost = ({ blogpost, updateBlogpost }: Props) => {
                     </span>
                 </>
             }
-        />       
+        />
     </>;
 };
 

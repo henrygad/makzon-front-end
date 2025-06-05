@@ -15,8 +15,7 @@ const useSendNotification = () => {
       await axios.post(url, data, {
         baseURL: apiEndPont,
         withCredentials: true,
-      });
-      console.log("send notification");
+      });  
     } catch (error) {
       console.error(error);
     }

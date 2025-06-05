@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import Displayuserinfor from "../components/Displayuserinfor";
 import userProps from "../types/user.type";
-import Displayuserloading from "../components/loaders/Displayuserloading";
+import Displayuserloading from "../loaders/Displayuserloading";
 
 type Props = {
     title?: string

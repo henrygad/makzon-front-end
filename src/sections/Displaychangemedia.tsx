@@ -5,7 +5,7 @@ import useGetLocalFiles from "../hooks/useGetLocalFiles";
 import Displayimage from "../components/Displayimage";
 import { useNavigate } from "react-router-dom";
 import imgplaceholder from "../assets/imageplaceholder.svg";
-import Model from "../components/Modal";
+import Modal from "../components/Modal";
 import Displaymedia from "../components/Displaymedia";
 import { Button } from "../components/Button";
 import { useAppSelector } from "../redux";
@@ -19,9 +19,10 @@ type Props = {
   viewMediaUrl: string
   setGetMediaFromDevice: ({ blob, tempUrl }: { blob: Blob, tempUrl: string }) => void
   setGetMediaFromGalary: (url: string[]) => void
+  onCancelGetMediaFromGalary?: (url: string[]) => void
 }
 
-const Displaychangemedia = ({ title, dialog, handleDialog, viewMediaUrl, setGetMediaFromDevice, setGetMediaFromGalary }: Props) => {
+const Displaychangemedia = ({ title, dialog, handleDialog, viewMediaUrl, setGetMediaFromDevice, setGetMediaFromGalary, onCancelGetMediaFromGalary = () => null }: Props) => {
   const { data: Media } = useAppSelector((state) => state.userMediaSlices.media);
   const [selectMedia, setSelectMedia] = useState<mediaProps[]>([]);
   const { getLocalFiles } = useGetLocalFiles();
@@ -91,18 +92,18 @@ const Displaychangemedia = ({ title, dialog, handleDialog, viewMediaUrl, setGetM
             <button
               className="font-text text-nowrap whitespace-pre text-sm cursor-pointer"
               onClick={() => {
-              handleDialog();
-              setTimeout(() => {
-                navigate("#display-image-galary");
-              }, 100);
-            }}>
+                handleDialog();
+                setTimeout(() => {
+                  navigate("#display-image-galary");
+                }, 100);
+              }}>
               From galary
             </button>
           </span>
         </span>
       </>}
     />
-    <Model
+    <Modal
       id="display-image-galary"
       children={
         <div className="bg-white h-screen max-h-screen overflow-hidden scroll-auto">
@@ -141,6 +142,7 @@ const Displaychangemedia = ({ title, dialog, handleDialog, viewMediaUrl, setGetM
                 fieldName={"Cancel"}
                 className="font-text font-semibold py-1 bg-red-600 text-white text-sm rounded-md"
                 onClick={() => {
+                  onCancelGetMediaFromGalary([]);
                   setSelectMedia([]);
                   navigate(-1);
                 }}

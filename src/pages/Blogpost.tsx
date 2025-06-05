@@ -3,7 +3,7 @@ import postProps from "../types/post.type";
 import Displayblogpost from "../components/Displayblogpost";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Displayblogpostloading from "../components/loaders/Displayblogpostloading";
+import Displayblogpostloading from "../loaders/Displayblogpostloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type viewTargetNotificationProps = {

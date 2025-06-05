@@ -4,7 +4,7 @@ import commentProps from "../types/comment.type";
 import postProps from "../types/post.type";
 import { useLocation } from "react-router-dom";
 import useAutoNavigate from "../hooks/useAutoNavigate";
-import Displaycommentloading from "../components/loaders/DIsplaycommentloading";
+import Displaycommentloading from "../loaders/DIsplaycommentloading";
 
 type Props = {
   blogpost: postProps;

@@ -3,7 +3,7 @@ import Logo from "../components/Logo";
 import userProps from "../types/user.type";
 import Tab from "../components/Tab";
 import Finduser from "../sections/Finduser";
-import Displayscreenloading from "../components/loaders/Displayscreenloading";
+import Displayscreenloading from "../loaders/Displayscreenloading";
 import Verifyuser from "../sections/Verifyuser";
 import { useNavigate } from "react-router-dom";
 import Resetpassword from "../sections/Resetpassword";

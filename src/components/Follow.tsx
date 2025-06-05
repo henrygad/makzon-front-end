@@ -19,7 +19,7 @@ const Follow = ({ friend }: { friend: string }) => {
                 withCredentials: true,
                 baseURL: apiEndPont
             });
-            const friendUserName: string = await res.data.data.friendUserName;
+            const friendUserName: string = await res.data.data.friendUserName;           
             
             let updateUserFollowing: userProps = User;
             
@@ -39,7 +39,7 @@ const Follow = ({ friend }: { friend: string }) => {
             targetTitle: "Someone followed you",
             from: User.userName,
             to: friend,
-            message: `${User.followings.includes(friend) ? "unfollowed" : "followed "} you. You can follow them back`,
+             message: User.followings.includes(friend) ? "unfollowed you. You can unfollow them back" : "followed you. You can follow them back",
             checked: false,
             url: "/profile/" + User.userName,
         });

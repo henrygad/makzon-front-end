@@ -595,6 +595,18 @@
   resolved "https://registry.yarnpkg.com/@standard-schema/utils/-/utils-0.3.0.tgz#3d5e608f16c2390c10528e98e59aef6bf73cae7b"
   integrity sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==
 
+"@tanstack/query-core@5.80.6":
+  version "5.80.6"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.80.6.tgz#d2e54fa9eabebc953c675b74b17d6cd45a2a4cb4"
+  integrity sha512-nl7YxT/TAU+VTf+e2zTkObGTyY8YZBMnbgeA1ee66lIVqzKlYursAII6z5t0e6rXgwUMJSV4dshBTNacNpZHbQ==
+
+"@tanstack/react-query@^5.80.6":
+  version "5.80.6"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-5.80.6.tgz#9c77f05f3236b95693caaea155e5eaa4459f0197"
+  integrity sha512-izX+5CnkpON3NQGcEm3/d7LfFQNo9ZpFtX2QsINgCYK9LT2VCIdi8D3bMaMSNhrAJCznRoAkFic76uvLroALBw==
+  dependencies:
+    "@tanstack/query-core" "5.80.6"
+
 "@testing-library/dom@^10.0.0":
   version "10.4.0"
   resolved "https://registry.yarnpkg.com/@testing-library/dom/-/dom-10.4.0.tgz#82a9d9462f11d240ecadbf406607c6ceeeff43a8"
@@ -2022,10 +2034,10 @@ magic-string@^0.30.5:
   dependencies:
     "@jridgewell/sourcemap-codec" "^1.5.0"
 
-makzontexteditor@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/makzontexteditor/-/makzontexteditor-1.2.0.tgz#b78fd9953de2dd42ccac37e6fea853cee00ae433"
-  integrity sha512-6iBZ8Jrjp0BgGafalFqsfNefLQ+eVfh+f+Vh3SC60cUzLRrwn0vbWLXYhMD6qXJ2021RrSxy8ZkCjqA6bxG6gg==
+makzontexteditor@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/makzontexteditor/-/makzontexteditor-1.2.1.tgz#db20e1a71712b5287ee8c7f9ea4806634ece008d"
+  integrity sha512-Zggj/cIrEWIAoNweiV53LUwEDQGM/AwuP7rwJ/XEJxH9bCmbEeATmfRDTGRQB8KHCSPA6pc15YS4nB2PJ9MC7w==
   dependencies:
     react "^19.1.0"
     react-dom "^19.1.0"

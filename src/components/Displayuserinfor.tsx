@@ -3,14 +3,15 @@ import userProps from "../types/user.type";
 import Displayimage from "./Displayimage";
 import useSanitize from "../hooks/useSanitize";
 import avatarPlaceholder from "../assets/avaterplaceholder.svg";
-import Displayuserloading from "./loaders/Displayuserloading";
+import Displayuserloading from "../loaders/Displayuserloading";
+import useDateFormat from "../hooks/useDateFormat";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
   loading?: boolean;
   className?: string;
   short: boolean;
-  user: userProps | null;
+  user: userProps | null | undefined;
   onClick?: () => void;
 };
 
@@ -21,7 +22,7 @@ const Shortdetail = ({ user, short, className = "flex justify-start items-start 
   }
   return (
     <span
-      className={` ${className} cursor-pointer`}
+      className={` ${className} min-h-[50px] cursor-pointer`}
       onClick={onClick}
     >
       <Displayimage
@@ -64,6 +65,7 @@ const Displayuserinfor = ({
   onClick = () => null,
 }: Props) => {
   const sanitize = useSanitize();
+  const handleDateFormat = useDateFormat();
 
   return <>
     {short ?
@@ -84,8 +86,7 @@ const Displayuserinfor = ({
             <span className="block text-base font-text text-slate-900 text-start w-full mt-1">
               {user.profession}
             </span>
-            <span className="block text-base text-start text-stone-700 font-text space-y-0.5 mt-3">
-              {/* email */}
+            <span className="block text-base text-start text-stone-700 font-text space-y-0.5 mt-3">             
               <span className="block">
                 {/* email */}
                 {user.displayEmail || ""}
@@ -114,15 +115,15 @@ const Displayuserinfor = ({
                   </>
                 ) : null}
               </span>
-            </span>
-            <span className="block text-base text-start font-text mt-3">
+            </span>            
+            <span className="block text-sm text-start font-text space-y-1 mt-3">
               {/* sex */}
               <span className="block capitalize">
                 {user.sex || ""}
               </span>
               {/* date of birth */}
-              <span className="block">
-                {user.displayDateOfBirth ? user.dateOfBirth || "" : null}
+              <span className="block">                
+                {user.displayDateOfBirth ? handleDateFormat(user.dateOfBirth || "") : null}
               </span>
               {/* country */}
               <span className="block">

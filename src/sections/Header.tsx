@@ -42,7 +42,7 @@ const Header = ({ notificationUpdate, setNotificationUpdate }: props) => {
     search: "Search",
     post: "Reading Post",
   };
-
+  
   return <header className="container">
     {
       User.login ?

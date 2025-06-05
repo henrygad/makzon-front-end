@@ -26,18 +26,18 @@ const Modal = ({ id, children }: Props) => {
         setDisplayModal(false);
         if (displayModal) document.body.classList.remove("overflow-hidden");
       }
-    }
-
-    return () => document.body.classList.remove("overflow-hidden");
+    }   
   };
 
   const handlePopState = () => {
     handleDisplayModal();
+    return () => document.body.classList.remove("overflow-hidden");
   };
 
 
   useEffect(() => {
     handleDisplayModal();
+    return () => document.body.classList.remove("overflow-hidden");
   }, [location.hash]);
 
 

@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from "../redux";
 import { deleteMdia } from "../redux/slices/userMediaSlices";
 import { useState } from "react";
 import { MdDeleteOutline } from "react-icons/md";
-import Displayscreenloading from "../components/loaders/Displayscreenloading";
+import Displayscreenloading from "../loaders/Displayscreenloading";
 import mediaProps from "../types/media.type";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 

@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from "../redux";
 import { fetchProfile } from "../redux/slices/userProfileSlices";
 import Cookies from "js-cookie";
 import errorProps from "../types/error.type";
-import Displayscreenloading from "../components/loaders/Displayscreenloading";
+import Displayscreenloading from "../loaders/Displayscreenloading";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 

@@ -16,6 +16,7 @@ type props = {
     }
 };
 
+
 const Displaylike = ({ userName, autoViewLike }: props) => {
     const [user, setUser] = useState<userProps | null>(null);    
 

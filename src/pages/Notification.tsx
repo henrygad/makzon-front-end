@@ -44,7 +44,7 @@ const Notification = () => {
     const callBackFn = (acc: notificationProps[], curr: notificationProps) => {
         const pre = acc?.[acc.length - 1];
 
-        if (pre?.type?.trim().toLowerCase() === curr.type.trim().toLowerCase() &&
+        if (pre?.type?.trim().toLowerCase() === curr.type?.trim().toLowerCase() &&
             pre?.targetTitle?.trim().toLowerCase() === curr?.targetTitle?.trim().toLowerCase()
         ) {
             acc = acc.map((notic) =>

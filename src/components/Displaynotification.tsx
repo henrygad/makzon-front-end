@@ -33,6 +33,7 @@ type viewTargetNotificationProps =
   | undefined;
 
 const Displayicon = ({ type }: { type: string }) => {
+  if (!type) return null;
   if (type.trim().toLowerCase() === "viewed")
     return <FaRegEye size={24} color="gray" />;
   if (type.trim().toLowerCase() === "followed")
@@ -63,6 +64,7 @@ const Displayuseravatar = ({ userName }: { userName: string }) => {
         console.error(error)
       );
   }, [userName]);
+
 
   if (!userInfor) return <span>loading</span>;
 
@@ -171,7 +173,7 @@ export const Single = ({
 
   };
 
-  const handleDeleteAllNotics = async (
+  const handleDeleteNotic = async (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
     _id: string
   ) => {
@@ -182,7 +184,7 @@ export const Single = ({
       await axios.delete(url, {
         baseURL: apiEndPont,
         withCredentials: true,
-      });
+      });      
       appDispatch(deleteNotifications({ _id }));
     } catch (error) {
       console.error(error);
@@ -216,7 +218,7 @@ export const Single = ({
             {useDelete && !isSelect ?
               (
                 <button
-                  onClick={(e) => handleDeleteAllNotics(e, notification._id || "")}
+                  onClick={(e) => handleDeleteNotic(e, notification._id || "")}
                 >
                   <MdDeleteOutline size={16} color="gray" />
                 </button>
@@ -226,7 +228,7 @@ export const Single = ({
           </span>
           <span className="text-sm font-text break-words hyphens-auto line-clamp-3 ">
             <span className="font-semibold">{notification.from} </span>{" "}
-            {notification.message.trim()}
+            {notification.message?.trim()}
           </span>
         </span>
       </span>
@@ -256,6 +258,7 @@ export const Multiple = ({
   const appDispatch = useAppDispatch();
 
   const handleViewNotification = async (notic: notificationProps) => {
+    
     let viewTargetNotification: viewTargetNotificationProps = undefined;
 
     if (notic.type.trim().toLowerCase().includes("followed")) {
@@ -322,8 +325,9 @@ export const Multiple = ({
 
   };
 
-  const handleDeleteAllNotics = (
+  const handleDeleteMultipleNotic = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    notifications: notificationProps[]
   ) => {
 
     const deleteNotic = async (_id: string) => {
@@ -388,7 +392,7 @@ export const Multiple = ({
               )}
             </span>
             {!isSelect ?
-              <button onClick={handleDeleteAllNotics}>
+              <button onClick={(e)=> handleDeleteMultipleNotic(e, notifications)}>
                 <MdDeleteOutline size={16} color="gray" />
               </button> :
               null
