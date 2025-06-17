@@ -132,7 +132,7 @@ const Updateprofile = () => {
                 {
                     !loading ?
                         <>
-                            <section className="mt-4">
+                            <section className="flex justify-center mt-10">
                                 {/* display avatar */}
                                 <Displayimage
                                     url={userData?.avatar || ""}
@@ -160,7 +160,7 @@ const Updateprofile = () => {
                                     onClick={handleDialog}
                                 />
                             </section>
-                            <section className="space-y-4 mt-4">
+                            <section className="space-y-4 mt-10">
                                 {/* first name */}
                                 <label htmlFor="first-name" className="block space-y-0.5">
                                     <p className="text-sm capitalize">First name</p>

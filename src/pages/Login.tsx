@@ -12,7 +12,7 @@ const Login = () => {
       <>
       <header className="flex flex-col justify-between items-center py-10 gap-4">       
         <Logo withText={true} className="h-6 w-6" />
-        <h2 className="font-text text-2xl font-medium">Wellcome Back!</h2>
+        <h2 className="font-text text-2xl font-medium">Welcome Back!</h2>
       </header>
       <main className="container">
         <Loginuser />
