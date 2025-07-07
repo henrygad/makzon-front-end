@@ -9,16 +9,12 @@ type Props = {
 };
 
 
-const Button = ({ id, fieldName, className, onClick = ()=> null, disabled }: Props) => {    
-
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {            
-        onClick(e);
-    };
+const Button = ({ id, fieldName, className, onClick = ()=> null, disabled }: Props) => {        
 
     return <button
         id={id || ""}
-        className={`font-text text-sm px-3 ${className}`}
-        onClick={handleClick}
+        className={`font-text text-sm px-3 cursor-pointer ${className}`}
+        onClick={onClick}
         disabled={disabled}
     >
         {fieldName}

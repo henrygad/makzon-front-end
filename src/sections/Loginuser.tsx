@@ -95,7 +95,6 @@ const Loginuser = () => {
         }
     };
 
-
     useEffect(() => {
         if (location.state) {
             const { identity } = location.state as { identity: string };            
@@ -110,6 +109,7 @@ const Loginuser = () => {
             onSubmit={handleSubmit(handleLoginForm)}
             className="space-y-6"
         >
+
             {/* client login identity*/}
             <label htmlFor="username" className="flex flex-col gap-1">
                 <h3 className="font-text text-base font-medium">
