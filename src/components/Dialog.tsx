@@ -2,8 +2,8 @@ import { ReactElement, useRef } from "react";
 import useClickOutSide from "../hooks/useClickOutSide";
 
 
-const Dialog = ({ dialog, handleDialog= ()=> null, className, children }:
-    { dialog: boolean, handleDialog?: () => void, className: string, children: ReactElement }) => {
+const Dialog = ({ dialog, handleDialog= ()=> null, className = "", children }:
+    { dialog: boolean, handleDialog?: () => void, className?: string, children: ReactElement }) => {
 
     const dialogRef = useRef<HTMLSpanElement | null>(null);
 
@@ -17,7 +17,7 @@ const Dialog = ({ dialog, handleDialog= ()=> null, className, children }:
                 className="container flex-1 flex justify-center items-center">
                 <span
                     className={`block bg-white rounded-xl shadow-md -mt-20 ${className}`}
-                    ref={dialogRef}
+                    ref={dialogRef}               
                 >
                     {children}
                 </span>

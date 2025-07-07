@@ -53,7 +53,9 @@ const Verifyuser = ({ user, loading, setLoading, handleChangeTab }: Props) => {
   return (
     <section className="flex-1 flex justify-center items-center pt-10 px-5 space-y-16">
       <form className="space-y-6" onSubmit={handleVerifyUser}>
-        <Displayuserinfor user={user} short={true} />
+        <span className="flex justify-center ">
+          <Displayuserinfor user={user} short={true} />
+        </span>
         {/* otp input*/}
         <label htmlFor="otp" className="flex flex-col gap-1">
           <span className="w-full flex justify-center">

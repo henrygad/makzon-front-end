@@ -132,8 +132,8 @@ const Updateprofile = () => {
                 {
                     !loading ?
                         <>
+                                {/* display profile avatar section */}
                             <section className="flex justify-center mt-10">
-                                {/* display avatar */}
                                 <Displayimage
                                     url={userData?.avatar || ""}
                                     alt={User.userName}

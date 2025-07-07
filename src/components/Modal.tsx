@@ -40,7 +40,6 @@ const Modal = ({ id, children }: Props) => {
     return () => document.body.classList.remove("overflow-hidden");
   }, [location.hash]);
 
-
   useEffect(() => {
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
@@ -49,6 +48,7 @@ const Modal = ({ id, children }: Props) => {
   return displayModal ? <div
     id={id.trim().toLowerCase()}
     className="fixed top-0 bottom-0 right-0 left-0 bg-gray-600/55 z-50"
+    onClick={(e) => e.preventDefault()}
   >
     {children}
   </div > :

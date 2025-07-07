@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../redux";
 import { fetchProfile } from "../redux/slices/userProfileSlices";
 import userProps from "../types/user.type";
+import Displayscreenloading from "../loaders/Displayscreenloading";
 
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
@@ -46,12 +47,15 @@ const Logoutbtn = () => {
     }
   };
 
-  return <button
-    className=" font-text text-sm text-white p-2 bg-red-700 shadow-sm border rounded-md"
-    onClick={handleLogOut}
-  >
-    {!loading ? "Logout" : "loading"}
-  </button>;
+  return <>
+    <button
+      className=" font-text text-sm text-white px-3 py-1.5 bg-red-700 active:bg-opacity-50 shadow-sm border rounded-md"
+      onClick={handleLogOut}
+    >
+      {!loading ? "Logout" : "loading"}
+    </button>
+    <Displayscreenloading loading={loading} />
+  </>;
 };
 
 export default Logoutbtn;

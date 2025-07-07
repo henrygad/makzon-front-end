@@ -5,12 +5,14 @@ const Security = () => {
 
 
     return <main className="container">
-        <div>
-            <Deleteaccountbtn />
-        </div>
+        <menu className="flex w-full h-full p-4">
+            <ul>
+                <li>
+                    <Deleteaccountbtn />
+                </li>
+            </ul>
+        </menu>
     </main>;
 };
 
 export default Security;
-
-

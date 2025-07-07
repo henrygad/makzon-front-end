@@ -21,6 +21,7 @@ import Displayscreenloading from "../loaders/Displayscreenloading";
 import Makzontexteditor, { deleteAll } from "makzontexteditor";
 import Displaychangemedia from "./Displaychangemedia";
 import useDialog from "../hooks/useDialog";
+import AIcontentgenerator from "../components/AIcontentgenerator";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
 
 type Props = {
@@ -37,10 +38,11 @@ const Addpost = ({ existingPost }: Props) => {
     const [title, setTitle] = useState("");
     const [image, setImage] = useState("");    
     const [blob, setBlob] = useState<Blob | undefined>(undefined);
-    const [article, setArticle] = useState({
+    const [getArticle, setGetArticle] = useState({
         _html: "",
         text: "",
     });
+    const [setArticle, setSetArticle] = useState({new: true, context: ""});
     const [imageCaption, setImageCaption] = useState("");
     const catigoryInputRef = useRef<HTMLInputElement>(null);
     const [catigories, setCatigories] = useState<{ _id: string; cat: string }[]>([
@@ -57,7 +59,12 @@ const Addpost = ({ existingPost }: Props) => {
     const [popUpMsg, setPopUpMsg] = useState("");
     const [popUp, setPopUp] = useState(false);
 
-    const { dialog, handleDialog } = useDialog();
+    const { dialog: displayChangeMedia, handleDialog: handleDisplayChangeMedia } = useDialog();
+    const { dialog: aiContentGenerator, handleDialog: handleAiContentGenerator } = useDialog();
+
+    // ai generate content
+    const [aiGenerateTopic, setAiGenerateTopic] = useState("");
+    const [aiGenerateTopicLoading, setAiGenerateTopicLoading] = useState(false);
 
     const handleFilterSlug = (slug: string, slugPatter: string) => {
         const filterSlug = slug
@@ -250,8 +257,8 @@ const Addpost = ({ existingPost }: Props) => {
                     ...existingPost,
                     image: image.split("/")[image.split("/").length - 1],
                     title,
-                    body: article.text,
-                    _html: { title, body: article._html },
+                    body: getArticle.text,
+                    _html: { title, body: getArticle._html },
                     catigories: catigories.map((catigory) => catigory.cat),
                 };
                 await publish(editBlogpost, blob, true);
@@ -261,8 +268,8 @@ const Addpost = ({ existingPost }: Props) => {
                     ...existingPost,
                     image: image.split("/")[image.split("/").length - 1],
                     title,
-                    body: article.text,
-                    _html: { title, body: article._html },
+                    body: getArticle.text,
+                    _html: { title, body: getArticle._html },
                     catigories: catigories.map((catigory) => catigory.cat),
                     status: "published"
                 };
@@ -276,8 +283,8 @@ const Addpost = ({ existingPost }: Props) => {
                         publishedId: undefined,
                         image: image.split("/")[image.split("/").length - 1],
                         title,
-                        body: article.text,
-                        _html: { title, body: article._html },
+                        body: getArticle.text,
+                        _html: { title, body: getArticle._html },
                         catigories: catigories.map((catigory) => catigory.cat),
                         status: "published",
                     };
@@ -286,8 +293,8 @@ const Addpost = ({ existingPost }: Props) => {
                     const createBlogpost = {
                         title,
                         image: image.split("/")[image.split("/").length - 1],
-                        body: article.text,
-                        _html: { title, body: article._html },
+                        body: getArticle.text,
+                        _html: { title, body: getArticle._html },
                         catigories: catigories.map((catigory) => catigory.cat),
                         slug: handleFilterSlug(slug || title, slugPatter).trim(),
                         status: "published",
@@ -303,8 +310,8 @@ const Addpost = ({ existingPost }: Props) => {
             const createBlogpost = {
                 title,
                 image: image.split("/")[image.split("/").length - 1],
-                body: article.text,
-                _html: { title, body: article._html },
+                body: getArticle.text,
+                _html: { title, body: getArticle._html },
                 catigories: catigories.map((catigory) => catigory.cat),
                 slug: handleFilterSlug(slug || title, slugPatter).trim(),
                 status: "published",
@@ -322,7 +329,7 @@ const Addpost = ({ existingPost }: Props) => {
         setBlob(undefined);
         setImage("");        
         setImageCaption("");
-        setArticle({
+        setGetArticle({
             _html: "",
             text: "",
         });
@@ -344,8 +351,8 @@ const Addpost = ({ existingPost }: Props) => {
                 ...existingPost,
                 image: image.split("/")[image.split("/").length - 1],
                 title,
-                body: article.text,
-                _html: { title, body: article._html },
+                body: getArticle.text,
+                _html: { title, body: getArticle._html },
                 catigories: catigories.map((catigory) => catigory.cat),
                 slug: handleFilterSlug(slug || title, slugPatter).trim(),
             };
@@ -356,8 +363,8 @@ const Addpost = ({ existingPost }: Props) => {
                 publishedId: existingPost?._id, // Copy existing post id for drafting post                                
                 title,
                 image: image.split("/")[image.split("/").length - 1],
-                body: article.text,
-                _html: { title, body: article._html },
+                body: getArticle.text,
+                _html: { title, body: getArticle._html },
                 catigories: catigories.map((catigory) => catigory.cat),
                 slug: handleFilterSlug(slug || title, slugPatter).trim(),
                 status: "drafted",
@@ -372,7 +379,7 @@ const Addpost = ({ existingPost }: Props) => {
         setBlob(undefined);        
         setImage("");
         setImageCaption("");
-        setArticle({
+        setGetArticle({
             _html: "",
             text: "",
         });
@@ -383,14 +390,33 @@ const Addpost = ({ existingPost }: Props) => {
         deleteAll(editorRef);
     };
 
+    const handleGenerateContentFromAI = async (topic: string) => {
+        setAiGenerateTopicLoading(true);
+        try {
+
+            const url = apiEndPont + "/generateaicontent";
+            const data = { topic };
+            
+            const res = await axios.post(url, data, {
+                baseURL: apiEndPont,
+                withCredentials: true,
+            });
+            const context = await res.data.content as string ;
+            setSetArticle({ new: false, context});
+            //setAiGenerateTopic("");
+            //handleAiContentGenerator();
+        } catch (err) {
+            console.log("Something went wrong.", err);
+        } finally {
+            setAiGenerateTopicLoading(false);
+        }
+      };
+
     useEffect(() => {
         if (existingPost) {
             setTitle(existingPost.title || "");
             setImage(existingPost.image? apiEndPont + "/media/" + existingPost.image: "");
-            setArticle({
-                _html: existingPost._html.body,
-                text: existingPost.body,
-            });
+            setSetArticle({ new: false, context: existingPost?._html.body });
             setCatigories(
                 existingPost.catigories.length
                     ? existingPost.catigories.map((catigory) => ({
@@ -406,7 +432,15 @@ const Addpost = ({ existingPost }: Props) => {
     return <>
         <section className="space-y-8">
             {/* draft button */}
-            <div className="flex justify-end items-center pr-2">
+            <div className="flex justify-between gap-4 items-center px-4">
+                <AIcontentgenerator
+                    topic={aiGenerateTopic}
+                    setTopic={setAiGenerateTopic}
+                    loading={aiGenerateTopicLoading}
+                    dialog={aiContentGenerator}
+                    handleDialog={handleAiContentGenerator}
+                    handleGenerate={handleGenerateContentFromAI}
+                />
                 <Button
                     fieldName={"Draft"}
                     className={`py-1 px-4 font-text text-sm font-semibold text-slate-800 rounded-full transition-colors border-2 shadow shadow-slate-100 
@@ -443,13 +477,10 @@ const Addpost = ({ existingPost }: Props) => {
                     useHistor: true,
                 }}
                 autoFocus={true}
-                setContext={{
-                    new: existingPost ? false : true,
-                    context: existingPost?._html.body || "",
-                }}
+                setContext={setArticle}               
                 getValue={(value) => {
                     setIsEmpty(false);
-                    setArticle(value);
+                    setGetArticle(value);
 
                     const title = value.text.split(" ", 10);
                     if (title.length > 10) {
@@ -588,12 +619,12 @@ const Addpost = ({ existingPost }: Props) => {
                     }}
                     placeHolder={
                         <span
-                            onClick={handleDialog}
+                            onClick={handleDisplayChangeMedia}
                             className="absolute top-0 bottom-0 right-0 left-0 h-[140px] w-[140px] border border-slate-200 bg-slate-200 rounded-md cursor-pointer"
                         ></span>
                     }
                     className="h-[140px] w-[140px] object-contain rounded cursor-pointer border"
-                    onClick={handleDialog}
+                    onClick={handleDisplayChangeMedia}
                 />
                 <span className="block">
                     <input
@@ -630,16 +661,23 @@ const Addpost = ({ existingPost }: Props) => {
                 />
             </div>
         </section>
+
+        {/* loading screen */}
         <section>
             {/* Screen loading */}
             <Displayscreenloading
-                loading={loadingUploadedLocalFile || loadingUploadedFileBlob || loadingUploadedPost}
+                loading={loadingUploadedLocalFile ||
+                    loadingUploadedFileBlob ||
+                    loadingUploadedPost ||
+                    aiGenerateTopicLoading}
             />
         </section>
+
+        {/* Display change media dialog */}
         <Displaychangemedia
             title="Select image from"
-            dialog={dialog}
-            handleDialog={handleDialog}
+            dialog={displayChangeMedia}
+            handleDialog={handleDisplayChangeMedia}
             viewMediaUrl={image}
             setGetMediaFromDevice={({ blob, tempUrl }) => {
                 setBlob(blob);

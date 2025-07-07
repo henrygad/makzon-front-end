@@ -18,70 +18,82 @@ const Likeblogpost = ({ blogpost, updateBlogpost }: Props) => {
 
     const sendNotification = useSendNotification();
 
-    const like = async(_id: string, userName: string) => {
+    const like = async (_id: string, userName: string) => {
         try {
-            const url = apiEndPont + "/post/partial/" + _id;            
             const data: postProps = {
                 ...blogpost,
                 likes: [userName, ...(blogpost.likes || [])]
             };
-            
+
+            // update blogpost like locally
+            updateBlogpost({ blogpost: data, type: "EDIT" });
+            setAnimateLikeBtn(true);
+
+            // update blogpost like in server
+            const url = apiEndPont + "/post/partial/" + _id;
             const res = await axios.patch(url, data, {
                 baseURL: apiEndPont,
                 withCredentials: true
             });
+
             const likedBlogpost: postProps = await res.data.data;
-            updateBlogpost({ blogpost: likedBlogpost, type: "EDIT" });            
+            updateBlogpost({ blogpost: likedBlogpost, type: "EDIT" });
         } catch (error) {
             console.error(error);
         }
-        
+
         // when use commented or reply to a comment send notification
         sendNotification({
             type: "liked",
             from: userName,
             targetTitle: blogpost.title,
             options: {
-                type: "blogpost-like",                           
+                type: "blogpost-like",
             },
             to: blogpost.author || "",
             message: `liked your blogpost, ${blogpost.title}`,
             checked: false,
-            url: "/post/" + blogpost.author + "/" + blogpost.slug + "/#blogpost-likes",            
+            url: "/post/" + blogpost.author + "/" + blogpost.slug + "/#blogpost-likes",
         });
     };
 
-    const unLike = async (_id: string, userName: string) => {       
+    const unLike = async (_id: string, userName: string) => {
 
         try {
-            const url = apiEndPont + "/post/partial/" + _id;
+
             const data = {
                 ...blogpost,
                 likes: (blogpost.likes || []).filter(like => like !== userName)
             };
+
+            // update blogpost unlike locally
+            updateBlogpost({ blogpost: data, type: "EDIT" });
+            setAnimateLikeBtn(true);
+
+            // update blogpost unlike in server
+            const url = apiEndPont + "/post/partial/" + _id;
             const res = await axios.patch(url, data, {
                 baseURL: apiEndPont,
                 withCredentials: true
             });
             const unLikedBlogpost: postProps = await res.data.data;
-            updateBlogpost({ blogpost: unLikedBlogpost, type: "EDIT" });            
+            updateBlogpost({ blogpost: unLikedBlogpost, type: "EDIT" });
         } catch (error) {
             console.error(error);
         }
-       
+
     };
 
     const handleBlogpostLiking = (_id: string, userName: string) => {
-        if (blogpost.likes &&
-            blogpost.likes.includes(User.userName)) {
+        if (blogpost.likes && blogpost.likes.includes(User.userName)) {
             unLike(_id, userName);
         } else {
             like(_id, userName);
         }
-        setAnimateLikeBtn(true);
 
-        setTimeout(() => {
+        const clear = setTimeout(() => {
             setAnimateLikeBtn(false);
+            clearTimeout(clear);
         }, 100);
     };
 

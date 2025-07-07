@@ -145,7 +145,6 @@ const Signupuser = () => {
         }
     };
 
-
     return <>
         {/* sign up local form */}
         <section className="flex-1 flex justify-center items-center pt-10 px-5 " >

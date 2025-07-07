@@ -4,13 +4,18 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../redux";
 import { fetchProfile } from "../redux/slices/userProfileSlices";
 import userProps from "../types/user.type";
+import Dialog from "./Dialog";
+import useDialog from "../hooks/useDialog";
 const apiEndPont = import.meta.env.VITE_DOMAIN_NAME_BACKEND;
+
 
 const Deleteaccountbtn = () => {
     const { data: User } = useAppSelector(state => state.userProfileSlices.userProfile);
     const appDispatch = useAppDispatch();
     const navigate = useNavigate();
+    const {handleDialog, dialog } = useDialog();
     const [loading, setLoading] = useState(false);
+
 
     const handDeleteaccount = async (password: string) => {
         if (loading) return;
@@ -42,12 +47,22 @@ const Deleteaccountbtn = () => {
         }
     };
 
-    return <button
-        className=" font-text text-sm text-white p-2 bg-red-700 shadow-sm border rounded-md"
-        onClick={()=>handDeleteaccount("Henry619@")}
-    >
-        {!loading ? "Delete" : "loading"}
-    </button>;
+    return <>
+        <button
+            className="font-text text-sm text-white px-3 py-1.5 bg-red-700 active:bg-opacity-50 shadow-sm border rounded-md"
+            onClick={{}}
+        >
+            Delete account
+        </button>
+
+        <Dialog
+            dialog={dialog}
+            handleDialog={handleDialog}
+            className=""
+            children={<>
+            </>}
+        />
+    </>;
 };
 
 export default Deleteaccountbtn;

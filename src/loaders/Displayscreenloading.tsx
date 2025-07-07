@@ -17,6 +17,7 @@ const Displayscreenloading = ({ loading }: { loading: boolean }) => {
     <div
       className="fixed top-0 bottom-0 right-0 left-0 backdrop-blur-sm z-50"
       style={{ margin: 0 }}
+      onClick={(e) => e.preventDefault()}
     >
       <div className="w-full h-full flex justify-center items-center">
         <span className="flex gap-2 p-2">

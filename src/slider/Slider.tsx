@@ -62,10 +62,11 @@ const Slider = ({ media, className }: { media: string[], className: string }) =>
     return () => clearInterval(clearIntervalRef.current);
   }, []);
 
-
   if (!media.length) {
-    return <div className="font-text font-medium text-xl h-full w-full flex justify-center items-center bg-gray-300 rounded-md">
-      No Media found for Slider
+    return <div
+      className={`flex ${className} rounded-md animate-pulse`}
+    >
+      <div className="flex-1 bg-slate-300 "></div>
     </div>;
   }
 

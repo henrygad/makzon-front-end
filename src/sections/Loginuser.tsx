@@ -142,7 +142,7 @@ const Loginuser = () => {
                         id="password"
                         type={!toggleHidePassword ? "password" : "text"}
                         placeholder="Enter your password"
-                        autoComplete="true"
+                        autoComplete="false"
                         className={`font-text text-sm text-slate-600 font-medium min-w-[280px] sm:min-w-[320px] md:min-w-[420px]  outline-none border rounded-lg px-3 py-2
                         ${errors.password ? "border-red-600 outline-red-600" : ""}
                     `}
