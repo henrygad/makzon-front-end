@@ -68,7 +68,7 @@ const Deleteaccountbtn = () => {
             dialog={dialog}
             handleDialog={handleDialog}
             className=""
-            children={<span className="flex flex-col gap-8 p-8 shadow-sm">
+            children={<span className="flex flex-col gap-6 shadow-sm p-8">
                 <span className="inline-block">
                     <p className="text-xl font-bold text-red-700 font-text">
                         Do you want to delete your account?
@@ -76,7 +76,7 @@ const Deleteaccountbtn = () => {
                 </span>
                 <span className="inline-block">
                     <span className="flex flex-col gap-3">
-                        <h3 className="font-text text-base font-medium text-slate-500">
+                        <h3 className="font-text text-sm text-wrap font-medium text-slate-500">
                             Comfirm password to continue
                         </h3>
                         <span className="flex-1 relative">
@@ -85,7 +85,7 @@ const Deleteaccountbtn = () => {
                                 type={!toggleHidePassword ? "password" : "text"}
                                 placeholder="Enter your password"
                                 autoComplete="false"
-                                className={`font-text text-sm text-slate-600 font-medium min-w-[280px] sm:min-w-[320px] md:min-w-[420px]  outline-none border rounded-lg px-3 py-2 ${error ? "border-red-600 outline-red-600" : ""}`}                               
+                                className={`font-text text-sm text-slate-600 font-medium min-w-full  outline-none border rounded-lg px-3 py-2 ${error ? "border-red-600 outline-red-600" : ""}`}                               
                                 onChange={(e)=> setPassword(e.target.value)}
                             />
                             <span
@@ -106,13 +106,13 @@ const Deleteaccountbtn = () => {
                         )}
                     </span>
                 </span>
-                <span className="flex justify-around items-center gap-4">
+                <span className="flex justify-around items-start gap-4">
                     <span className="inline-block">
                         <Button
                             fieldName={"Continue to Delete"}
                             disabled={loading || !password.trim()}
                             onClick={() => handDeleteaccount(password)}
-                            className={` text-red-700 font-bold ${loading || !password.trim() ? "opacity-30":""}`}
+                            className={` text-red-700 font-bold text-start ${loading || !password.trim() ? "opacity-30":""}`}
                         />
                     </span>
                     <span className="inline-block">
