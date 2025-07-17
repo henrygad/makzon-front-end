@@ -1046,6 +1046,15 @@ autoprefixer@^10.4.19:
     picocolors "^1.0.1"
     postcss-value-parser "^4.2.0"
 
+axios@^1.10.0:
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.10.0.tgz#af320aee8632eaf2a400b6a1979fa75856f38d54"
+  integrity sha512-/1xYAC4MP/HEG+3duIhFr4ZQXR4sQXOIe+o6sdqzeykGLx6Upp/1p8MHqhINOvGeP7xyNHe7tsiJByc4SSVUxw==
+  dependencies:
+    follow-redirects "^1.15.6"
+    form-data "^4.0.0"
+    proxy-from-env "^1.1.0"
+
 axios@^1.7.2:
   version "1.7.9"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.9.tgz#d7d071380c132a24accda1b2cfc1535b79ec650a"
@@ -2034,11 +2043,13 @@ magic-string@^0.30.5:
   dependencies:
     "@jridgewell/sourcemap-codec" "^1.5.0"
 
-makzontexteditor@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/makzontexteditor/-/makzontexteditor-1.2.4.tgz#af00e47a847e85f3a957de9f1b68de04f9b54f72"
-  integrity sha512-hAqE/xvQ1QUfMr3lR++7C+KZ0sMTDr8XtyV5IYEHu/W9GTgVMyrOYTu8NJHdlysgjYeanTKkV/TnGohDXwilnA==
+makzontexteditor@^1.2.5, makzontexteditor@^1.2.6:
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/makzontexteditor/-/makzontexteditor-1.2.6.tgz#63c62797b234391971874891af9de6413ad2f125"
+  integrity sha512-CmgQyCMZvbZw8+sHmjHLrDRmfNarSYc8vbxFppZBN9G/9VvYfGcoAYY4Uex+mxfuWtbS2luuY5h9pwfedNzg8w==
   dependencies:
+    axios "^1.10.0"
+    makzontexteditor "^1.2.5"
     react "^19.1.0"
     react-dom "^19.1.0"
     react-icons "^5.5.0"
