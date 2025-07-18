@@ -1,4 +1,3 @@
-import { GoLink } from "react-icons/go";
 import userProps from "../types/user.type";
 import Displayimage from "./Displayimage";
 import useSanitize from "../hooks/useSanitize";
@@ -79,23 +78,27 @@ const Displayuserinfor = ({
         {!loading && user ?
           <>
             {/* bio */}
-            <span
-              className="block font-text text-base mt-4"
-              dangerouslySetInnerHTML={sanitize(user.bio || "")}></span>
+            {user.country &&
+              <span
+                className="block font-text text-base mt-4"
+                dangerouslySetInnerHTML={sanitize(user.bio || "")}
+              />}
             {/* profession */}
-            <span className="block text-base font-text text-slate-900 text-start w-full mt-1">
-              {user.profession}
-            </span>
-            <span className="block text-base text-start text-stone-700 font-text space-y-0.5 mt-3">             
-              <span className="block">
-                {/* email */}
-                {user.displayEmail || ""}
-              </span>
+            {user.profession &&
+              <span className="block text-base font-text text-slate-900 text-start w-full mt-1">
+                🧑‍💼 {user.profession}
+              </span>}
+            <span className="block text-sm text-start text-stone-700 font-text space-y-1 mt-3">
+              {/* email */}
+              {user.displayEmail &&
+                <span className="block">
+                  📧 {user.displayEmail}
+                </span>}
               {/* phonenumber */}
               <span className="block">
                 {user.displayPhoneNumber && user.displayPhoneNumber?.split("-")[1] ? (
                   <span>
-                    {user.displayPhoneNumber.split("-")[0]}{" "}
+                    📞 {user.displayPhoneNumber.split("-")[0]}{" "}
                     {user.displayPhoneNumber.split("-")[1]}
                   </span>
                 ) : null}
@@ -104,43 +107,48 @@ const Displayuserinfor = ({
               <span className="flex items-center gap-1">
                 {user.website ? (
                   <>
-                    <GoLink size={13} color="blue" />
+                    🔗
                     <a
-                      href={user.website || ""}
+                      href={user.website}
                       className=" text-slate-700 no-underline cursor-pointer"
                       target="_blank"
                     >
-                      {user.website || ""}
+                      {user.website}
                     </a>
                   </>
                 ) : null}
               </span>
-            </span>            
-            <span className="block text-sm text-start font-text space-y-1 mt-3">
+            </span>
+            <span className="block text-xs text-start font-text space-y-1 mt-3">
               {/* sex */}
-              <span className="block capitalize">
-                {user.sex || ""}
-              </span>
+              {user.sex &&
+                <span className="block capitalize">
+                  ⚧ {user.sex}
+                </span>}
               {/* date of birth */}
-              <span className="block">                
-                {user.displayDateOfBirth ? handleDateFormat(user.dateOfBirth || "") : null}
-              </span>
+              {user.displayDateOfBirth &&
+                <span className="block">
+                  📅  {handleDateFormat(user.dateOfBirth || "")}
+                </span>}
               {/* country */}
-              <span className="block">
-                {user.country || ""}
-              </span>
+              {user.country &&
+                <span className="block">
+                  🌍 {user.country}
+                </span>}
             </span>
           </> :
-          <div className="animate-pulse">
+          <>
             {/* loading full profile details */}
-            <div className="space-y-3 p-2 animate-pulse">
-              <div className="min-w-[240px] sm:min-w-[480px] h-4 min- bg-slate-300 rounded-md"></div>
-              <div className="h-4 bg-slate-300 rounded-md"></div>
-              <div className="h-4 bg-slate-300 rounded-md"></div>
+            <div className="animate-pulse">
+              <div className="space-y-3 p-2 animate-pulse">
+                <div className="min-w-[240px] sm:min-w-[480px] h-4 min- bg-slate-300 rounded-md"></div>
+                <div className="h-4 bg-slate-300 rounded-md"></div>
+                <div className="h-4 bg-slate-300 rounded-md"></div>
+              </div>
             </div>
-          </div>
+          </>
         }
-      </div>
+      </div >
     }
   </>;
 };
