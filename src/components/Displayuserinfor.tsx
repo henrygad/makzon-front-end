@@ -110,7 +110,7 @@ const Displayuserinfor = ({
                     🔗
                     <a
                       href={user.website}
-                      className=" text-slate-700 no-underline cursor-pointer"
+                      className="text-blue-700 no-underline cursor-pointer"
                       target="_blank"
                     >
                       {user.website}

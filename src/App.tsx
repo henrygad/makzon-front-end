@@ -295,9 +295,9 @@ const App = () => {
       );
       followersEventSource.onmessage = (event) => {
         const data = JSON.parse(event.data) as { eventType: string, followers: string[] };
-        const { followers } = data;           
+        const { followers } = data;
         const user = { ...User, followers } as userProps;
-        appDispatch(editProfile(user));       
+        appDispatch(editProfile(user));
       };
       followersEventSource.onerror = (error) => {
         console.error(error);
