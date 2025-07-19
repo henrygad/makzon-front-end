@@ -20,8 +20,8 @@ const Displaymultipleusers = ({ title, horizontal = true, users }: Props) => {
             null
         }
         {horizontal ?
-            <div className="overflow-x-auto scroll-smooth snap-x snap-mandatory"
-            >            <div className="flex gap-4 w-max px-4">
+            <div className="overflow-x-auto scroll-smooth snap-x snap-mandatory">
+                <div className="flex gap-4 w-max px-4">
                     {users ?
                         users.length ?
                             users.map(user =>

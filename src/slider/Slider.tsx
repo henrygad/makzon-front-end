@@ -1,24 +1,24 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { BsArrowLeftCircleFill, BsArrowRightCircleFill } from "react-icons/bs";
 import Displayimage from "../components/Displayimage";
 
 const Slider = ({ media, className }: { media: string[], className: string }) => {
   const [currentImage, setCurrentImage] = useState(0);
   const [transition, setTransition] = useState(true);
-  const clearIntervalRef = useRef<NodeJS.Timeout>(undefined);
 
   const handlePreviousSlide = () => {
     if (currentImage === 0) {
       setTransition(false);
-      setCurrentImage(media.length);
+      setCurrentImage(media.length - 1);
 
-      setTimeout(() => {
+      const clear = setTimeout(() => {
         setTransition(true);
-        setCurrentImage(media.length - 1);
+        setCurrentImage((pre) => pre - 1);
+        clearTimeout(clear);
       }, 100);
     } else {
       setTransition(true);
-      setCurrentImage(currentImage - 1);
+      setCurrentImage((pre)=> pre - 1);
     }
   };
 
@@ -33,22 +33,12 @@ const Slider = ({ media, className }: { media: string[], className: string }) =>
       }, 100);
     } else {
       setTransition(true);
-      setCurrentImage(currentImage + 1);
+      setCurrentImage((pre) => pre + 1);
     }
   };
 
   const handleDotsSlide = (index: number) => {
     setCurrentImage(index);
-  };
-
-  const handleAutoSlide = (slideTo: string = "right", delay: number = 200) => {
-    clearIntervalRef.current = setInterval(() => {
-      if (slideTo === "left") {
-        handlePreviousSlide();
-      } else {
-        handleNextSlide();
-      }
-    }, delay);
   };
 
   const handleDotsColor = () => {
@@ -57,11 +47,7 @@ const Slider = ({ media, className }: { media: string[], className: string }) =>
     } else return currentImage;
   };
 
-  useEffect(() => {
-    handleAutoSlide("right", 4000);    
-    return () => clearInterval(clearIntervalRef.current);
-  }, []);
-
+ 
   if (!media.length) {
     return <div
       className={`flex ${className} rounded-md animate-pulse`}
@@ -86,17 +72,17 @@ const Slider = ({ media, className }: { media: string[], className: string }) =>
             width: media.length > 0 ? (media.length * 100 + 100) + "%" : "100%",
             height: "100%",
             left: -(currentImage * 100) + "%",
-          }}          
-          onMouseEnter={() => {
-            clearInterval(clearIntervalRef.current);
           }}
-          onMouseLeave={() => { 
-            handleAutoSlide("right", 4000);
+          onMouseEnter={() => {
+           
+          }}
+          onMouseLeave={() => {
+           
           }}
         >
-          {media.map((link,index) => (
+          {media.map((link, index) => (
             <div
-              key={link+"_"+index}
+              key={link + "_" + index}
               className="w-full h-full"
             >
               <Displayimage
@@ -114,7 +100,7 @@ const Slider = ({ media, className }: { media: string[], className: string }) =>
               url={media[0]}
               alt={media[0]}
               className="w-full h-full rounded-md object-cover"
-              parentClassName="w-full h-full"              
+              parentClassName="w-full h-full"
             />
           </div>
         </div>

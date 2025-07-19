@@ -20,7 +20,6 @@ type props = {
     setSearchError: React.Dispatch<React.SetStateAction<string>>
 };
 
-
 const Trending = ({
     newUsers,
     trendingPosts,
