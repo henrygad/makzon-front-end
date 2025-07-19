@@ -34,6 +34,7 @@ const Updateprofile = () => {
     const firstNameInputRef = useRef<HTMLInputElement | null>(null);
     const lastNameInputRef = useRef<HTMLInputElement | null>(null);
     const bioInputRef = useRef<HTMLTextAreaElement | null>(null);
+    const professionAreaRef = useRef<HTMLElement | null>(null);
     const professionInputRef = useRef<HTMLInputElement | null>(null);
     const displayEmailInputRef = useRef<HTMLInputElement | null>(null);
     const displayPhoneNumberInputRef = useRef<HTMLInputElement | null>(null);
@@ -69,7 +70,7 @@ const Updateprofile = () => {
                 const value = user[key as keyof userProps];
                 if (value !== undefined) formData.append(key, JSON.stringify(value));
             }
-            
+
             const url = apiEndPont + "/user";
             const res = await axios.patch(url,
                 formData,
@@ -132,7 +133,7 @@ const Updateprofile = () => {
                 {
                     !loading ?
                         <>
-                                {/* display profile avatar section */}
+                            {/* display profile avatar section */}
                             <section className="flex justify-center mt-10">
                                 <Displayimage
                                     url={userData?.avatar || ""}
@@ -344,8 +345,8 @@ const Updateprofile = () => {
                                     <p className="text-sm">Profession</p>
                                     <span className="flex flex-wrap justify-between items-center gap-2">
                                         <span
-                                            className={`${toEdit["profession"] ? "block" : "hidden"
-                                                } flex-1 relative`}
+                                            ref={professionAreaRef}
+                                            className={`${toEdit["profession"] ? "block" : "hidden"} flex-1 relative`}
                                         >
                                             <input
                                                 id="profession"
@@ -369,10 +370,13 @@ const Updateprofile = () => {
                                                     }
                                                 }}
                                             />
+
                                             <Customselection
+                                                professionAreaRef={professionAreaRef}
                                                 arrOfOptions={Professions}
                                                 className="top-9 right-0 left-0 w-full min-h-[180px] max-h-[180px] border border-blue-600 py-2 rounded-md shadow-md shadow-gray-400 overflow-y-auto"
                                                 dropDown={searchProfession.trim() ? true : false}
+                                                setDropDown={() => setSearchProfession("")}
                                                 useSearch={true}
                                                 search={searchProfession}
                                                 select={userData?.profession || ""}
@@ -408,7 +412,6 @@ const Updateprofile = () => {
                                                         }
                                                     }}
                                                 >
-                                                    Edit
                                                 </button>
                                             </>
                                         ) : (

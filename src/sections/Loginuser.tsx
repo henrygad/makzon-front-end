@@ -53,7 +53,7 @@ const Loginuser = () => {
                     loading: false,
                     error: "",
                 }));
-
+                
                 // set cookie
                 Cookies.set("makzonFrtendSession",
                     JSON.stringify({ userName: loginData.userName, email: loginData.email, login: true, sessionId: User.sessionId }), {
@@ -71,7 +71,7 @@ const Loginuser = () => {
 
             setValue("password", "");
 
-            if (errorMsg.toLowerCase().includes("password")) {                
+            if (errorMsg.toLowerCase().includes("password")) {
                 setError("password", {
                     type: "manual",
                     message: "Incorrect password"
@@ -84,7 +84,7 @@ const Loginuser = () => {
             }
 
 
-           
+
 
             console.error(error);
         } finally {
@@ -97,10 +97,10 @@ const Loginuser = () => {
 
     useEffect(() => {
         if (location.state) {
-            const { identity } = location.state as { identity: string };            
+            const { identity } = location.state as { identity: string };
             setValue("identity", identity);
         }
-     }, [location.state]);
+    }, [location.state]);
 
     return <section className="flex-1 flex justify-center items-center pt-10 px-5 space-y-16">
         {/* login up local form */}

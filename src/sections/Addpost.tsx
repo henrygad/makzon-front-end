@@ -402,9 +402,7 @@ const Addpost = ({ existingPost }: Props) => {
                 withCredentials: true,
             });
             const context = await res.data.content as string ;
-            setSetArticle({ new: false, context});
-            //setAiGenerateTopic("");
-            //handleAiContentGenerator();
+            setSetArticle({ new: false, context});            
         } catch (err) {
             console.log("Something went wrong.", err);
         } finally {

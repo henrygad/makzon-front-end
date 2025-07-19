@@ -1,5 +1,6 @@
 {
-  "name": "blogsup",
+  "name": "makzon",
+  "description": "Makzon is a modern **social blogging platform** built for creators across any field. With Makzon, authors can write, edit, draft, and publish rich blog content using a custom editor, while readers can follow authors, like and comment on posts, and explore trending topics.",
   "private": true,
   "version": "0.0.0",
   "type": "module",

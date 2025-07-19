@@ -78,11 +78,9 @@ const Displayuserinfor = ({
         {!loading && user ?
           <>
             {/* bio */}
-            {user.country &&
-              <span
-                className="block font-text text-base mt-4"
-                dangerouslySetInnerHTML={sanitize(user.bio || "")}
-              />}
+            {user.bio &&
+              <span className="block font-text text-base mt-4"> {user.bio}
+              </span>}
             {/* profession */}
             {user.profession &&
               <span className="block text-base font-text text-slate-900 text-start w-full mt-1">
